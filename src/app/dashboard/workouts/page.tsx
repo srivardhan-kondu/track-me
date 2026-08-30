@@ -8,6 +8,9 @@ import { startOfDayLocal } from "@/lib/utils";
 import type { TimelineEntry } from "@/services/reporting";
 
 export const metadata = { title: "Workouts" };
+// Meal and workout logging run transcription and analysis in after(), which
+// counts toward this function's duration. 60s is the Vercel Hobby ceiling.
+export const maxDuration = 60;
 
 const DAYS = 30;
 

@@ -111,6 +111,12 @@ usable before you have any keys:
 
 ---
 
+## Deploying
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full path to production
+(Vercel + Neon + Cloudflare R2), including the Google OAuth ordering that trips
+up most first deploys.
+
 ## Configuration
 
 Copy `.env.example` to `.env`.

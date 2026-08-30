@@ -30,6 +30,21 @@ export const usingR2 = Boolean(
 
 const LOCAL_ROOT = path.join(process.cwd(), ".uploads");
 
+/**
+ * The local driver writes to the working directory, which on a serverless host
+ * is read-only and discarded between invocations. Fail with an actionable
+ * message rather than surfacing an opaque EROFS at upload time.
+ */
+function assertStorageUsable() {
+  if (!usingR2 && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Object storage is not configured. Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, " +
+        "R2_SECRET_ACCESS_KEY and R2_BUCKET — local filesystem storage cannot " +
+        "be used in production.",
+    );
+  }
+}
+
 let client: S3Client | null = null;
 function s3(): S3Client {
   if (!client) {
@@ -85,6 +100,7 @@ export async function putObject(
   body: Buffer,
   contentType: string,
 ): Promise<string> {
+  assertStorageUsable();
   if (!isSafeKey(key)) throw new Error("Unsafe storage key");
 
   if (usingR2) {

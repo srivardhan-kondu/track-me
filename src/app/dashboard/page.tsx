@@ -14,6 +14,9 @@ import { startOfDayLocal } from "@/lib/utils";
 import { getDayTimeline, getDayTotals } from "@/services/reporting";
 
 export const metadata = { title: "Today" };
+// Meal and workout logging run transcription and analysis in after(), which
+// counts toward this function's duration. 60s is the Vercel Hobby ceiling.
+export const maxDuration = 60;
 
 function parseDate(value?: string): Date {
   if (!value) return new Date();

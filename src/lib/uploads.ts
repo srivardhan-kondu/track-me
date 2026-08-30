@@ -1,5 +1,8 @@
-export const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
-export const MAX_AUDIO_BYTES = 25 * 1024 * 1024; // Whisper's own limit
+// Backstops behind the platform's request-body cap. The client downscales
+// images to a few hundred KB, and a 3-minute Opus voice note is under 1 MB,
+// so these only catch genuinely anomalous uploads.
+export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+export const MAX_AUDIO_BYTES = 3 * 1024 * 1024;
 
 export const IMAGE_TYPES = [
   "image/jpeg",

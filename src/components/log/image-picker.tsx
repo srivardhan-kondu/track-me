@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Camera, ImagePlus, X } from "lucide-react";
+import { Camera, ImagePlus, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { downscaleImage, formatBytes } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
 export function ImagePicker({
@@ -20,6 +21,7 @@ export function ImagePicker({
   className?: string;
 }) {
   const [preview, setPreview] = React.useState<string | null>(null);
+  const [working, setWorking] = React.useState(false);
   const galleryRef = React.useRef<HTMLInputElement | null>(null);
   const cameraRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -33,9 +35,19 @@ export function ImagePicker({
     return () => URL.revokeObjectURL(url);
   }, [value]);
 
-  function handleFiles(files: FileList | null) {
-    const file = files?.[0];
-    if (file) onChange(file);
+  async function handleFiles(files: FileList | null) {
+    const picked = files?.[0];
+    if (!picked) return;
+
+    // Resize before upload: phone photos routinely exceed the request body
+    // limit of a serverless deployment.
+    setWorking(true);
+    try {
+      const { file } = await downscaleImage(picked);
+      onChange(file);
+    } finally {
+      setWorking(false);
+    }
   }
 
   return (
@@ -66,6 +78,11 @@ export function ImagePicker({
             alt="Selected meal"
             className="h-48 w-full object-cover"
           />
+          {value && (
+            <span className="absolute bottom-2 left-2 rounded bg-black/60 px-1.5 py-0.5 text-[11px] font-medium text-white">
+              {formatBytes(value.size)}
+            </span>
+          )}
           <Button
             type="button"
             size="icon"
@@ -85,9 +102,14 @@ export function ImagePicker({
               variant="outline"
               size="sm"
               className="flex-1 gap-2"
+              disabled={working}
               onClick={() => cameraRef.current?.click()}
             >
-              <Camera className="h-4 w-4" />
+              {working ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Camera className="h-4 w-4" />
+              )}
               Camera
             </Button>
             <Button
@@ -95,6 +117,7 @@ export function ImagePicker({
               variant="outline"
               size="sm"
               className="flex-1 gap-2"
+              disabled={working}
               onClick={() => galleryRef.current?.click()}
             >
               <ImagePlus className="h-4 w-4" />
@@ -102,7 +125,7 @@ export function ImagePicker({
             </Button>
           </div>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            {hint}
+            {working ? "Preparing photo…" : hint}
           </p>
         </div>
       )}
