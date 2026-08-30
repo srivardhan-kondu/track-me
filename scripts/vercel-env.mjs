@@ -8,7 +8,7 @@
  * A fresh AUTH_SECRET is generated rather than reusing the development one.
  * Values are never printed — only a masked summary.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -55,14 +55,21 @@ const lines = [
 
 const block = lines.join("\n");
 
+// Also written to a gitignored file, so the values can be opened and copied
+// without passing through a terminal or a chat transcript.
+const OUT_PATH = fileURLToPath(new URL("../vercel-env.txt", import.meta.url));
+writeFileSync(OUT_PATH, block + "\n", { mode: 0o600 });
+
+let clipboard = true;
 try {
   execFileSync("pbcopy", { input: block });
 } catch {
-  console.error("Could not reach the clipboard (pbcopy). Nothing was printed.");
-  process.exit(1);
+  clipboard = false;
 }
 
-console.log("\nCopied to clipboard — paste into Vercel → Environment Variables:\n");
+console.log(
+  `\n${clipboard ? "Copied to clipboard" : "Clipboard unavailable"} — also written to vercel-env.txt\n`,
+);
 for (const k of [...KEYS, "AUTH_SECRET"]) {
   const v = k === "AUTH_SECRET" ? "(freshly generated)" : env[k];
   const shown =
@@ -74,6 +81,9 @@ for (const k of [...KEYS, "AUTH_SECRET"]) {
   console.log(`  ${k.padEnd(22)} ${shown}`);
 }
 console.log(`
+  open vercel-env.txt        # to copy the values by hand
+  rm vercel-env.txt          # delete it once Vercel has them
+
 Still to add after the first deploy:
   AUTH_URL, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET
 `);
