@@ -1,0 +1,112 @@
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import NextAuth, { type DefaultSession } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+
+import { db } from "@/lib/db";
+
+export const googleEnabled = Boolean(
+  process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
+);
+
+/**
+ * A password-less sign-in used only for local development when Google OAuth
+ * credentials are absent. Hard-gated so it can never be reachable in a
+ * production deployment.
+ */
+export const devLoginEnabled =
+  process.env.NODE_ENV !== "production" && !googleEnabled;
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: "ATHLETE" | "COACH";
+    } & DefaultSession["user"];
+  }
+}
+
+const providers = [];
+
+if (googleEnabled) {
+  providers.push(
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      allowDangerousEmailAccountLinking: true,
+    }),
+  );
+}
+
+if (devLoginEnabled) {
+  providers.push(
+    Credentials({
+      id: "dev",
+      name: "Development sign-in",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        role: { label: "Role", type: "text" },
+      },
+      async authorize(creds) {
+        const email = String(creds?.email ?? "").trim().toLowerCase();
+        if (!email || !email.includes("@")) return null;
+
+        const role = creds?.role === "COACH" ? "COACH" : "ATHLETE";
+        const name = email
+          .split("@")[0]
+          .split(/[._-]+/)
+          .filter(Boolean)
+          .map((p) => p[0].toUpperCase() + p.slice(1))
+          .join(" ");
+
+        const user = await db.user.upsert({
+          where: { email },
+          update: {},
+          create: { email, name, role },
+        });
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      },
+    }),
+  );
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
+  // JWT sessions so the credentials provider works alongside the adapter.
+  session: { strategy: "jwt" },
+  trustHost: true,
+  pages: { signIn: "/signin" },
+  providers,
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user?.id) token.sub = user.id;
+
+      if (token.sub) {
+        const dbUser = await db.user.findUnique({
+          where: { id: token.sub },
+          select: { role: true, name: true, image: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.name = dbUser.name;
+          token.picture = dbUser.image;
+        }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.sub!;
+        session.user.role =
+          (token.role as "ATHLETE" | "COACH" | undefined) ?? "ATHLETE";
+      }
+      return session;
+    },
+  },
+});
