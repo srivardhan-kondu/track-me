@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { buildKey, isSafeKey, putObject } from "../src/services/storage";
+import {
+  buildKey,
+  deleteObject,
+  getObject,
+  isSafeKey,
+  putObject,
+} from "../src/services/storage";
 
 describe("storage keys", () => {
   it("scopes keys to the user and record type", () => {
@@ -54,10 +60,17 @@ describe("production storage guard", () => {
     }
   });
 
-  it("allows local writes outside production", async () => {
+  it("round-trips an object outside production", async () => {
     const key = buildKey("testuser", "meal", "image/jpeg");
-    await assert.doesNotReject(() =>
-      putObject(key, Buffer.from("test"), "image/jpeg"),
-    );
+    const payload = Buffer.from("gymos storage round-trip");
+
+    try {
+      await putObject(key, payload, "image/jpeg");
+      const read = await getObject(key);
+      assert.ok(read.equals(payload), "read back what was written");
+    } finally {
+      // Leave nothing behind, whichever driver is active.
+      await deleteObject(key);
+    }
   });
 });
