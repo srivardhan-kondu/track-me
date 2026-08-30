@@ -79,6 +79,9 @@ function s3(): S3Client {
       endpoint: endpoint(),
       // Path-style keeps non-AWS providers working regardless of DNS setup.
       forcePathStyle: true,
+      // Recent SDK versions attach checksum headers to every request, which
+      // several S3-compatible implementations (R2, Neon, Supabase) reject.
+      requestChecksumCalculation: "WHEN_REQUIRED",
       credentials: {
         accessKeyId: R2_ACCESS_KEY_ID!,
         secretAccessKey: R2_SECRET_ACCESS_KEY!,

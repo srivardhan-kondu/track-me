@@ -49,7 +49,23 @@ No CORS configuration is needed: uploads pass through the server, not the browse
 > If you would rather not add one, any S3-compatible store works — set
 > `S3_ENDPOINT` (and `S3_REGION`) instead of `R2_ACCOUNT_ID`, keeping the same
 > `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` variables.
-> **Supabase Storage** is the easiest no-card option:
+> **Neon Object Storage** (public beta, `us-east-2` only) is the natural fit if
+> your database is already on Neon — buckets branch with the database:
+>
+> ```
+> S3_ENDPOINT   https://br-<branch-id>.storage.c-2.us-east-2.aws.neon.tech
+> S3_REGION     us-east-2
+> R2_BUCKET     gymos-media
+> R2_ACCESS_KEY_ID      <token_id, nak_live_...>
+> R2_SECRET_ACCESS_KEY  <s3_secret_access_key, nsk_live_...>
+> ```
+>
+> Create the bucket with `neon buckets create gymos-media`, and the credential
+> from the Neon Console: select the branch, **Credentials** → **Create
+> credential** with the `storage:read` and `storage:write` scopes. Both secrets
+> are shown once only.
+>
+> **Supabase Storage** is another no-card option:
 >
 > ```
 > S3_ENDPOINT   https://<project-ref>.supabase.co/storage/v1/s3
