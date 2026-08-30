@@ -45,6 +45,19 @@ git push -u origin main
 
 No CORS configuration is needed: uploads pass through the server, not the browser.
 
+> **R2 requires a payment method** on file to enable, even on the free tier.
+> If you would rather not add one, any S3-compatible store works — set
+> `S3_ENDPOINT` (and `S3_REGION`) instead of `R2_ACCOUNT_ID`, keeping the same
+> `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` variables.
+> **Supabase Storage** is the easiest no-card option:
+>
+> ```
+> S3_ENDPOINT   https://<project-ref>.supabase.co/storage/v1/s3
+> S3_REGION     <your project region, e.g. us-east-1>
+> R2_BUCKET     gymos-media
+> R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY   from Storage → S3 Access Keys
+> ```
+
 `R2_PUBLIC_BASE_URL` is optional. Leave it blank and the app issues presigned
 URLs valid for one hour. Set it only if you attach a public custom domain to
 the bucket.

@@ -24,9 +24,34 @@ const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET = process.env.R2_BUCKET;
 const R2_PUBLIC_BASE_URL = process.env.R2_PUBLIC_BASE_URL;
 
-export const usingR2 = Boolean(
-  R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET,
+/**
+ * Optional endpoint override. Any S3-compatible store works here — Supabase
+ * Storage, Backblaze B2, MinIO, plain S3 — so the deployment is not tied to
+ * Cloudflare. Left unset, the endpoint is derived from R2_ACCOUNT_ID.
+ */
+const S3_ENDPOINT = process.env.S3_ENDPOINT;
+const S3_REGION = process.env.S3_REGION || "auto";
+
+function endpoint(): string | undefined {
+  if (S3_ENDPOINT) return S3_ENDPOINT.replace(/\/$/, "");
+  if (R2_ACCOUNT_ID) return `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+  return undefined;
+}
+
+/** True once a bucket, credentials and a reachable endpoint are all present. */
+export const usingObjectStorage = Boolean(
+  R2_ACCESS_KEY_ID &&
+    R2_SECRET_ACCESS_KEY &&
+    R2_BUCKET &&
+    (R2_ACCOUNT_ID || S3_ENDPOINT),
 );
+
+/** Name of the configured provider, for the settings screen. */
+export const storageProvider = !usingObjectStorage
+  ? "local filesystem"
+  : S3_ENDPOINT
+    ? new URL(S3_ENDPOINT).hostname
+    : "Cloudflare R2";
 
 const LOCAL_ROOT = path.join(process.cwd(), ".uploads");
 
@@ -36,11 +61,12 @@ const LOCAL_ROOT = path.join(process.cwd(), ".uploads");
  * message rather than surfacing an opaque EROFS at upload time.
  */
 function assertStorageUsable() {
-  if (!usingR2 && process.env.NODE_ENV === "production") {
+  if (!usingObjectStorage && process.env.NODE_ENV === "production") {
     throw new Error(
-      "Object storage is not configured. Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, " +
-        "R2_SECRET_ACCESS_KEY and R2_BUCKET — local filesystem storage cannot " +
-        "be used in production.",
+      "Object storage is not configured. Set R2_ACCESS_KEY_ID, " +
+        "R2_SECRET_ACCESS_KEY, R2_BUCKET and either R2_ACCOUNT_ID (Cloudflare " +
+        "R2) or S3_ENDPOINT (any S3-compatible store) — local filesystem " +
+        "storage cannot be used in production.",
     );
   }
 }
@@ -49,8 +75,10 @@ let client: S3Client | null = null;
 function s3(): S3Client {
   if (!client) {
     client = new S3Client({
-      region: "auto",
-      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      region: S3_REGION,
+      endpoint: endpoint(),
+      // Path-style keeps non-AWS providers working regardless of DNS setup.
+      forcePathStyle: true,
       credentials: {
         accessKeyId: R2_ACCESS_KEY_ID!,
         secretAccessKey: R2_SECRET_ACCESS_KEY!,
@@ -103,7 +131,7 @@ export async function putObject(
   assertStorageUsable();
   if (!isSafeKey(key)) throw new Error("Unsafe storage key");
 
-  if (usingR2) {
+  if (usingObjectStorage) {
     await s3().send(
       new PutObjectCommand({
         Bucket: R2_BUCKET!,
@@ -124,7 +152,7 @@ export async function putObject(
 export async function getObject(key: string): Promise<Buffer> {
   if (!isSafeKey(key)) throw new Error("Unsafe storage key");
 
-  if (usingR2) {
+  if (usingObjectStorage) {
     const res = await s3().send(
       new GetObjectCommand({ Bucket: R2_BUCKET!, Key: key }),
     );
@@ -138,7 +166,7 @@ export async function getObject(key: string): Promise<Buffer> {
 export async function deleteObject(key: string): Promise<void> {
   if (!isSafeKey(key)) return;
   try {
-    if (usingR2) {
+    if (usingObjectStorage) {
       await s3().send(
         new DeleteObjectCommand({ Bucket: R2_BUCKET!, Key: key }),
       );
@@ -159,7 +187,7 @@ export async function mediaUrl(
 ): Promise<string | null> {
   if (!key || !isSafeKey(key)) return null;
 
-  if (usingR2) {
+  if (usingObjectStorage) {
     if (R2_PUBLIC_BASE_URL) {
       return `${R2_PUBLIC_BASE_URL.replace(/\/$/, "")}/${key}`;
     }

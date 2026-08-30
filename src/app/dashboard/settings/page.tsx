@@ -15,7 +15,7 @@ import { googleEnabled } from "@/lib/auth";
 import { requireUser } from "@/lib/session";
 import { initials } from "@/lib/utils";
 import { aiEnabled } from "@/services/ai/client";
-import { usingR2 } from "@/services/storage";
+import { storageProvider, usingObjectStorage } from "@/services/storage";
 
 export const metadata = { title: "Settings" };
 
@@ -159,10 +159,10 @@ export default async function SettingsPage() {
               inactiveLabel="No API key — meals fall back to the offline estimator and voice notes are stored but not transcribed."
             />
             <IntegrationRow
-              name="Cloudflare R2"
-              active={usingR2}
-              activeLabel="Media is stored in your R2 bucket."
-              inactiveLabel="Not configured — media is written to .uploads/ on this machine."
+              name="Object storage"
+              active={usingObjectStorage}
+              activeLabel={`Media is stored in ${storageProvider}.`}
+              inactiveLabel="Not configured — media is written to .uploads/ on this machine. This cannot work in production."
             />
           </ul>
         </CardContent>

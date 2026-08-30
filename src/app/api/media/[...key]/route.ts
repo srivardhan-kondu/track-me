@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { currentUser } from "@/lib/session";
-import { getObject, isSafeKey, usingR2 } from "@/services/storage";
+import { getObject, isSafeKey, usingObjectStorage } from "@/services/storage";
 
 const CONTENT_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
@@ -17,14 +17,14 @@ const CONTENT_TYPES: Record<string, string> = {
 };
 
 /**
- * Serves locally-stored uploads in development. In production R2 signs its own
- * URLs, so this route is not part of the media path.
+ * Serves locally-stored uploads in development. With object storage configured
+ * the provider signs its own URLs, so this route is not part of the media path.
  */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ key: string[] }> },
 ) {
-  if (usingR2) {
+  if (usingObjectStorage) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
