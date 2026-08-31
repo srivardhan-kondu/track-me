@@ -6,8 +6,10 @@ import { WeightActions } from "@/components/timeline/record-actions";
 import { SegmentedLinks } from "@/components/ui/filter-pills";
 import { BigStat } from "@/components/ui/metric";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
-import { safeZone } from "@/lib/tz";
+import { PremiumNotice } from "@/components/billing/premium-notice";
+import { FREE_HISTORY_DAYS } from "@/lib/entitlements";
+import { premiumStatus, requireUser } from "@/lib/session";
+import { addDaysInZone, dayKeyInZone, safeZone } from "@/lib/tz";
 import { cn, round } from "@/lib/utils";
 import { getCompliance, getWeightSeries } from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
@@ -20,6 +22,14 @@ const RANGES = [
   { label: "1y", value: "365", days: 365, window: "one-year" },
 ] as const;
 
+/** What a free account sees, whatever the URL asks for. */
+const FREE_RANGE = {
+  label: "7d",
+  value: "7",
+  days: FREE_HISTORY_DAYS,
+  window: "7-day",
+} as const;
+
 export default async function WeightPage({
   searchParams,
 }: {
@@ -28,14 +38,27 @@ export default async function WeightPage({
   const user = await requireUser();
   const { range: rangeParam } = await searchParams;
 
-  const range = RANGES.find((r) => r.value === rangeParam) ?? RANGES[1];
+  const { premium } = await premiumStatus(user.id);
   const zone = safeZone(user.timeZone);
+
+  // A free account is pinned to the short window regardless of ?range=, so the
+  // labels below always describe what is actually plotted.
+  const range = premium
+    ? (RANGES.find((r) => r.value === rangeParam) ?? RANGES[1])
+    : FREE_RANGE;
+
+  const floor = premium
+    ? undefined
+    : dayKeyInZone(
+        addDaysInZone(new Date(), -(FREE_HISTORY_DAYS - 1), zone),
+        zone,
+      );
 
   const [series, compliance, entries] = await Promise.all([
     getWeightSeries(user.id, range.days, zone),
-    getCompliance(user.id, 14, zone),
+    getCompliance(user.id, premium ? 14 : FREE_HISTORY_DAYS, zone),
     db.weightEntry.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, ...(floor ? { day: { gte: floor } } : {}) },
       orderBy: { day: "desc" },
       take: 30,
     }),
@@ -86,17 +109,26 @@ export default async function WeightPage({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <SegmentedLinks
-            active={range.value}
-            options={RANGES.map((r) => ({
-              label: r.label,
-              value: r.value,
-              href: `/dashboard/weight?range=${r.value}`,
-            }))}
-          />
+          {premium && (
+            <SegmentedLinks
+              active={range.value}
+              options={RANGES.map((r) => ({
+                label: r.label,
+                value: r.value,
+                href: `/dashboard/weight?range=${r.value}`,
+              }))}
+            />
+          )}
           <WeightForm defaultWeight={latest} />
         </div>
       </div>
+
+      {!premium && (
+        <PremiumNotice
+          title="Showing the last 7 days"
+          body="Your check-ins are all still here — Premium opens the 30-day, 90-day and one-year windows, and the trend behind them."
+        />
+      )}
 
       <section className="rounded-2xl border border-line-strong bg-surface px-7 py-6">
         <div className="flex flex-wrap items-start gap-x-11 gap-y-6">

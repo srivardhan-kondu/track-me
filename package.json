@@ -20,7 +20,9 @@
     "env:vercel": "node scripts/vercel-env.mjs",
     "check:variance": "node --import tsx --env-file=.env scripts/check-variance.ts",
     "db:catalog": "tsx prisma/seed-catalog.ts",
-    "check:exercises": "node --import tsx --env-file=.env scripts/check-exercises.ts"
+    "check:exercises": "node --import tsx --env-file=.env scripts/check-exercises.ts",
+    "payments": "node --import tsx --env-file=.env scripts/payments.ts",
+    "webhook:test": "node --import tsx --env-file=.env scripts/webhook-test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

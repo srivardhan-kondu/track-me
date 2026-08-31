@@ -4,14 +4,16 @@ import { aiEnabled, openai, TRANSCRIBE_MODEL } from "./client";
 
 /**
  * Speech-to-text for meal and workout voice notes.
- * Returns null when no API key is configured — callers fall back to the
- * typed description the athlete can always provide instead.
+ * Returns null when no API key is configured, or when the athlete is not on a
+ * plan that includes AI — callers fall back to the typed description the
+ * athlete can always provide instead.
  */
 export async function transcribeAudio(
   audio: Buffer,
   filename = "note.webm",
+  useAi: boolean = aiEnabled,
 ): Promise<string | null> {
-  if (!aiEnabled) return null;
+  if (!useAi || !aiEnabled) return null;
 
   const file = await toFile(audio, filename);
   const res = await openai().audio.transcriptions.create({

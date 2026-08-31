@@ -143,15 +143,20 @@ function fallback(transcript: string): NutritionResult {
 
 /**
  * Estimates meal nutrition from a photo and/or a description.
- * Falls back to the offline estimator when no API key is configured.
+ * Falls back to the offline estimator when no API key is configured, or when
+ * the athlete is on the free plan — logging still works, it is the analysis
+ * that is paid for.
  */
-export async function analyzeMeal(input: {
-  transcript?: string | null;
-  image?: { buffer: Buffer; contentType: string } | null;
-}): Promise<NutritionResult> {
+export async function analyzeMeal(
+  input: {
+    transcript?: string | null;
+    image?: { buffer: Buffer; contentType: string } | null;
+  },
+  useAi: boolean = aiEnabled,
+): Promise<NutritionResult> {
   const transcript = input.transcript?.trim() ?? "";
 
-  if (!aiEnabled) return fallback(transcript);
+  if (!useAi || !aiEnabled) return fallback(transcript);
 
   const content: Array<
     | { type: "text"; text: string }

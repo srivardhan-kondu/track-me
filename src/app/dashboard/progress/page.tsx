@@ -2,7 +2,8 @@ import { EmptyState } from "@/components/layout/page";
 import { ProgressPhotoCard } from "@/components/log/progress-photo-card";
 import { ProgressUploader } from "@/components/log/progress-uploader";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { PremiumNotice } from "@/components/billing/premium-notice";
+import { premiumStatus, requireUser } from "@/lib/session";
 import { mediaUrl } from "@/services/storage";
 
 export const metadata = { title: "Progress photos" };
@@ -80,6 +81,7 @@ function CompareTile({
 
 export default async function ProgressPage() {
   const user = await requireUser();
+  const { premium } = await premiumStatus(user.id);
 
   const [photos, weights] = await Promise.all([
     db.progressPhoto.findMany({
@@ -143,10 +145,17 @@ export default async function ProgressPage() {
           </p>
         </div>
 
-        <ProgressUploader />
+        {premium && <ProgressUploader />}
       </div>
 
-      {canCompare && (
+      {!premium && (
+        <PremiumNotice
+          title="Progress photos are part of Premium"
+          body="Anything you have already uploaded stays here and stays yours. Premium adds new photos, the side-by-side comparison and AI physique analysis."
+        />
+      )}
+
+      {canCompare && premium && (
         <section className="grid grid-cols-2 gap-4 rounded-2xl border border-line-strong bg-surface-muted p-5">
           <CompareTile
             photo={baseline}
@@ -166,7 +175,7 @@ export default async function ProgressPage() {
         <EmptyState
           title="No progress photos yet"
           body="Take your first set today — front, side and back, same lighting each time. It becomes the baseline everything else is measured against."
-          action={<ProgressUploader />}
+          action={premium ? <ProgressUploader /> : undefined}
         />
       ) : (
         <div className="flex flex-col gap-5">
@@ -209,7 +218,7 @@ export default async function ProgressPage() {
                     />
                   ))}
 
-                  {key === thisMonth && (
+                  {key === thisMonth && premium && (
                     <ProgressUploader
                       trigger={
                         <button

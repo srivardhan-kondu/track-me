@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { premiumStatus, requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
 import { dayKeyInZone, safeZone } from "@/lib/tz";
 import { buildKey, deleteObject, putObject } from "@/services/storage";
@@ -117,11 +117,21 @@ const PhotoSchema = z.object({
   takenAt: z.string().optional(),
 });
 
-/** Uploads a progress photo for one pose. */
+/** Uploads a progress photo for one pose. Premium only. */
 export async function uploadProgressPhoto(
   formData: FormData,
 ): Promise<ActionResult> {
   const user = await requireUser();
+
+  // Checked server-side, not merely hidden in the UI: the action is reachable
+  // by anyone who can post to it.
+  const { premium } = await premiumStatus(user.id);
+  if (!premium) {
+    return {
+      ok: false,
+      error: "Progress photos are part of Premium. See Settings to upgrade.",
+    };
+  }
 
   const parsed = PhotoSchema.safeParse({
     pose: formData.get("pose"),

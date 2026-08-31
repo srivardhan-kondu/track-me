@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { premiumStatus, requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
 import { transcribeAudio } from "@/services/ai/transcribe";
 import { parseWorkout } from "@/services/ai/workout";
@@ -169,12 +169,17 @@ async function processWorkout(
     const workout = await db.workout.findUnique({
       where: { id: workoutId },
       select: {
+        userId: true,
         audioKey: true,
         transcript: true,
         durationMin: true,
       },
     });
     if (!workout) return;
+
+    // Read the plan here rather than at submission: this runs in after(), and
+    // a trial that lapsed in between should not still buy a parse.
+    const { premium } = await premiumStatus(workout.userId);
 
     let transcript = workout.transcript;
 
@@ -183,11 +188,12 @@ async function processWorkout(
       const spoken = await transcribeAudio(
         audio,
         workout.audioKey.split("/").pop() ?? "note.webm",
+        premium,
       );
       transcript = [spoken, typedDescription].filter(Boolean).join(". ") || null;
     }
 
-    const result = await parseWorkout(transcript);
+    const result = await parseWorkout(transcript, premium);
 
     // Attach each movement to the catalog so its sets count toward muscle
     // volume. An unrecognised name still logs, just without attribution.

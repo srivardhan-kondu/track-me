@@ -14,7 +14,8 @@ import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { Timeline } from "@/components/timeline/timeline";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { FREE_HISTORY_DAYS, historyDays } from "@/lib/entitlements";
+import { premiumStatus, requireUser } from "@/lib/session";
 import {
   addDaysInZone,
   formatDateInZone,
@@ -22,6 +23,7 @@ import {
   hourInZone,
   isSameDayInZone,
   safeZone,
+  startOfDayInZone,
   toDateParam,
 } from "@/lib/tz";
 import {
@@ -54,8 +56,19 @@ export default async function TodayPage({
   const user = await requireUser();
   const { date: dateParam } = await searchParams;
 
+  const { premium } = await premiumStatus(user.id);
+
   const zone = safeZone(user.timeZone);
-  const date = fromDateParam(dateParam, zone);
+  const railDays = historyDays(premium, RAIL_DAYS);
+
+  // ?date= is user input, so the free window has to be enforced here and not
+  // only in the day switcher's arrows.
+  const requested = fromDateParam(dateParam, zone);
+  const earliest = startOfDayInZone(
+    addDaysInZone(new Date(), -(FREE_HISTORY_DAYS - 1), zone),
+    zone,
+  );
+  const date = premium || requested >= earliest ? requested : earliest;
   const isToday = isSameDayInZone(date, new Date(), zone);
 
   const [entries, totals, summary, series, compliance, note, pending, lastWeight] =
@@ -63,7 +76,7 @@ export default async function TodayPage({
       getDayTimeline(user.id, date, zone),
       getDayTotals(user.id, date, zone),
       getSummary(user.id, 7, zone),
-      getWeightSeries(user.id, RAIL_DAYS, zone),
+      getWeightSeries(user.id, railDays, zone),
       getCompliance(user.id, 7, zone),
       getLatestCoachNote(user.id),
       db.meal.count({
@@ -193,7 +206,7 @@ export default async function TodayPage({
         </section>
 
         <aside className="flex flex-col gap-3.5">
-          <WeightRailCard points={series} days={RAIL_DAYS} />
+          <WeightRailCard points={series} days={railDays} />
           <ConsistencyCard days={compliance} />
           {note && <CoachNoteCard note={note} />}
         </aside>

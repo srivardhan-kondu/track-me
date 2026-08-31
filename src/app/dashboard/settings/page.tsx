@@ -1,9 +1,11 @@
+import { Upgrade } from "@/components/billing/upgrade";
 import { RoleSwitcher } from "@/components/settings/role-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { googleEnabled } from "@/lib/auth";
-import { requireUser } from "@/lib/session";
+import { checkoutEnabled, liveMode } from "@/lib/razorpay";
+import { premiumStatus, requireUser } from "@/lib/session";
 import { cn, initials } from "@/lib/utils";
 import { safeZone } from "@/lib/tz";
 import { aiEnabled } from "@/services/ai/client";
@@ -87,8 +89,42 @@ function ServiceRow({
   );
 }
 
+/** One line describing what the account currently has, and until when. */
+function planSummary(status: {
+  plan: string;
+  planExpiresAt: Date | null;
+  trialEndsAt: Date | null;
+  premium: boolean;
+  trialing: boolean;
+}): { label: string; detail: string } {
+  const on = (d: Date) =>
+    d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+
+  if (status.plan === "PREMIUM" && !status.planExpiresAt) {
+    return { label: "Lifetime", detail: "Paid once. Nothing to renew." };
+  }
+  if (status.premium && !status.trialing) {
+    return {
+      label: "Premium",
+      detail: `Renews on ${on(status.planExpiresAt!)}.`,
+    };
+  }
+  if (status.trialing) {
+    return {
+      label: "Trial",
+      detail: `Free premium until ${on(status.trialEndsAt!)}.`,
+    };
+  }
+  return {
+    label: "Free",
+    detail: "Workout logging, routines and weight tracking.",
+  };
+}
+
 export default async function SettingsPage() {
   const user = await requireUser();
+  const status = await premiumStatus(user.id);
+  const plan = planSummary(status);
 
   const coaches = await db.coachAthlete.findMany({
     where: { athleteId: user.id },
@@ -129,9 +165,30 @@ export default async function SettingsPage() {
                 </p>
               </div>
 
-              <Badge>{user.role === "COACH" ? "Coach" : "Athlete"}</Badge>
+              <Badge variant={status.premium ? "default" : "secondary"}>
+                {plan.label}
+              </Badge>
             </div>
           </section>
+
+          <Panel title="Plan" description={plan.detail}>
+            {checkoutEnabled ? (
+              <>
+                <Upgrade currentTerm={status.planTerm} />
+                {!liveMode && (
+                  <p className="mt-3 text-[11.5px] leading-relaxed text-fg-dim">
+                    Razorpay is in test mode on this deployment — use a test
+                    card. No money moves.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-[12.5px] leading-relaxed text-fg-muted">
+                Payments are not configured here. Set RAZORPAY_KEY_ID and
+                RAZORPAY_KEY_SECRET to enable the payment sheet.
+              </p>
+            )}
+          </Panel>
 
           <Panel
             title="Mode"
@@ -219,6 +276,17 @@ export default async function SettingsPage() {
                   aiEnabled
                     ? "Transcription and nutrition analysis are live."
                     : "No API key — meals fall back to the offline estimator and voice notes are stored but not transcribed."
+                }
+              />
+              <ServiceRow
+                name="Payments"
+                live={checkoutEnabled && liveMode}
+                detail={
+                  !checkoutEnabled
+                    ? "No API keys — the payment sheet is hidden."
+                    : liveMode
+                      ? "Razorpay Checkout is taking real payments."
+                      : "Razorpay test keys — the sheet works, but no money moves."
                 }
               />
               <ServiceRow

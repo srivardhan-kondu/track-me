@@ -26,6 +26,16 @@ model User {
 
   role      Role     @default(ATHLETE)
   heightCm  Float?
+
+  /// Paid entitlement. A trial grants premium features without touching this,
+  /// so `plan` only ever moves once money has actually arrived.
+  plan          Plan      @default(FREE)
+  planTerm      PlanTerm?
+  /// Null on FREE, and null on LIFETIME — which never expires.
+  planExpiresAt DateTime?
+  /// Stamped on first sign-in. Premium features stay open until it passes.
+  trialEndsAt   DateTime?
+
   /// IANA zone, detected in the browser. Date bucketing and every rendered
   /// time depend on it; the server's own zone is UTC in production.
   timeZone  String?
@@ -38,6 +48,7 @@ model User {
   coachLinks   CoachAthlete[] @relation("AthleteToCoach")
   athleteLinks CoachAthlete[] @relation("CoachToAthlete")
 
+  payments       Payment[]
   meals          Meal[]
   workouts       Workout[]
   weightEntries  WeightEntry[]
@@ -368,4 +379,74 @@ model Comment {
   @@index([mealId])
   @@index([workoutId])
   @@index([weightEntryId])
+}
+
+// ---------------------------------------------------------------------------
+// Billing
+// ---------------------------------------------------------------------------
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+/// The tiers sold through the Razorpay payment page. Identified by the exact
+/// amount paid, since the page lets the buyer type any figure they like.
+enum PlanTerm {
+  MONTHLY
+  YEARLY
+  LIFETIME
+}
+
+/// What became of a captured payment.
+///   APPLIED   attributed to a user, entitlement granted
+///   UNMATCHED the payer's email matches no account — awaits reconciliation
+///   IGNORED   the amount is not one of our prices (a test rupee, a tip)
+enum PaymentStatus {
+  APPLIED
+  UNMATCHED
+  IGNORED
+}
+
+/// One captured Razorpay payment.
+model Payment {
+  /// Razorpay's own payment id (`pay_...`) rather than a cuid: it is the
+  /// idempotency key, so a redelivered webhook collides instead of granting
+  /// a second entitlement.
+  id String @id
+
+  userId String?
+  status PaymentStatus
+
+  /// Paise, exactly as Razorpay reports it. Converting to rupees is a display
+  /// concern, and doing it here would invite rounding into the money path.
+  amount   Int
+  currency String    @default("INR")
+  term     PlanTerm?
+
+  /// Razorpay order id (`order_...`) for a Checkout purchase. Null for money
+  /// taken through the razorpay.me page, which creates no order.
+  orderId String?
+
+  /// Contact details as typed on the payment page. The email is the only link
+  /// back to an account, and is not necessarily the one they signed in with.
+  email   String?
+  contact String?
+  /// The page's required "Comment" field, where buyers are asked to put their
+  /// sign-in email.
+  note    String?
+
+  /// Razorpay event name, kept to make redeliveries legible in the log.
+  event String
+  /// The untouched webhook body, so an UNMATCHED payment can be settled by
+  /// hand months later without asking Razorpay for the record again.
+  payload Json
+
+  paidAt    DateTime
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([email])
 }

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { premiumStatus, requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
 import { analyzeMeal } from "@/services/ai/nutrition";
 import { transcribeAudio } from "@/services/ai/transcribe";
@@ -105,9 +105,18 @@ async function processMeal(mealId: string, typedDescription: string | null) {
   try {
     const meal = await db.meal.findUnique({
       where: { id: mealId },
-      select: { imageKey: true, audioKey: true, transcript: true },
+      select: {
+        userId: true,
+        imageKey: true,
+        audioKey: true,
+        transcript: true,
+      },
     });
     if (!meal) return;
+
+    // Read the plan here rather than at submission: this runs in after(), and
+    // a trial that lapsed in between should not still buy an analysis.
+    const { premium } = await premiumStatus(meal.userId);
 
     let transcript = meal.transcript;
 
@@ -116,6 +125,7 @@ async function processMeal(mealId: string, typedDescription: string | null) {
       const spoken = await transcribeAudio(
         audio,
         meal.audioKey.split("/").pop() ?? "note.webm",
+        premium,
       );
       // Fall back to the typed description when speech-to-text is unavailable.
       transcript = [spoken, typedDescription].filter(Boolean).join(". ") || null;
@@ -136,7 +146,10 @@ async function processMeal(mealId: string, typedDescription: string | null) {
       };
     }
 
-    const result = await analyzeMeal({ transcript, image: imagePayload });
+    const result = await analyzeMeal(
+      { transcript, image: imagePayload },
+      premium,
+    );
 
     await db.meal.update({
       where: { id: mealId },

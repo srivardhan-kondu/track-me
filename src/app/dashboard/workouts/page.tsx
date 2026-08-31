@@ -6,7 +6,9 @@ import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { SessionCard } from "@/components/workouts/session-card";
 import { StatCard } from "@/components/ui/metric";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { PremiumNotice } from "@/components/billing/premium-notice";
+import { historyDays } from "@/lib/entitlements";
+import { premiumStatus, requireUser } from "@/lib/session";
 import {
   addDaysInZone,
   formatDateInZone,
@@ -30,11 +32,13 @@ const DAYS = WEEKS * 7;
 export default async function WorkoutsPage() {
   const user = await requireUser();
 
+  const { premium } = await premiumStatus(user.id);
+
   const zone = safeZone(user.timeZone);
-  const from = startOfDayInZone(
-    addDaysInZone(new Date(), -(DAYS - 1), zone),
-    zone,
-  );
+  // Sessions older than the window stay in the database untouched; the free
+  // plan simply does not read that far back.
+  const days = historyDays(premium, DAYS);
+  const from = startOfDayInZone(addDaysInZone(new Date(), -(days - 1), zone), zone);
 
   const [workouts, pending, volume] = await Promise.all([
     db.workout.findMany({
@@ -56,17 +60,19 @@ export default async function WorkoutsPage() {
     getMuscleVolume(user.id, 7, zone),
   ]);
 
+  const weeks = Math.max(1, Math.round(days / 7));
+
   const sessions = workouts.length;
   const totalMinutes = workouts.reduce((a, w) => a + (w.durationMin ?? 0), 0);
-  const perWeek = Math.round((sessions / WEEKS) * 10) / 10;
+  const perWeek = Math.round((sessions / weeks) * 10) / 10;
 
   // Tonnage per week, oldest first, so the current week closes the chart.
-  const weekTotals = new Array(WEEKS).fill(0);
+  const weekTotals = new Array(weeks).fill(0);
   for (const w of workouts) {
     const offset = Math.floor(
       (w.performedAt.getTime() - from.getTime()) / 86_400_000,
     );
-    const bucket = Math.min(WEEKS - 1, Math.max(0, Math.floor(offset / 7)));
+    const bucket = Math.min(weeks - 1, Math.max(0, Math.floor(offset / 7)));
     weekTotals[bucket] += tonnesLifted(w.exercises);
   }
 
@@ -98,13 +104,20 @@ export default async function WorkoutsPage() {
             Training
           </h1>
           <p className="mt-2.5 text-[13px] text-fg-dim">
-            Last {WEEKS} weeks
+            Last {premium ? `${weeks} weeks` : `${days} days`}
             {sessions > 0 && ` · ${perWeek} sessions a week`}
           </p>
         </div>
 
         <WorkoutForm />
       </div>
+
+      {!premium && (
+        <PremiumNotice
+          title="Showing the last 7 days"
+          body="Every session you have logged is still recorded. Premium opens the full five-week view, strength progression and PR tracking."
+        />
+      )}
 
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="rounded-2xl border border-line-strong bg-surface px-6 py-5">
@@ -130,7 +143,7 @@ export default async function WorkoutsPage() {
           <StatCard
             label="Sessions"
             value={sessions}
-            note={`${WEEKS} weeks`}
+            note={premium ? `${weeks} weeks` : `${days} days`}
           />
           <StatCard
             label="Time trained"

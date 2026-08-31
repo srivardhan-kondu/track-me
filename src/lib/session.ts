@@ -2,6 +2,12 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  isPremium,
+  isTrialing,
+  type Entitlement,
+  type PlanTerm,
+} from "@/lib/entitlements";
 
 export type SessionUser = {
   id: string;
@@ -55,4 +61,46 @@ export async function assertCanViewAthlete(
   });
 
   if (!link) throw new Error("Not authorised to view this athlete");
+}
+
+export type PremiumStatus = Entitlement & {
+  /** Which tier was bought, for showing it as the current one. */
+  planTerm: PlanTerm | null;
+  premium: boolean;
+  trialing: boolean;
+};
+
+/** The caller's billing state, for rendering upgrade prompts. */
+export async function premiumStatus(userId: string): Promise<PremiumStatus> {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      plan: true,
+      planTerm: true,
+      planExpiresAt: true,
+      trialEndsAt: true,
+    },
+  });
+
+  const current = user ?? {
+    plan: "FREE" as const,
+    planTerm: null,
+    planExpiresAt: null,
+    trialEndsAt: null,
+  };
+
+  return {
+    ...current,
+    premium: isPremium(current),
+    trialing: isTrialing(current),
+  };
+}
+
+/**
+ * Gates a premium feature. Throws rather than redirecting, for the same reason
+ * assertCanViewAthlete does: server actions must fail closed.
+ */
+export async function assertPremium(userId: string): Promise<void> {
+  const { premium } = await premiumStatus(userId);
+  if (!premium) throw new Error("This feature needs a Premium plan");
 }

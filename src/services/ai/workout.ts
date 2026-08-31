@@ -158,13 +158,20 @@ function fallbackParse(transcript: string): WorkoutResult {
   return { title, durationMin, exercises, aiGenerated: false };
 }
 
-/** Converts a dictated workout into structured exercises. */
+/**
+ * Converts a dictated workout into structured exercises.
+ *
+ * The offline parser handles the common "three sets of ten at sixty kilos"
+ * phrasing, so a free account still logs a usable session; the model is what
+ * copes with everything else.
+ */
 export async function parseWorkout(
   transcript: string | null | undefined,
+  useAi: boolean = aiEnabled,
 ): Promise<WorkoutResult> {
   const text = transcript?.trim() ?? "";
 
-  if (!aiEnabled) return fallbackParse(text);
+  if (!useAi || !aiEnabled) return fallbackParse(text);
   if (!text) {
     return { title: "Workout", durationMin: null, exercises: [], aiGenerated: false };
   }

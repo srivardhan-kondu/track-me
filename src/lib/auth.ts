@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
 import { db } from "@/lib/db";
+import { trialEndsFrom } from "@/lib/entitlements";
 
 export const googleEnabled = Boolean(
   process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
@@ -91,9 +92,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub) {
         const dbUser = await db.user.findUnique({
           where: { id: token.sub },
-          select: { role: true, name: true, image: true, timeZone: true },
+          select: {
+            role: true,
+            name: true,
+            image: true,
+            timeZone: true,
+            trialEndsAt: true,
+          },
         });
         if (dbUser) {
+          // Stamped here rather than in an adapter event because the dev
+          // credentials provider creates its users itself and never fires one.
+          // Doing it on sign-in also starts the clock for accounts that
+          // predate the paywall, which is the intended launch behaviour.
+          if (!dbUser.trialEndsAt) {
+            await db.user.update({
+              where: { id: token.sub },
+              data: { trialEndsAt: trialEndsFrom(new Date()) },
+            });
+          }
+
           token.role = dbUser.role;
           token.name = dbUser.name;
           token.picture = dbUser.image;
