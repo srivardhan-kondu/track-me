@@ -11,8 +11,17 @@ import { buildKey, deleteObject, putObject } from "@/services/storage";
 
 import type { ActionResult } from "./meals";
 
+/**
+ * Scales read to two decimal places, so that is what a check-in stores.
+ *
+ * Rounded rather than merely allowed: a float arriving from the form can carry
+ * a tail no scale ever showed (77.05 typed, 77.05000000000001 stored), and the
+ * number is displayed back to the athlete as-is.
+ */
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 const WeightSchema = z.object({
-  weightKg: z.coerce.number().min(20).max(400),
+  weightKg: z.coerce.number().min(20).max(400).transform(round2),
   notes: z.string().max(500).optional(),
   day: z.string().optional(),
 });

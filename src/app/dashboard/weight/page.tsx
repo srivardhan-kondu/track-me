@@ -178,8 +178,10 @@ export default async function WeightPage({
             <ul className="flex flex-col gap-2.5">
               {withPhotos.map((entry, i) => {
                 const previous = withPhotos[i + 1];
+                // Two places, to match what a check-in stores: at one place a
+                // 77.05 → 77.00 morning reads as no change at all.
                 const delta = previous
-                  ? round(entry.weightKg - previous.weightKg, 1)
+                  ? round(entry.weightKg - previous.weightKg, 2)
                   : null;
 
                 return (
