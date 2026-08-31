@@ -62,7 +62,7 @@ describe("production storage guard", () => {
 
   it("round-trips an object outside production", async () => {
     const key = buildKey("testuser", "meal", "image/jpeg");
-    const payload = Buffer.from("gymos storage round-trip");
+    const payload = Buffer.from("track me storage round-trip");
 
     try {
       await putObject(key, payload, "image/jpeg");

@@ -25,7 +25,7 @@ export default async function SignInPage({
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Activity className="h-4 w-4" />
           </div>
-          <span className="text-xl font-semibold tracking-tight">GymOS</span>
+          <span className="text-xl font-semibold tracking-tight">Track Me</span>
         </Link>
 
         <SignInForm

@@ -125,27 +125,27 @@
 }
 
 /* Dialog transitions — hand-rolled so no animation plugin is needed. */
-@keyframes gymos-fade-in {
+@keyframes trackme-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes gymos-pop-in {
+@keyframes trackme-pop-in {
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
-.gymos-overlay[data-state="open"] {
-  animation: gymos-fade-in 150ms ease-out;
+.trackme-overlay[data-state="open"] {
+  animation: trackme-fade-in 150ms ease-out;
 }
 
-.gymos-dialog[data-state="open"] {
-  animation: gymos-pop-in 170ms ease-out;
+.trackme-dialog[data-state="open"] {
+  animation: trackme-pop-in 170ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gymos-overlay[data-state="open"],
-  .gymos-dialog[data-state="open"] {
+  .trackme-overlay[data-state="open"],
+  .trackme-dialog[data-state="open"] {
     animation: none;
   }
 }

@@ -121,7 +121,7 @@ export async function linkAthlete(formData: FormData): Promise<ActionResult> {
   if (!athlete) {
     return {
       ok: false,
-      error: "No GymOS account with that email yet. Ask them to sign up first.",
+      error: "No Track Me account with that email yet. Ask them to sign up first.",
     };
   }
   if (athlete.id === user.id) {

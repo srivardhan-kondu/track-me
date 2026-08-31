@@ -87,7 +87,7 @@ export function SignInForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Welcome to GymOS</CardTitle>
+        <CardTitle className="text-xl">Welcome to Track Me</CardTitle>
         <CardDescription>
           Log training in seconds. Share it with your coach automatically.
         </CardDescription>
@@ -122,7 +122,7 @@ export function SignInForm({
         {devLoginEnabled && (
           <form onSubmit={handleDev} className="space-y-4">
             <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
-              Google OAuth is not configured, so GymOS is using its local
+              Google OAuth is not configured, so Track Me is using its local
               development sign-in. Set <code>AUTH_GOOGLE_ID</code> and{" "}
               <code>AUTH_GOOGLE_SECRET</code> to switch it off.
             </div>

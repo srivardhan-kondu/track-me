@@ -21,7 +21,7 @@ export default async function DashboardLayout({
             <div className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground">
               <Activity className="h-3.5 w-3.5" />
             </div>
-            <span className="font-semibold tracking-tight">GymOS</span>
+            <span className="font-semibold tracking-tight">Track Me</span>
           </Link>
 
           <div className="flex items-center gap-1">

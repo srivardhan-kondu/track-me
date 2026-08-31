@@ -39,7 +39,7 @@ export default async function LandingPage() {
           <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Activity className="h-4 w-4" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">GymOS</span>
+          <span className="text-lg font-semibold tracking-tight">Track Me</span>
         </div>
         <Button asChild variant="ghost" size="sm">
           <Link href="/signin">Sign in</Link>

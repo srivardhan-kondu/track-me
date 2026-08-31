@@ -62,7 +62,7 @@ export default async function SettingsPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your account and how GymOS is wired up.
+          Your account and how Track Me is wired up.
         </p>
       </header>
 

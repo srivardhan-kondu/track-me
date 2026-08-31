@@ -34,7 +34,7 @@ async function main() {
     process.exit(1);
   }
 
-  const payload = Buffer.from(`gymos storage check ${randomUUID()}`);
+  const payload = Buffer.from(`track me storage check ${randomUUID()}`);
   const key = buildKey("healthcheck", "meal", "image/jpeg");
 
   const t0 = Date.now();

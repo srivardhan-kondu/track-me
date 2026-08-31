@@ -102,7 +102,7 @@ export function MealForm({
         <DialogHeader>
           <DialogTitle>Log a meal</DialogTitle>
           <DialogDescription>
-            A photo and a few spoken words are enough — GymOS works out the
+            A photo and a few spoken words are enough — Track Me works out the
             macros.
           </DialogDescription>
         </DialogHeader>

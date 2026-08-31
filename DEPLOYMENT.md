@@ -1,4 +1,4 @@
-# Deploying GymOS
+# Deploying Track Me
 
 Target: **Vercel** (hosting) + **Neon** (database) + **Cloudflare R2** (media).
 
@@ -35,7 +35,7 @@ git push -u origin main
 
 ## 2. Cloudflare R2
 
-1. **https://dash.cloudflare.com** → **R2** → *Create bucket* (e.g. `gymos-media`).
+1. **https://dash.cloudflare.com** → **R2** → *Create bucket* (e.g. `trackme-media`).
    Leave it **private** — the app signs its own URLs.
 2. **R2** → *Manage R2 API Tokens* → *Create API token*
    - Permission: **Object Read & Write**
@@ -55,12 +55,12 @@ No CORS configuration is needed: uploads pass through the server, not the browse
 > ```
 > S3_ENDPOINT   https://br-<branch-id>.storage.c-2.us-east-2.aws.neon.tech
 > S3_REGION     us-east-2
-> R2_BUCKET     gymos-media
+> R2_BUCKET     trackme-media
 > R2_ACCESS_KEY_ID      <token_id, nak_live_...>
 > R2_SECRET_ACCESS_KEY  <s3_secret_access_key, nsk_live_...>
 > ```
 >
-> Create the bucket with `neon buckets create gymos-media`, and the credential
+> Create the bucket with `neon buckets create trackme-media`, and the credential
 > from the Neon Console: select the branch, **Credentials** → **Create
 > credential** with the `storage:read` and `storage:write` scopes. Both secrets
 > are shown once only.
@@ -70,7 +70,7 @@ No CORS configuration is needed: uploads pass through the server, not the browse
 > ```
 > S3_ENDPOINT   https://<project-ref>.supabase.co/storage/v1/s3
 > S3_REGION     <your project region, e.g. us-east-1>
-> R2_BUCKET     gymos-media
+> R2_BUCKET     trackme-media
 > R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY   from Storage → S3 Access Keys
 > ```
 
@@ -101,7 +101,7 @@ Keep it — it goes into Vercel as `AUTH_SECRET`. Do not reuse the development o
    R2_ACCOUNT_ID     <from step 2>
    R2_ACCESS_KEY_ID  <from step 2>
    R2_SECRET_ACCESS_KEY <from step 2>
-   R2_BUCKET         gymos-media
+   R2_BUCKET         trackme-media
    ```
 
    Leave `AUTH_URL`, `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` out for now.
@@ -155,7 +155,7 @@ Visit the URL and sign in with Google. Then check:
 The database still holds the seeded coach and athletes. Before real use:
 
 ```bash
-npx prisma studio        # delete the three @gymos.dev users
+npx prisma studio        # delete the three @trackme.dev users
 ```
 
 Deleting a user cascades to their meals, workouts, weigh-ins and photos.

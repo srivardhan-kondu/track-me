@@ -85,7 +85,7 @@ async function main() {
     console.log("");
   } catch {
     console.log(
-      "\n  Connected, but the GymOS tables are missing.\n  Run: npm run db:push && npm run db:seed\n",
+      "\n  Connected, but the Track Me tables are missing.\n  Run: npm run db:push && npm run db:seed\n",
     );
   }
 

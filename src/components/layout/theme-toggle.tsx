@@ -17,7 +17,7 @@ export function ThemeToggle() {
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
     try {
-      localStorage.setItem("gymos-theme", next ? "dark" : "light");
+      localStorage.setItem("trackme-theme", next ? "dark" : "light");
     } catch {
       // Private browsing can block storage; the toggle still works this session.
     }

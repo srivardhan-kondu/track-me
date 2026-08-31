@@ -6,8 +6,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "GymOS",
-    template: "%s · GymOS",
+    default: "Track Me",
+    template: "%s · Track Me",
   },
   description:
     "AI-powered fitness reporting. Log meals, workouts and weight by voice — your coach sees everything in one timeline.",
@@ -34,7 +34,7 @@ export default function RootLayout({
         {/* Applies the stored theme before paint to avoid a flash. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("gymos-theme");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;if(d)document.documentElement.classList.add("dark");}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("trackme-theme");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;if(d)document.documentElement.classList.add("dark");}catch(e){}})();`,
           }}
         />
       </head>

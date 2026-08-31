@@ -59,7 +59,7 @@ export function AddAthlete() {
         <DialogHeader>
           <DialogTitle>Add an athlete</DialogTitle>
           <DialogDescription>
-            They need a GymOS account first. Once added, their timeline appears
+            They need a Track Me account first. Once added, their timeline appears
             on your dashboard.
           </DialogDescription>
         </DialogHeader>

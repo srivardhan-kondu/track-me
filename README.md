@@ -1,4 +1,4 @@
-# GymOS
+# Track Me
 
 AI-powered fitness reporting. Athletes log meals, workouts and weigh-ins by
 voice and photo; coaches review everything from one dashboard.
@@ -40,8 +40,8 @@ The goal is not calorie counting. The goal is accountability.
 
 ```bash
 npm install
-docker run -d --name gymos-postgres \
-  -e POSTGRES_USER=gymos -e POSTGRES_PASSWORD=gymos -e POSTGRES_DB=gymos \
+docker run -d --name trackme-postgres \
+  -e POSTGRES_USER=trackme -e POSTGRES_PASSWORD=trackme -e POSTGRES_DB=trackme \
   -p 55433:5432 postgres:18-alpine
 
 npm run db:push     # create the tables
@@ -53,9 +53,9 @@ Open http://localhost:3000 and sign in with any of the seeded accounts:
 
 | Email               | Role    |
 | ------------------- | ------- |
-| `coach@gymos.dev`   | Coach   |
-| `athlete@gymos.dev` | Athlete |
-| `priya@gymos.dev`   | Athlete |
+| `coach@trackme.dev`   | Coach   |
+| `athlete@trackme.dev` | Athlete |
+| `priya@trackme.dev`   | Athlete |
 
 ### Using a hosted database
 
@@ -122,7 +122,7 @@ up most first deploys.
 Copy `.env.example` to `.env`.
 
 ```bash
-DATABASE_URL="postgresql://gymos:gymos@localhost:55433/gymos?schema=public"
+DATABASE_URL="postgresql://trackme:trackme@localhost:55433/trackme?schema=public"
 
 AUTH_SECRET="..."            # openssl rand -base64 32
 AUTH_URL="http://localhost:3000"

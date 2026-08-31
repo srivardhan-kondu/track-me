@@ -8,9 +8,9 @@ import { estimateFromText } from "../src/services/ai/food-table";
 
 const db = new PrismaClient();
 
-const COACH_EMAIL = "coach@gymos.dev";
-const ATHLETE_EMAIL = "athlete@gymos.dev";
-const ATHLETE_TWO_EMAIL = "priya@gymos.dev";
+const COACH_EMAIL = "coach@trackme.dev";
+const ATHLETE_EMAIL = "athlete@trackme.dev";
+const ATHLETE_TWO_EMAIL = "priya@trackme.dev";
 
 type MealTemplate = {
   hour: number;
@@ -231,7 +231,7 @@ async function seedAthlete(
 }
 
 async function main() {
-  console.log("Seeding GymOS…");
+  console.log("Seeding Track Me…");
 
   const emails = [COACH_EMAIL, ATHLETE_EMAIL, ATHLETE_TWO_EMAIL];
   await db.user.deleteMany({ where: { email: { in: emails } } });

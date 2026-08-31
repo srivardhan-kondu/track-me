@@ -1,4 +1,4 @@
-// GymOS — fitness reporting platform
+// Track Me — fitness reporting platform
 // PostgreSQL + Prisma
 
 generator client {
