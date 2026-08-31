@@ -5,9 +5,6 @@
  * business address is one edit rather than five. Razorpay's activation review
  * checks these pages for exactly this information — an incomplete address is a
  * common reason for a merchant account to be rejected.
- *
- * ⚠️ ADDRESS and JURISDICTION are placeholders. Fill them in before submitting
- * for activation.
  */
 export const BUSINESS = {
   /** Product name, as it appears to users. */
@@ -22,15 +19,16 @@ export const BUSINESS = {
   email: "srivardhan.kondu@gmail.com",
   phone: "+91 63027 71540",
 
-  /** ⚠️ Replace with the registered business address. */
   address: [
-    "[Street address]",
-    "[City], [State] [PIN]",
+    "6-34/A, Sai Aishwarya Colony",
+    "Parvathapur, Peerzadiguda",
+    "Medipally, Hyderabad",
+    "Telangana 500098",
     "India",
   ],
 
-  /** ⚠️ The city whose courts have jurisdiction. */
-  jurisdiction: "[City], India",
+  /** The city whose courts have jurisdiction. */
+  jurisdiction: "Hyderabad, Telangana",
 
   /** Shown on every policy page. Update when the wording changes. */
   lastUpdated: "31 August 2026",
