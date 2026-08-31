@@ -5,6 +5,7 @@
 import { PrismaClient, type MealSlot, type Pose } from "@prisma/client";
 
 import { estimateFromText } from "../src/services/ai/food-table";
+import { resolveExerciseId } from "../src/services/exercises/resolve";
 
 const db = new PrismaClient();
 
@@ -184,6 +185,10 @@ async function seedAthlete(
     // Train four days in five.
     if (random() < 0.75) {
       const tpl = WORKOUT_TEMPLATES[daysAgo % WORKOUT_TEMPLATES.length];
+      // Attach catalog entries so the seeded history produces real volume.
+      const catalogIds = await Promise.all(
+        tpl.exercises.map((ex) => resolveExerciseId(ex.name)),
+      );
       const workout = await db.workout.create({
         data: {
           userId: athleteId,
@@ -193,7 +198,11 @@ async function seedAthlete(
           status: "COMPLETE",
           performedAt: at(daysAgo, 18, Math.floor(random() * 45)),
           exercises: {
-            create: tpl.exercises.map((ex, i) => ({ ...ex, position: i })),
+            create: tpl.exercises.map((ex, i) => ({
+              ...ex,
+              position: i,
+              catalogId: catalogIds[i],
+            })),
           },
         },
       });

@@ -9,9 +9,80 @@ import { requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
 import { transcribeAudio } from "@/services/ai/transcribe";
 import { parseWorkout } from "@/services/ai/workout";
+import { resolveExerciseIds } from "@/services/exercises/resolve";
 import { buildKey, deleteObject, getObject, putObject } from "@/services/storage";
 
 import type { ActionResult } from "./meals";
+
+const ManualExerciseSchema = z.object({
+  catalogId: z.string().nullable().optional(),
+  name: z.string().trim().min(1).max(120),
+  weightKg: z.number().min(0).max(1000).nullable().optional(),
+  sets: z.number().int().min(0).max(50).nullable().optional(),
+  reps: z.number().int().min(0).max(500).nullable().optional(),
+});
+
+const ManualWorkoutSchema = z.object({
+  title: z.string().trim().max(120).optional(),
+  durationMin: z.number().int().min(0).max(600).nullable().optional(),
+  notes: z.string().trim().max(1000).optional(),
+  performedAt: z.string().optional(),
+  exercises: z.array(ManualExerciseSchema).min(1).max(40),
+});
+
+/**
+ * Logs a workout built from the exercise catalog rather than dictated. Skips
+ * AI entirely: the athlete has already given structured data, so there is
+ * nothing to infer.
+ */
+export async function createManualWorkout(
+  input: unknown,
+): Promise<ActionResult> {
+  const user = await requireUser();
+
+  const parsed = ManualWorkoutSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Add at least one exercise." };
+  }
+
+  const performedAt = parsed.data.performedAt
+    ? new Date(parsed.data.performedAt)
+    : new Date();
+  if (Number.isNaN(performedAt.getTime())) {
+    return { ok: false, error: "Invalid workout time." };
+  }
+
+  // Resolve anything typed free-hand so it still counts toward volume.
+  const catalogIds = await resolveExerciseIds(
+    parsed.data.exercises.map((e) => e.name),
+  );
+
+  const workout = await db.workout.create({
+    data: {
+      userId: user.id,
+      title: parsed.data.title || "Workout",
+      durationMin: parsed.data.durationMin ?? null,
+      notes: parsed.data.notes || null,
+      performedAt,
+      status: "COMPLETE",
+      exercises: {
+        create: parsed.data.exercises.map((ex, i) => ({
+          name: ex.name,
+          weightKg: ex.weightKg ?? null,
+          sets: ex.sets ?? null,
+          reps: ex.reps ?? null,
+          position: i,
+          catalogId: ex.catalogId ?? catalogIds[i],
+        })),
+      },
+    },
+    select: { id: true },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/workouts");
+  return { ok: true, id: workout.id };
+}
 
 const CreateSchema = z.object({
   description: z.string().max(4000).optional(),
@@ -118,6 +189,12 @@ async function processWorkout(
 
     const result = await parseWorkout(transcript);
 
+    // Attach each movement to the catalog so its sets count toward muscle
+    // volume. An unrecognised name still logs, just without attribution.
+    const catalogIds = await resolveExerciseIds(
+      result.exercises.map((e) => e.name),
+    );
+
     await db.$transaction([
       // Replace any prior parse so a re-run does not duplicate exercises.
       db.exercise.deleteMany({ where: { workoutId } }),
@@ -137,6 +214,7 @@ async function processWorkout(
               sets: ex.sets,
               reps: ex.reps,
               position: i,
+              catalogId: catalogIds[i],
             })),
           },
         },

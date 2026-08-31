@@ -192,9 +192,128 @@ model Exercise {
   /// Ordering within the workout as dictated.
   position Int    @default(0)
 
-  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  /// Resolved catalog entry, when the movement was recognised. Null keeps an
+  /// unrecognised exercise loggable rather than rejecting it.
+  catalogId String?
+
+  workout Workout          @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  catalog CatalogExercise? @relation(fields: [catalogId], references: [id], onDelete: SetNull)
 
   @@index([workoutId])
+  @@index([catalogId])
+}
+
+// ---------------------------------------------------------------------------
+// Exercise taxonomy
+// ---------------------------------------------------------------------------
+
+enum MovementPattern {
+  HORIZONTAL_PUSH
+  VERTICAL_PUSH
+  HORIZONTAL_PULL
+  VERTICAL_PULL
+  SQUAT
+  HINGE
+  LUNGE
+  CARRY
+  ROTATION
+  ANTI_ROTATION
+  GAIT
+  JUMP
+  SPRINT
+  CRAWL
+}
+
+enum ExerciseType {
+  COMPOUND
+  ISOLATION
+  POWER
+  OLYMPIC
+  CARDIO
+  MOBILITY
+  STRETCH
+  REHABILITATION
+}
+
+enum Equipment {
+  BARBELL
+  DUMBBELL
+  MACHINE
+  CABLE
+  SMITH_MACHINE
+  BODYWEIGHT
+  RESISTANCE_BAND
+  KETTLEBELL
+  TRAP_BAR
+  EZ_BAR
+  MEDICINE_BALL
+  SUSPENSION_TRAINER
+}
+
+/// How much of the work a muscle does in a given exercise.
+enum MuscleRole {
+  PRIMARY
+  SECONDARY
+  STABILISER
+}
+
+model MuscleGroup {
+  /// Stable identifier from the taxonomy (e.g. "MG001").
+  id       String @id
+  key      String @unique
+  name     String
+  position Int    @default(0)
+
+  muscles Muscle[]
+}
+
+model Muscle {
+  /// Stable identifier from the taxonomy (e.g. "M001").
+  id       String @id
+  name     String
+  groupId  String
+  position Int    @default(0)
+
+  group     MuscleGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  exercises ExerciseMuscle[]
+
+  @@index([groupId])
+}
+
+/// A known movement. Logged exercises resolve to one of these so volume can be
+/// attributed to muscles.
+model CatalogExercise {
+  id   String @id @default(cuid())
+  slug String @unique
+  name String
+
+  /// Spoken and written variants matched when resolving a dictated exercise.
+  aliases String[]
+
+  pattern   MovementPattern
+  type      ExerciseType
+  equipment Equipment
+
+  /// Loads one side at a time, so per-set volume counts differently.
+  isUnilateral Boolean @default(false)
+
+  muscles ExerciseMuscle[]
+  logged  Exercise[]
+
+  @@index([pattern])
+  @@index([equipment])
+}
+
+model ExerciseMuscle {
+  catalogExerciseId String
+  muscleId          String
+  role              MuscleRole
+
+  catalog CatalogExercise @relation(fields: [catalogExerciseId], references: [id], onDelete: Cascade)
+  muscle  Muscle          @relation(fields: [muscleId], references: [id], onDelete: Cascade)
+
+  @@id([catalogExerciseId, muscleId])
+  @@index([muscleId])
 }
 
 model WeightEntry {

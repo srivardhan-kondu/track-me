@@ -1,7 +1,9 @@
+import { VolumeBreakdown } from "@/components/exercises/volume-breakdown";
 import { WorkoutForm } from "@/components/log/workout-form";
 import { StatTile } from "@/components/timeline/macros";
 import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { Timeline } from "@/components/timeline/timeline";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import {
@@ -12,6 +14,7 @@ import {
   startOfDayInZone,
   toDateParam,
 } from "@/lib/tz";
+import { getMuscleVolume } from "@/services/exercises/volume";
 import type { TimelineEntry } from "@/services/reporting";
 
 export const metadata = { title: "Workouts" };
@@ -27,7 +30,7 @@ export default async function WorkoutsPage() {
   const zone = safeZone(user.timeZone);
   const from = startOfDayInZone(addDaysInZone(new Date(), -(DAYS - 1), zone), zone);
 
-  const [workouts, pending] = await Promise.all([
+  const [workouts, pending, volume] = await Promise.all([
     db.workout.findMany({
       where: { userId: user.id, performedAt: { gte: from } },
       orderBy: { performedAt: "desc" },
@@ -44,6 +47,7 @@ export default async function WorkoutsPage() {
     db.workout.count({
       where: { userId: user.id, status: { in: ["PENDING", "PROCESSING"] } },
     }),
+    getMuscleVolume(user.id, 7, zone),
   ]);
 
   const sessions = workouts.length;
@@ -87,6 +91,19 @@ export default async function WorkoutsPage() {
           unit="h"
         />
       </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Volume by muscle group</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Last 7 days. A set counts fully toward the muscles an exercise
+            trains directly, and half toward those assisting.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <VolumeBreakdown report={volume} days={7} />
+        </CardContent>
+      </Card>
 
       {groups.size === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">

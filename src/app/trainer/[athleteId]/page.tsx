@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { ComplianceStrip } from "@/components/charts/compliance-strip";
 import { WeightChart } from "@/components/charts/weight-chart";
+import { VolumeBreakdown } from "@/components/exercises/volume-breakdown";
 import { StatTile } from "@/components/timeline/macros";
 import { Timeline } from "@/components/timeline/timeline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +21,7 @@ import {
   toDateParam,
 } from "@/lib/tz";
 import { initials } from "@/lib/utils";
+import { getMuscleVolume } from "@/services/exercises/volume";
 import {
   getCompliance,
   getDayTimeline,
@@ -56,12 +58,13 @@ export default async function AthleteReviewPage({
   const date = fromDateParam(dateParam, zone);
   const isToday = isSameDayInZone(date, new Date(), zone);
 
-  const [entries, totals, summary, series, compliance] = await Promise.all([
+  const [entries, totals, summary, series, compliance, volume] = await Promise.all([
     getDayTimeline(athleteId, date, zone),
     getDayTotals(athleteId, date, zone),
     getSummary(athleteId, 7, zone),
     getWeightSeries(athleteId, 90, zone),
     getCompliance(athleteId, 14, zone),
+    getMuscleVolume(athleteId, 7, zone),
   ]);
 
   const prev = addDaysInZone(date, -1, zone);
@@ -162,6 +165,18 @@ export default async function AthleteReviewPage({
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Volume by muscle group</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Last 7 days, weighted by how directly each exercise trains the group.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <VolumeBreakdown report={volume} days={7} />
+        </CardContent>
+      </Card>
 
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

@@ -15,7 +15,9 @@ The goal is not calorie counting. The goal is accountability.
 - Whisper transcribes the voice note; GPT Vision estimates calories and macros
   per ingredient
 - Log a workout by dictating it ("bench press 80 kilos, 3 sets of 8") — parsed
-  into structured exercises with weight, sets and reps
+  into structured exercises with weight, sets and reps — or build it from a
+  catalog of 110 exercises
+- See volume by muscle group, and a push-to-pull balance check
 - Daily morning weight check-in (one entry per day, editable) with optional photo
 - Progress photos by pose (front / side / back), grouped into monthly history
 - A dated timeline merging meals, workouts and weigh-ins in chronological order
@@ -158,6 +160,8 @@ npm start           # serve the production build
 npm test            # parser and storage unit tests
 npm run check:ai    # exercise the real OpenAI integration (needs a key)
 npm run check:variance  # measure estimate consistency across repeated runs
+npm run check:exercises # verify dictated exercise names resolve to the catalog
+npm run db:catalog      # (re)seed the muscle taxonomy and exercise catalog
 npm run typecheck   # tsc --noEmit
 npm run db:url      # point .env at a hosted database (reads stdin)
 npm run db:setup    # push schema + seed + verify, in one step
@@ -189,6 +193,7 @@ src/
     layout/          nav, theme toggle, user menu
   services/
     ai/              transcription, nutrition, workout parsing, offline fallback
+    exercises/       catalog resolution and muscle-volume attribution
     storage/         R2 with a local filesystem driver
     reporting.ts     timeline, daily totals, summaries, compliance
   lib/               db, auth, session guards, uploads, utils
@@ -214,6 +219,25 @@ upload (photo + voice + notes)
 
 Uploads return in milliseconds rather than blocking on the model. A failed job
 lands as `FAILED` with the error on the card and a one-click re-run.
+
+### Exercise taxonomy
+
+70 muscles across 8 groups, with a 110-exercise catalog mapping each movement
+onto them by role — primary, secondary, or stabiliser — alongside its movement
+pattern, exercise type and equipment.
+
+A dictated exercise is resolved to a catalog entry by alias matching, which is
+forgiving about how people actually speak: "incline db press", "rdls", "rfess"
+and "skull crushers" all land correctly. Plurals are handled by singularising
+rather than by listing every variant. `npm run check:exercises` holds this to a
+regression suite of 54 real phrasings.
+
+Volume is then attributed the way coaches count it: a set is worth 1 to each
+muscle the exercise trains directly and 0.5 to each muscle assisting;
+stabilisers score nothing, because bracing during a squat is not leg training.
+A group scores once per exercise at its strongest role, so an exercise touching
+four quad heads is not counted as four times the leg volume. Sets whose
+exercise did not resolve are reported separately rather than silently dropped.
 
 ### Notable decisions
 
