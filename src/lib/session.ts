@@ -9,6 +9,8 @@ export type SessionUser = {
   email: string | null;
   image: string | null;
   role: "ATHLETE" | "COACH";
+  /** Raw stored zone; pass through safeZone() before using it. */
+  timeZone: string | null;
 };
 
 export async function currentUser(): Promise<SessionUser | null> {
@@ -20,6 +22,7 @@ export async function currentUser(): Promise<SessionUser | null> {
     email: session.user.email ?? null,
     image: session.user.image ?? null,
     role: session.user.role ?? "ATHLETE",
+    timeZone: session.user.timeZone ?? null,
   };
 }
 

@@ -171,3 +171,28 @@ export async function updateRole(formData: FormData): Promise<ActionResult> {
   revalidatePath("/", "layout");
   return { ok: true };
 }
+
+/**
+ * Records the athlete's IANA timezone, detected in the browser. Everything
+ * date-related is bucketed and rendered in this zone.
+ */
+export async function setTimeZone(timeZone: string): Promise<ActionResult> {
+  const user = await requireUser();
+
+  // Validate against Intl rather than a list, and ignore anything unusable.
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone }).format(new Date());
+  } catch {
+    return { ok: false, error: "Unrecognised timezone." };
+  }
+
+  const existing = await db.user.findUnique({
+    where: { id: user.id },
+    select: { timeZone: true },
+  });
+  if (existing?.timeZone === timeZone) return { ok: true };
+
+  await db.user.update({ where: { id: user.id }, data: { timeZone } });
+  revalidatePath("/", "layout");
+  return { ok: true };
+}

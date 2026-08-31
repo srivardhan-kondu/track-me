@@ -1,5 +1,13 @@
 import { db } from "@/lib/db";
-import { dayKey, endOfDayLocal, round, startOfDayLocal } from "@/lib/utils";
+import {
+  addDaysInZone,
+  dayKeyInZone,
+  endOfDayInZone,
+  safeZone,
+  startOfDayInZone,
+  toDateParam,
+} from "@/lib/tz";
+import { round } from "@/lib/utils";
 
 export type TimelineEntry =
   | { kind: "meal"; at: Date; id: string; data: TimelineMeal }
@@ -71,9 +79,11 @@ const commentInclude = {
 export async function getDayTimeline(
   userId: string,
   date: Date,
+  timeZone: string,
 ): Promise<TimelineEntry[]> {
-  const from = startOfDayLocal(date);
-  const to = endOfDayLocal(date);
+  const zone = safeZone(timeZone);
+  const from = startOfDayInZone(date, zone);
+  const to = endOfDayInZone(date, zone);
 
   const [meals, workouts, weight] = await Promise.all([
     db.meal.findMany({
@@ -90,7 +100,7 @@ export async function getDayTimeline(
       },
     }),
     db.weightEntry.findFirst({
-      where: { userId, day: dayKey(date) },
+      where: { userId, day: dayKeyInZone(date, zone) },
       include: { comments: commentInclude },
     }),
   ]);
@@ -140,9 +150,11 @@ export type DayTotals = {
 export async function getDayTotals(
   userId: string,
   date: Date,
+  timeZone: string,
 ): Promise<DayTotals> {
-  const from = startOfDayLocal(date);
-  const to = endOfDayLocal(date);
+  const zone = safeZone(timeZone);
+  const from = startOfDayInZone(date, zone);
+  const to = endOfDayInZone(date, zone);
 
   const [agg, workoutCount] = await Promise.all([
     db.meal.aggregate({
@@ -187,11 +199,12 @@ export type WeeklySummary = {
 export async function getSummary(
   userId: string,
   days = 7,
+  timeZone = "UTC",
 ): Promise<WeeklySummary> {
-  const to = endOfDayLocal(new Date());
-  const from = startOfDayLocal(
-    new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000),
-  );
+  const zone = safeZone(timeZone);
+  const now = new Date();
+  const to = endOfDayInZone(now, zone);
+  const from = startOfDayInZone(addDaysInZone(now, -(days - 1), zone), zone);
 
   const [meals, workoutCount, weights] = await Promise.all([
     db.meal.findMany({
@@ -208,15 +221,16 @@ export async function getSummary(
       where: { userId, performedAt: { gte: from, lte: to } },
     }),
     db.weightEntry.findMany({
-      where: { userId, day: { gte: dayKey(from), lte: dayKey(to) } },
+      where: {
+        userId,
+        day: { gte: dayKeyInZone(from, zone), lte: dayKeyInZone(to, zone) },
+      },
       orderBy: { day: "asc" },
       select: { weightKg: true, day: true },
     }),
   ]);
 
-  const loggedDays = new Set(
-    meals.map((m) => startOfDayLocal(m.eatenAt).toISOString()),
-  );
+  const loggedDays = new Set(meals.map((m) => toDateParam(m.eatenAt, zone)));
 
   const sum = (pick: (m: (typeof meals)[number]) => number | null) =>
     meals.reduce((acc, m) => acc + (pick(m) ?? 0), 0);
@@ -254,8 +268,10 @@ export type WeightPoint = { day: Date; weightKg: number };
 export async function getWeightSeries(
   userId: string,
   days = 90,
+  timeZone = "UTC",
 ): Promise<WeightPoint[]> {
-  const from = dayKey(new Date(Date.now() - days * 24 * 60 * 60 * 1000));
+  const zone = safeZone(timeZone);
+  const from = dayKeyInZone(addDaysInZone(new Date(), -days, zone), zone);
   const rows = await db.weightEntry.findMany({
     where: { userId, day: { gte: from } },
     orderBy: { day: "asc" },
@@ -275,11 +291,12 @@ export type ComplianceDay = {
 export async function getCompliance(
   userId: string,
   days = 14,
+  timeZone = "UTC",
 ): Promise<ComplianceDay[]> {
-  const from = startOfDayLocal(
-    new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000),
-  );
-  const to = endOfDayLocal(new Date());
+  const zone = safeZone(timeZone);
+  const now = new Date();
+  const from = startOfDayInZone(addDaysInZone(now, -(days - 1), zone), zone);
+  const to = endOfDayInZone(now, zone);
 
   const [meals, workouts, weights] = await Promise.all([
     db.meal.findMany({
@@ -291,17 +308,19 @@ export async function getCompliance(
       select: { performedAt: true },
     }),
     db.weightEntry.findMany({
-      where: { userId, day: { gte: dayKey(from), lte: dayKey(to) } },
+      where: {
+        userId,
+        day: { gte: dayKeyInZone(from, zone), lte: dayKeyInZone(to, zone) },
+      },
       select: { day: true },
     }),
   ]);
 
+  // Keyed by local calendar date so every bucket is the athlete's own day.
   const bucket = new Map<string, ComplianceDay>();
   for (let i = 0; i < days; i++) {
-    const d = startOfDayLocal(
-      new Date(from.getTime() + i * 24 * 60 * 60 * 1000),
-    );
-    bucket.set(d.toDateString(), {
+    const d = addDaysInZone(from, i, zone);
+    bucket.set(toDateParam(d, zone), {
       day: d,
       meals: 0,
       workouts: 0,
@@ -310,24 +329,18 @@ export async function getCompliance(
   }
 
   for (const m of meals) {
-    const k = startOfDayLocal(m.eatenAt).toDateString();
-    const b = bucket.get(k);
+    const b = bucket.get(toDateParam(m.eatenAt, zone));
     if (b) b.meals += 1;
   }
   for (const w of workouts) {
-    const k = startOfDayLocal(w.performedAt).toDateString();
-    const b = bucket.get(k);
+    const b = bucket.get(toDateParam(w.performedAt, zone));
     if (b) b.workouts += 1;
   }
   for (const w of weights) {
-    // `day` is a date-only column, so read it in UTC to avoid a timezone shift.
+    // `day` is a date-only column already stored as the local calendar date.
     const d = new Date(w.day);
-    const k = new Date(
-      d.getUTCFullYear(),
-      d.getUTCMonth(),
-      d.getUTCDate(),
-    ).toDateString();
-    const b = bucket.get(k);
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    const b = bucket.get(key);
     if (b) b.weighedIn = true;
   }
 
@@ -341,16 +354,18 @@ export async function getCoachRoster(coachId: string) {
     orderBy: { createdAt: "asc" },
     include: {
       athlete: {
-        select: { id: true, name: true, email: true, image: true },
+        select: { id: true, name: true, email: true, image: true, timeZone: true },
       },
     },
   });
 
   return Promise.all(
     links.map(async (link) => {
+      // Each athlete's figures are bucketed in their own zone.
+      const zone = safeZone(link.athlete.timeZone);
       const [summary, todayTotals, lastMeal] = await Promise.all([
-        getSummary(link.athlete.id, 7),
-        getDayTotals(link.athlete.id, new Date()),
+        getSummary(link.athlete.id, 7, zone),
+        getDayTotals(link.athlete.id, new Date(), zone),
         db.meal.findFirst({
           where: { userId: link.athlete.id },
           orderBy: { eatenAt: "desc" },

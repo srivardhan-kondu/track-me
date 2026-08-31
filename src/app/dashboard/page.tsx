@@ -10,24 +10,20 @@ import { Timeline } from "@/components/timeline/timeline";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
-import { startOfDayLocal } from "@/lib/utils";
+import {
+  addDaysInZone,
+  formatDateInZone,
+  fromDateParam,
+  isSameDayInZone,
+  safeZone,
+  toDateParam,
+} from "@/lib/tz";
 import { getDayTimeline, getDayTotals } from "@/services/reporting";
 
 export const metadata = { title: "Today" };
 // Meal and workout logging run transcription and analysis in after(), which
 // counts toward this function's duration. 60s is the Vercel Hobby ceiling.
 export const maxDuration = 60;
-
-function parseDate(value?: string): Date {
-  if (!value) return new Date();
-  const d = new Date(`${value}T12:00:00`);
-  return Number.isNaN(d.getTime()) ? new Date() : d;
-}
-
-function toParam(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
 
 export default async function TodayPage({
   searchParams,
@@ -37,13 +33,13 @@ export default async function TodayPage({
   const user = await requireUser();
   const { date: dateParam } = await searchParams;
 
-  const date = parseDate(dateParam);
-  const isToday =
-    startOfDayLocal(date).getTime() === startOfDayLocal(new Date()).getTime();
+  const zone = safeZone(user.timeZone);
+  const date = fromDateParam(dateParam, zone);
+  const isToday = isSameDayInZone(date, new Date(), zone);
 
   const [entries, totals, pending, lastWeight] = await Promise.all([
-    getDayTimeline(user.id, date),
-    getDayTotals(user.id, date),
+    getDayTimeline(user.id, date, zone),
+    getDayTotals(user.id, date, zone),
     db.meal.count({
       where: { userId: user.id, status: { in: ["PENDING", "PROCESSING"] } },
     }),
@@ -54,10 +50,8 @@ export default async function TodayPage({
     }),
   ]);
 
-  const prev = new Date(date);
-  prev.setDate(prev.getDate() - 1);
-  const next = new Date(date);
-  next.setDate(next.getDate() + 1);
+  const prev = addDaysInZone(date, -1, zone);
+  const next = addDaysInZone(date, 1, zone);
 
   const firstName = user.name?.split(" ")[0] ?? "there";
 
@@ -71,17 +65,13 @@ export default async function TodayPage({
             {isToday ? `Hey ${firstName}` : "Timeline"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {date.toLocaleDateString(undefined, {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
+            {formatDateInZone(date, zone)}
           </p>
         </div>
 
         <div className="flex items-center gap-1">
           <Button asChild variant="outline" size="icon" aria-label="Previous day">
-            <Link href={`/dashboard?date=${toParam(prev)}`}>
+            <Link href={`/dashboard?date=${toDateParam(prev, zone)}`}>
               <ChevronLeft className="h-4 w-4" />
             </Link>
           </Button>
@@ -97,7 +87,7 @@ export default async function TodayPage({
             aria-label="Next day"
             disabled={isToday}
           >
-            <Link href={`/dashboard?date=${toParam(next)}`}>
+            <Link href={`/dashboard?date=${toDateParam(next, zone)}`}>
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -157,6 +147,7 @@ export default async function TodayPage({
         <Timeline
           entries={entries}
           viewerId={user.id}
+          timeZone={zone}
           isOwner
           canComment
           emptyState={

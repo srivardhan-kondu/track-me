@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
-import { dayKey } from "@/lib/utils";
+import { dayKeyInZone, safeZone } from "@/lib/tz";
 import { buildKey, deleteObject, putObject } from "@/services/storage";
 
 import type { ActionResult } from "./meals";
@@ -40,7 +40,15 @@ export async function logWeight(formData: FormData): Promise<ActionResult> {
     return { ok: false, error: (err as Error).message };
   }
 
-  const day = dayKey(parsed.data.day ? new Date(parsed.data.day) : new Date());
+  // An explicit YYYY-MM-DD is already a calendar date, so it becomes the
+  // bucket directly; "today" is resolved in the athlete's own zone.
+  let day: Date;
+  if (parsed.data.day && /^\d{4}-\d{2}-\d{2}$/.test(parsed.data.day)) {
+    const [y, m, d] = parsed.data.day.split("-").map(Number);
+    day = new Date(Date.UTC(y, m - 1, d));
+  } else {
+    day = dayKeyInZone(new Date(), safeZone(user.timeZone));
+  }
   if (Number.isNaN(day.getTime())) {
     return { ok: false, error: "Invalid date." };
   }

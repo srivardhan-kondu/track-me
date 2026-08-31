@@ -22,6 +22,7 @@ declare module "next-auth" {
     user: {
       id: string;
       role: "ATHLETE" | "COACH";
+      timeZone: string | null;
     } & DefaultSession["user"];
   }
 }
@@ -90,12 +91,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub) {
         const dbUser = await db.user.findUnique({
           where: { id: token.sub },
-          select: { role: true, name: true, image: true },
+          select: { role: true, name: true, image: true, timeZone: true },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.name = dbUser.name;
           token.picture = dbUser.image;
+          token.timeZone = dbUser.timeZone;
         }
       }
       return token;
@@ -105,6 +107,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub!;
         session.user.role =
           (token.role as "ATHLETE" | "COACH" | undefined) ?? "ATHLETE";
+        session.user.timeZone = (token.timeZone as string | null) ?? null;
       }
       return session;
     },

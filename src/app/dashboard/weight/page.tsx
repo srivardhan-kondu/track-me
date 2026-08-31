@@ -6,6 +6,7 @@ import { WeightActions } from "@/components/timeline/record-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
+import { safeZone } from "@/lib/tz";
 import { round } from "@/lib/utils";
 import { getCompliance, getWeightSeries } from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
@@ -15,9 +16,11 @@ export const metadata = { title: "Weight" };
 export default async function WeightPage() {
   const user = await requireUser();
 
+  const zone = safeZone(user.timeZone);
+
   const [series, compliance, entries] = await Promise.all([
-    getWeightSeries(user.id, 90),
-    getCompliance(user.id, 14),
+    getWeightSeries(user.id, 90, zone),
+    getCompliance(user.id, 14, zone),
     db.weightEntry.findMany({
       where: { userId: user.id },
       orderBy: { day: "desc" },

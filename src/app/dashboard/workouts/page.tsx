@@ -4,7 +4,14 @@ import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { Timeline } from "@/components/timeline/timeline";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
-import { startOfDayLocal } from "@/lib/utils";
+import {
+  addDaysInZone,
+  formatDateInZone,
+  fromDateParam,
+  safeZone,
+  startOfDayInZone,
+  toDateParam,
+} from "@/lib/tz";
 import type { TimelineEntry } from "@/services/reporting";
 
 export const metadata = { title: "Workouts" };
@@ -17,9 +24,8 @@ const DAYS = 30;
 export default async function WorkoutsPage() {
   const user = await requireUser();
 
-  const from = startOfDayLocal(
-    new Date(Date.now() - (DAYS - 1) * 24 * 60 * 60 * 1000),
-  );
+  const zone = safeZone(user.timeZone);
+  const from = startOfDayInZone(addDaysInZone(new Date(), -(DAYS - 1), zone), zone);
 
   const [workouts, pending] = await Promise.all([
     db.workout.findMany({
@@ -51,7 +57,7 @@ export default async function WorkoutsPage() {
 
   const groups = new Map<string, typeof workouts>();
   for (const w of workouts) {
-    const key = startOfDayLocal(w.performedAt).toISOString();
+    const key = toDateParam(w.performedAt, zone);
     const bucket = groups.get(key);
     if (bucket) bucket.push(w);
     else groups.set(key, [w]);
@@ -92,7 +98,7 @@ export default async function WorkoutsPage() {
       ) : (
         <div className="space-y-8">
           {[...groups.entries()].map(([key, dayWorkouts]) => {
-            const day = new Date(key);
+            const day = fromDateParam(key, zone);
             const entries: TimelineEntry[] = dayWorkouts.map((w) => ({
               kind: "workout" as const,
               at: w.performedAt,
@@ -107,7 +113,7 @@ export default async function WorkoutsPage() {
               <section key={key}>
                 <div className="mb-3 border-b border-border pb-2">
                   <h2 className="text-sm font-semibold">
-                    {day.toLocaleDateString(undefined, {
+                    {formatDateInZone(day, zone, {
                       weekday: "long",
                       day: "numeric",
                       month: "short",
@@ -118,6 +124,7 @@ export default async function WorkoutsPage() {
                 <Timeline
                   entries={entries}
                   viewerId={user.id}
+                  timeZone={zone}
                   isOwner
                   canComment
                 />

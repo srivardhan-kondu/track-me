@@ -3,6 +3,7 @@ import { Activity } from "lucide-react";
 
 import { BottomNav, SidebarNav } from "@/components/layout/nav";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { TimeZoneSync } from "@/components/layout/timezone-sync";
 import { UserMenu } from "@/components/layout/user-menu";
 import { requireUser } from "@/lib/session";
 
@@ -15,6 +16,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-dvh">
+      <TimeZoneSync current={user.timeZone} />
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/dashboard" className="flex items-center gap-2">

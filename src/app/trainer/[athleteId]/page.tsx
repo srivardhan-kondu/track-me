@@ -11,7 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
 import { assertCanViewAthlete, requireCoach } from "@/lib/session";
-import { initials, startOfDayLocal } from "@/lib/utils";
+import {
+  addDaysInZone,
+  formatDateInZone,
+  fromDateParam,
+  isSameDayInZone,
+  safeZone,
+  toDateParam,
+} from "@/lib/tz";
+import { initials } from "@/lib/utils";
 import {
   getCompliance,
   getDayTimeline,
@@ -19,17 +27,6 @@ import {
   getSummary,
   getWeightSeries,
 } from "@/services/reporting";
-
-function parseDate(value?: string): Date {
-  if (!value) return new Date();
-  const d = new Date(`${value}T12:00:00`);
-  return Number.isNaN(d.getTime()) ? new Date() : d;
-}
-
-function toParam(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
 
 export default async function AthleteReviewPage({
   params,
@@ -50,26 +47,25 @@ export default async function AthleteReviewPage({
 
   const athlete = await db.user.findUnique({
     where: { id: athleteId },
-    select: { id: true, name: true, email: true, image: true },
+    select: { id: true, name: true, email: true, image: true, timeZone: true },
   });
   if (!athlete) notFound();
 
-  const date = parseDate(dateParam);
-  const isToday =
-    startOfDayLocal(date).getTime() === startOfDayLocal(new Date()).getTime();
+  // The coach reviews the athlete's days as the athlete lived them.
+  const zone = safeZone(athlete.timeZone);
+  const date = fromDateParam(dateParam, zone);
+  const isToday = isSameDayInZone(date, new Date(), zone);
 
   const [entries, totals, summary, series, compliance] = await Promise.all([
-    getDayTimeline(athleteId, date),
-    getDayTotals(athleteId, date),
-    getSummary(athleteId, 7),
-    getWeightSeries(athleteId, 90),
-    getCompliance(athleteId, 14),
+    getDayTimeline(athleteId, date, zone),
+    getDayTotals(athleteId, date, zone),
+    getSummary(athleteId, 7, zone),
+    getWeightSeries(athleteId, 90, zone),
+    getCompliance(athleteId, 14, zone),
   ]);
 
-  const prev = new Date(date);
-  prev.setDate(prev.getDate() - 1);
-  const next = new Date(date);
-  next.setDate(next.getDate() + 1);
+  const prev = addDaysInZone(date, -1, zone);
+  const next = addDaysInZone(date, 1, zone);
 
   return (
     <div className="space-y-6">
@@ -171,11 +167,7 @@ export default async function AthleteReviewPage({
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold">
-              {date.toLocaleDateString(undefined, {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
+              {formatDateInZone(date, zone)}
             </h2>
             <p className="tabular mt-0.5 text-xs text-muted-foreground">
               {totals.calories} kcal · {totals.protein}g protein ·{" "}
@@ -190,7 +182,7 @@ export default async function AthleteReviewPage({
               size="icon"
               aria-label="Previous day"
             >
-              <Link href={`/trainer/${athleteId}?date=${toParam(prev)}`}>
+              <Link href={`/trainer/${athleteId}?date=${toDateParam(prev, zone)}`}>
                 <ChevronLeft className="h-4 w-4" />
               </Link>
             </Button>
@@ -200,7 +192,7 @@ export default async function AthleteReviewPage({
               </Button>
             )}
             <Button asChild variant="outline" size="icon" aria-label="Next day">
-              <Link href={`/trainer/${athleteId}?date=${toParam(next)}`}>
+              <Link href={`/trainer/${athleteId}?date=${toDateParam(next, zone)}`}>
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -210,6 +202,7 @@ export default async function AthleteReviewPage({
         <Timeline
           entries={entries}
           viewerId={coach.id}
+          timeZone={zone}
           isOwner={false}
           canComment
           emptyState={

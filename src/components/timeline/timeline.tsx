@@ -14,16 +14,12 @@ import {
   WorkoutActions,
 } from "@/components/timeline/record-actions";
 import { Badge } from "@/components/ui/badge";
+import { formatTimeInZone } from "@/lib/tz";
 import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/services/storage";
 import type { TimelineEntry } from "@/services/reporting";
 
-function timeLabel(d: Date) {
-  return d.toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
+
 
 const SLOT_LABEL: Record<string, string> = {
   BREAKFAST: "Breakfast",
@@ -79,12 +75,15 @@ function StatusBadge({ status }: { status: string }) {
 export async function Timeline({
   entries,
   viewerId,
+  timeZone,
   isOwner,
   canComment,
   emptyState,
 }: {
   entries: TimelineEntry[];
   viewerId: string;
+  /** IANA zone the athlete logs in; times render in it, not the server's. */
+  timeZone: string;
   isOwner: boolean;
   canComment: boolean;
   emptyState?: React.ReactNode;
@@ -146,7 +145,7 @@ export async function Timeline({
                 <span className="tabular text-xs font-medium text-muted-foreground">
                   {entry.kind === "weight"
                     ? "Morning"
-                    : timeLabel(entry.at)}
+                    : formatTimeInZone(entry.at, timeZone)}
                 </span>
                 {entry.kind !== "weight" && (
                   <StatusBadge status={entry.data.status} />
@@ -218,6 +217,11 @@ function MealBody({
 }) {
   const items = readItems(meal.items);
 
+  // Analysis finished but found nothing recognisable — an unclear photo, or a
+  // voice note that picked up no speech. Say so rather than showing zeros.
+  const foundNothing =
+    meal.status === "COMPLETE" && items.length === 0 && !meal.calories;
+
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-3">
@@ -245,11 +249,30 @@ function MealBody({
             {isOwner && <MealActions meal={meal} />}
           </div>
 
-          <MacroRow macros={meal} className="mt-2" />
+          {foundNothing ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              No food identified.
+            </p>
+          ) : (
+            <MacroRow macros={meal} className="mt-2" />
+          )}
         </div>
       </div>
 
-      <MacroSplitBar macros={meal} />
+      {!foundNothing && <MacroSplitBar macros={meal} />}
+
+      {foundNothing && (
+        <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3">
+          <p className="text-sm font-medium">Nothing recognisable in this one</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            The photo may not show food, or the voice note may not have picked
+            up any speech.{" "}
+            {isOwner
+              ? "Correct the macros by hand from the menu, or re-run the estimate."
+              : "The athlete can correct this from their own timeline."}
+          </p>
+        </div>
+      )}
 
       {meal.transcript && (
         <p className="text-sm italic leading-relaxed text-muted-foreground">

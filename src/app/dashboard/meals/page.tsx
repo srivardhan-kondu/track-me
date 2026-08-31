@@ -4,7 +4,14 @@ import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { Timeline } from "@/components/timeline/timeline";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
-import { startOfDayLocal } from "@/lib/utils";
+import {
+  addDaysInZone,
+  formatDateInZone,
+  fromDateParam,
+  safeZone,
+  startOfDayInZone,
+  toDateParam,
+} from "@/lib/tz";
 import { getSummary, type TimelineEntry } from "@/services/reporting";
 
 export const metadata = { title: "Meals" };
@@ -17,9 +24,8 @@ const DAYS = 14;
 export default async function MealsPage() {
   const user = await requireUser();
 
-  const from = startOfDayLocal(
-    new Date(Date.now() - (DAYS - 1) * 24 * 60 * 60 * 1000),
-  );
+  const zone = safeZone(user.timeZone);
+  const from = startOfDayInZone(addDaysInZone(new Date(), -(DAYS - 1), zone), zone);
 
   const [meals, summary, pending] = await Promise.all([
     db.meal.findMany({
@@ -34,7 +40,7 @@ export default async function MealsPage() {
         },
       },
     }),
-    getSummary(user.id, 7),
+    getSummary(user.id, 7, zone),
     db.meal.count({
       where: { userId: user.id, status: { in: ["PENDING", "PROCESSING"] } },
     }),
@@ -43,7 +49,7 @@ export default async function MealsPage() {
   // Group into day buckets, newest first.
   const groups = new Map<string, typeof meals>();
   for (const meal of meals) {
-    const key = startOfDayLocal(meal.eatenAt).toISOString();
+    const key = toDateParam(meal.eatenAt, zone);
     const bucket = groups.get(key);
     if (bucket) bucket.push(meal);
     else groups.set(key, [meal]);
@@ -105,7 +111,7 @@ export default async function MealsPage() {
       ) : (
         <div className="space-y-8">
           {[...groups.entries()].map(([key, dayMeals]) => {
-            const day = new Date(key);
+            const day = fromDateParam(key, zone);
             const entries: TimelineEntry[] = dayMeals
               .slice()
               .sort((a, b) => a.eatenAt.getTime() - b.eatenAt.getTime())
@@ -127,7 +133,7 @@ export default async function MealsPage() {
               <section key={key}>
                 <div className="mb-3 flex items-baseline justify-between border-b border-border pb-2">
                   <h2 className="text-sm font-semibold">
-                    {day.toLocaleDateString(undefined, {
+                    {formatDateInZone(day, zone, {
                       weekday: "long",
                       day: "numeric",
                       month: "short",
@@ -141,6 +147,7 @@ export default async function MealsPage() {
                 <Timeline
                   entries={entries}
                   viewerId={user.id}
+                  timeZone={zone}
                   isOwner
                   canComment
                 />
