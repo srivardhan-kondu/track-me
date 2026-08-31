@@ -7,6 +7,7 @@ import Google from "next-auth/providers/google";
 
 import { db } from "@/lib/db";
 import { trialEndsFrom } from "@/lib/entitlements";
+import { clientIp, consume } from "@/lib/rate-limit";
 
 export const googleEnabled = Boolean(
   process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
@@ -33,6 +34,31 @@ export const reviewLoginEnabled = Boolean(
   process.env.REVIEW_EMAIL && process.env.REVIEW_PASSWORD,
 );
 
+/**
+ * Throttles credential sign-in.
+ *
+ * Constant-time comparison is worth nothing against an attacker who gets
+ * unlimited guesses, and the reviewer account is a single shared password on a
+ * known address. Counted against the client address and the attempted email
+ * separately, so neither a single host working through passwords nor a
+ * distributed run at one account gets a free pass.
+ *
+ * Returns false when the caller should be refused without checking anything.
+ */
+async function signInAllowed(email: string): Promise<boolean> {
+  const ip = await clientIp();
+  const [byIp, byEmail] = await Promise.all([
+    consume("signIn", `ip:${ip}`),
+    consume("signIn", `email:${email}`),
+  ]);
+
+  if (!byIp.ok || !byEmail.ok) {
+    console.warn(`[auth] throttled a sign-in attempt for ${email} from ${ip}`);
+    return false;
+  }
+  return true;
+}
+
 /** Constant-time, so a wrong password cannot be found one character at a time. */
 function passwordMatches(given: string, expected: string): boolean {
   const a = Buffer.from(given);
@@ -58,7 +84,11 @@ if (googleEnabled) {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-      allowDangerousEmailAccountLinking: true,
+      // Deliberately off. Linking by email alone means any provider that
+      // merely asserts an address gets whatever account already holds it —
+      // which, next to two providers that upsert users by email, is an
+      // account-takeover path rather than a convenience.
+      allowDangerousEmailAccountLinking: false,
     }),
   );
 }
@@ -77,8 +107,24 @@ if (reviewLoginEnabled) {
         const password = String(creds?.password ?? "");
         const expectedEmail = process.env.REVIEW_EMAIL!.trim().toLowerCase();
 
+        if (!(await signInAllowed(email || "unknown"))) return null;
         if (email !== expectedEmail) return null;
         if (!passwordMatches(password, process.env.REVIEW_PASSWORD!)) return null;
+
+        const existing = await db.user.findUnique({
+          where: { email },
+          select: { id: true, _count: { select: { accounts: true } } },
+        });
+
+        // If REVIEW_EMAIL is ever set to an address somebody signs in with for
+        // real, this password would open their account. A reviewer gets a
+        // fresh row or nothing.
+        if (existing && existing._count.accounts > 0) {
+          console.error(
+            "[auth] REVIEW_EMAIL belongs to a real account; refusing to sign in",
+          );
+          return null;
+        }
 
         // Always an athlete: a reviewer has no business reading other
         // people's timelines, which is what the coach role grants.
@@ -111,6 +157,7 @@ if (devLoginEnabled) {
       async authorize(creds) {
         const email = String(creds?.email ?? "").trim().toLowerCase();
         if (!email || !email.includes("@")) return null;
+        if (!(await signInAllowed(email))) return null;
 
         const role = creds?.role === "COACH" ? "COACH" : "ATHLETE";
         const name = email

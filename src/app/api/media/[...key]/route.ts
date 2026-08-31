@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { currentUser } from "@/lib/session";
+import { assertCanViewAthlete, currentUser } from "@/lib/session";
 import { getObject, isSafeKey, usingObjectStorage } from "@/services/storage";
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -28,7 +28,6 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Any signed-in user may read media; object keys are unguessable UUIDs.
   const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,6 +38,23 @@ export async function GET(
 
   if (!isSafeKey(key)) {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
+  }
+
+  // Keys are built as "<kind>/<userId>/<stamp>/<uuid>.<ext>", so the owner is
+  // in the key. This used to serve any key to any signed-in user on the
+  // grounds that the UUID was unguessable — but the keys are not secret: the
+  // export hands them back in plaintext, and an unguessable identifier is not
+  // an access control. Same rule as every other read of someone's data.
+  const ownerId = key.split("/")[1];
+  if (!ownerId) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  try {
+    await assertCanViewAthlete(user.id, ownerId);
+  } catch {
+    // 404 rather than 403: whether a key exists is itself worth not saying.
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   try {

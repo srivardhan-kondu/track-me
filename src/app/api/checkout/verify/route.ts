@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { enforce, rateLimitResponse, RateLimited } from "@/lib/rate-limit";
 import { fetchPayment, verifyCheckoutSignature } from "@/lib/razorpay";
 import { currentUser } from "@/lib/session";
 import { recordPayment } from "@/services/billing";
@@ -29,6 +30,14 @@ export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Each attempt calls out to Razorpay's API.
+  try {
+    await enforce("checkoutVerify", user.id, "Too many verification attempts.");
+  } catch (err) {
+    if (err instanceof RateLimited) return rateLimitResponse(err);
+    throw err;
   }
 
   const parsed = Body.safeParse(await req.json().catch(() => null));

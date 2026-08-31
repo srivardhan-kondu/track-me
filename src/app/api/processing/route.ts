@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { enforce, rateLimitResponse, RateLimited } from "@/lib/rate-limit";
 import { currentUser } from "@/lib/session";
 
 /**
@@ -11,6 +12,15 @@ export async function GET() {
   const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // A ceiling above the client's own backoff, not a replacement for it: a
+  // stuck or tampered-with client cannot turn this into a hot loop.
+  try {
+    await enforce("processing", user.id, "Too many status checks.");
+  } catch (err) {
+    if (err instanceof RateLimited) return rateLimitResponse(err);
+    throw err;
   }
 
   const [meals, workouts] = await Promise.all([

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { toCsv } from "@/lib/csv";
 import { db } from "@/lib/db";
+import { enforce, rateLimitResponse, RateLimited } from "@/lib/rate-limit";
 import { currentUser, premiumStatus } from "@/lib/session";
 
 /**
@@ -19,22 +21,15 @@ export const dynamic = "force-dynamic";
 const TYPES = ["workouts", "meals", "weights"] as const;
 type Entity = (typeof TYPES)[number];
 
-function csvCell(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  const s = value instanceof Date ? value.toISOString() : String(value);
-  // Quote anything that would otherwise break the row apart.
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
-function toCsv(rows: Record<string, unknown>[]): string {
-  if (rows.length === 0) return "";
-  const headers = Object.keys(rows[0]);
-  const lines = [headers.join(",")];
-  for (const row of rows) {
-    lines.push(headers.map((h) => csvCell(row[h])).join(","));
-  }
-  return lines.join("\n");
-}
+/**
+ * Rows per entity in a single export.
+ *
+ * The queries used to be unbounded, which on a long-lived account meant five
+ * full table reads serialised into memory inside a function with a 60-second
+ * ceiling. Anyone past this cap is told so rather than handed a truncated file
+ * that looks complete.
+ */
+const MAX_ROWS = 5000;
 
 function filename(base: string, ext: string): string {
   const stamp = new Date().toISOString().slice(0, 10);
@@ -55,6 +50,15 @@ export async function GET(req: Request) {
     );
   }
 
+  // Five table reads and a full serialisation. Premium gates who can ask;
+  // this gates how often.
+  try {
+    await enforce("export", user.id, "You have exported your data a few times already.");
+  } catch (err) {
+    if (err instanceof RateLimited) return rateLimitResponse(err);
+    throw err;
+  }
+
   const url = new URL(req.url);
   const format = url.searchParams.get("format") === "csv" ? "csv" : "json";
   const type = url.searchParams.get("type") as Entity | null;
@@ -63,6 +67,7 @@ export async function GET(req: Request) {
     db.meal.findMany({
       where: { userId: user.id },
       orderBy: { eatenAt: "asc" },
+      take: MAX_ROWS + 1,
       select: {
         eatenAt: true,
         slot: true,
@@ -77,6 +82,7 @@ export async function GET(req: Request) {
     db.workout.findMany({
       where: { userId: user.id },
       orderBy: { performedAt: "asc" },
+      take: MAX_ROWS + 1,
       select: {
         performedAt: true,
         title: true,
@@ -91,11 +97,13 @@ export async function GET(req: Request) {
     db.weightEntry.findMany({
       where: { userId: user.id },
       orderBy: { day: "asc" },
+      take: MAX_ROWS + 1,
       select: { day: true, weightKg: true, notes: true, photoKey: true },
     }),
     db.progressPhoto.findMany({
       where: { userId: user.id },
       orderBy: { takenAt: "asc" },
+      take: MAX_ROWS + 1,
       select: { takenAt: true, pose: true, imageKey: true },
     }),
     db.user.findUnique({
@@ -109,6 +117,24 @@ export async function GET(req: Request) {
       },
     }),
   ]);
+
+  // Say so rather than handing back a file that looks complete but is not.
+  const truncated =
+    meals.length > MAX_ROWS ||
+    workouts.length > MAX_ROWS ||
+    weights.length > MAX_ROWS ||
+    photos.length > MAX_ROWS;
+
+  if (truncated) {
+    return NextResponse.json(
+      {
+        error:
+          "Your history is too large to export in one request. Email support " +
+          "and we will send you the full archive.",
+      },
+      { status: 413 },
+    );
+  }
 
   if (format === "csv") {
     if (!type || !TYPES.includes(type)) {
@@ -175,7 +201,9 @@ export async function GET(req: Request) {
     progressPhotos: photos,
   };
 
-  return new NextResponse(JSON.stringify(payload, null, 2), {
+  // Not pretty-printed: indentation is pure size on a payload no human reads
+  // by eye, and this is built in memory before a byte goes out.
+  return new NextResponse(JSON.stringify(payload), {
     headers: {
       "content-type": "application/json; charset=utf-8",
       "content-disposition": `attachment; filename="${filename("export", "json")}"`,

@@ -22,7 +22,18 @@ const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET = process.env.R2_BUCKET;
-const R2_PUBLIC_BASE_URL = process.env.R2_PUBLIC_BASE_URL;
+
+/**
+ * A public CDN base for assets that are genuinely public.
+ *
+ * Explicitly NOT used for anything a user uploaded. Serving meal photos and
+ * progress photos from an unauthenticated URL trades away authorisation for
+ * cache-hit rate: the URL never expires, cannot be revoked, and leaks through
+ * browser history, referrers and any extension reading the page — and the
+ * keys are not secret either, since /api/export hands them back in plaintext.
+ * User media is always presigned. See `mediaUrl`.
+ */
+const PUBLIC_ASSET_BASE_URL = process.env.PUBLIC_ASSET_BASE_URL;
 
 /**
  * Optional endpoint override. Any S3-compatible store works here — Supabase
@@ -182,24 +193,66 @@ export async function deleteObject(key: string): Promise<void> {
 }
 
 /**
- * A browser-usable URL for an object. Public CDN base when configured,
- * otherwise a short-lived presigned URL, otherwise the local media route.
+ * How long a signed media URL stays valid, and therefore how long one stays
+ * cached below. An hour is long enough that a page load is one cache hit.
+ */
+const SIGNED_TTL_SECONDS = 3600;
+
+/**
+ * Signed URLs, memoised per key for the life of the window.
+ *
+ * A timeline of twenty entries carries an image and a voice note each, so an
+ * uncached render signs forty URLs — per request, for every viewer. Signing is
+ * pure CPU with no network, but at ten thousand concurrent readers it is CPU
+ * spent on producing the same forty strings over and over.
+ */
+const signedCache = new Map<string, { url: string; expiresAt: number }>();
+const SIGNED_CACHE_MAX = 5000;
+
+function cacheSigned(key: string, url: string, ttlMs: number) {
+  // A plain size cap rather than a real LRU: entries expire on their own, and
+  // the eviction only has to stop an unbounded instance from growing.
+  if (signedCache.size >= SIGNED_CACHE_MAX) {
+    const oldest = signedCache.keys().next().value;
+    if (oldest !== undefined) signedCache.delete(oldest);
+  }
+  signedCache.set(key, { url, expiresAt: Date.now() + ttlMs });
+}
+
+/**
+ * A browser-usable URL for an object.
+ *
+ * Always short-lived and signed when object storage is configured — user media
+ * is never served from an unauthenticated URL. The local media route is the
+ * development fallback.
  */
 export async function mediaUrl(
   key: string | null | undefined,
 ): Promise<string | null> {
   if (!key || !isSafeKey(key)) return null;
 
-  if (usingObjectStorage) {
-    if (R2_PUBLIC_BASE_URL) {
-      return `${R2_PUBLIC_BASE_URL.replace(/\/$/, "")}/${key}`;
-    }
-    return getSignedUrl(
-      s3(),
-      new GetObjectCommand({ Bucket: R2_BUCKET!, Key: key }),
-      { expiresIn: 3600 },
-    );
-  }
+  if (!usingObjectStorage) return `/api/media/${key}`;
 
-  return `/api/media/${key}`;
+  const hit = signedCache.get(key);
+  if (hit && hit.expiresAt > Date.now()) return hit.url;
+
+  const url = await getSignedUrl(
+    s3(),
+    new GetObjectCommand({ Bucket: R2_BUCKET!, Key: key }),
+    { expiresIn: SIGNED_TTL_SECONDS },
+  );
+
+  // Expire the cache entry before the signature does, so a URL handed out at
+  // the edge of the window is still valid when the browser asks for it.
+  cacheSigned(key, url, (SIGNED_TTL_SECONDS - 300) * 1000);
+  return url;
+}
+
+/**
+ * A URL for an asset that is meant to be world-readable — never user media.
+ * Returns null unless a public base is configured.
+ */
+export function publicAssetUrl(key: string): string | null {
+  if (!PUBLIC_ASSET_BASE_URL || !isSafeKey(key)) return null;
+  return `${PUBLIC_ASSET_BASE_URL.replace(/\/$/, "")}/${key}`;
 }

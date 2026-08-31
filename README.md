@@ -135,7 +135,7 @@ R2_ACCOUNT_ID=""             # Cloudflare → R2 → account id
 R2_ACCESS_KEY_ID=""
 R2_SECRET_ACCESS_KEY=""
 R2_BUCKET=""
-R2_PUBLIC_BASE_URL=""        # optional CDN base; presigned URLs are used without it
+PUBLIC_ASSET_BASE_URL=""     # public assets only; user media is always presigned
 
 OPENAI_API_KEY=""
 OPENAI_TRANSCRIBE_MODEL="whisper-1"
