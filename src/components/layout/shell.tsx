@@ -44,6 +44,7 @@ export function AppShell({
     email: string | null;
     image: string | null;
     role: "ATHLETE" | "COACH";
+    isAdmin?: boolean;
   };
   /** A word beside the logo, for the coach's side of the app. */
   badge?: string;
@@ -53,7 +54,12 @@ export function AppShell({
   mobileAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const home = user.role === "COACH" ? "/trainer" : "/dashboard";
+  const home =
+    badge === "Admin"
+      ? "/admin"
+      : user.role === "COACH"
+        ? "/trainer"
+        : "/dashboard";
 
   return (
     <div className="min-h-dvh md:flex">
@@ -75,6 +81,7 @@ export function AppShell({
             email={user.email}
             image={user.image}
             role={user.role}
+            isAdmin={user.isAdmin}
           />
 
           <Link
@@ -109,7 +116,8 @@ export function AppShell({
               email={user.email}
               image={user.image}
               role={user.role}
-              />
+              isAdmin={user.isAdmin}
+            />
           </div>
         </header>
 

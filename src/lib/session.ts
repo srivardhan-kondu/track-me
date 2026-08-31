@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { grantsAdmin } from "@/lib/admin";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
@@ -17,6 +18,8 @@ export type SessionUser = {
   role: "ATHLETE" | "COACH";
   /** Raw stored zone; pass through safeZone() before using it. */
   timeZone: string | null;
+  /** From the token, so it is only ever used to decide whether to show a link. */
+  isAdmin: boolean;
 };
 
 export async function currentUser(): Promise<SessionUser | null> {
@@ -29,6 +32,7 @@ export async function currentUser(): Promise<SessionUser | null> {
     image: session.user.image ?? null,
     role: session.user.role ?? "ATHLETE",
     timeZone: session.user.timeZone ?? null,
+    isAdmin: Boolean(session.user.isAdmin),
   };
 }
 
@@ -111,4 +115,47 @@ export async function premiumStatus(userId: string): Promise<PremiumStatus> {
 export async function assertPremium(userId: string): Promise<void> {
   const { premium } = await premiumStatus(userId);
   if (!premium) throw new Error("This feature needs a Premium plan");
+}
+
+/**
+ * Whether the signed-in caller may use the admin console.
+ *
+ * Read from the database on every check rather than from the JWT: revoking
+ * somebody's admin must take effect now, not whenever their token next
+ * refreshes. It is one indexed lookup on a page that is already doing dozens.
+ */
+export async function currentAdmin(): Promise<SessionUser | null> {
+  const user = await currentUser();
+  if (!user) return null;
+
+  const record = await db.user.findUnique({
+    where: { id: user.id },
+    select: { isAdmin: true, email: true },
+  });
+  if (!record) return null;
+
+  return grantsAdmin(record) ? user : null;
+}
+
+/**
+ * Gate for admin pages. Sends a signed-in non-admin back to their own
+ * dashboard rather than to sign-in, which would loop them.
+ */
+export async function requireAdmin(): Promise<SessionUser> {
+  const user = await currentUser();
+  if (!user) redirect("/signin");
+
+  const admin = await currentAdmin();
+  if (!admin) redirect("/dashboard");
+  return admin;
+}
+
+/**
+ * Gate for admin server actions. Throws rather than redirecting, for the same
+ * reason the other assertions do: an action must fail closed.
+ */
+export async function assertAdmin(): Promise<SessionUser> {
+  const admin = await currentAdmin();
+  if (!admin) throw new Error("Not authorised");
+  return admin;
 }

@@ -73,6 +73,12 @@ declare module "next-auth" {
       id: string;
       role: "ATHLETE" | "COACH";
       timeZone: string | null;
+      /**
+       * Shown-or-not for the admin link in the account menu, and nothing
+       * more. Authorisation re-reads the column on every admin request — see
+       * `currentAdmin()` — so a stale token can reveal a link, never a page.
+       */
+      isAdmin: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -204,6 +210,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             image: true,
             timeZone: true,
             trialEndsAt: true,
+            isAdmin: true,
           },
         });
         if (dbUser) {
@@ -222,6 +229,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.name = dbUser.name;
           token.picture = dbUser.image;
           token.timeZone = dbUser.timeZone;
+          token.isAdmin = dbUser.isAdmin;
         }
       }
       return token;
@@ -232,6 +240,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role =
           (token.role as "ATHLETE" | "COACH" | undefined) ?? "ATHLETE";
         session.user.timeZone = (token.timeZone as string | null) ?? null;
+        session.user.isAdmin = Boolean(token.isAdmin);
       }
       return session;
     },

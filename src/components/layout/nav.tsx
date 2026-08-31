@@ -6,8 +6,13 @@ import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   Camera,
+  CreditCard,
   Dumbbell,
+  Gauge,
+  ListChecks,
   Scale,
+  ScrollText,
+  ServerCog,
   TrendingUp,
   UtensilsCrossed,
   Users,
@@ -108,6 +113,34 @@ export const COACH_NAV: NavGroup[] = [
         short: "Training",
         icon: Dumbbell,
       },
+    ],
+  },
+];
+
+/**
+ * The admin rail, grouped by the question each section answers: is the
+ * business working, is the system healthy, and what has been done to it.
+ */
+export const ADMIN_NAV: NavGroup[] = [
+  {
+    label: "Console",
+    items: [
+      { href: "/admin", label: "Overview", short: "Overview", icon: Gauge, exact: true },
+      { href: "/admin/users", label: "Users", short: "Users", icon: Users },
+      {
+        href: "/admin/payments",
+        label: "Payments",
+        short: "Money",
+        icon: CreditCard,
+      },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/admin/jobs", label: "Queue", short: "Queue", icon: ListChecks },
+      { href: "/admin/system", label: "System", short: "System", icon: ServerCog },
+      { href: "/admin/audit", label: "Audit log", short: "Audit", icon: ScrollText },
     ],
   },
 ];
