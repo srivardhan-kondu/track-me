@@ -6,9 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Pooled connection used by the app at runtime.
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
   // Direct (unpooled) connection; schema pushes cannot run through pgBouncer.
   directUrl = env("DIRECT_URL")
 }
@@ -24,8 +24,18 @@ model User {
   emailVerified DateTime?
   image         String?
 
-  role      Role     @default(ATHLETE)
-  heightCm  Float?
+  role     Role   @default(ATHLETE)
+  heightCm Float?
+
+  /// Collected during onboarding. Drives which athlete portrait the app
+  /// shows, and nothing else — it is never used to gate a feature.
+  gender      Gender?
+  /// Age in years at the time it was given, not a birth date: onboarding asks
+  /// for the number, and re-asking is cheaper than storing a birthday.
+  age         Int?
+  /// Stamped when onboarding finishes or is skipped, so the flow only ever
+  /// appears once. Null means the athlete has not been through it.
+  onboardedAt DateTime?
 
   /// Paid entitlement. A trial grants premium features without touching this,
   /// so `plan` only ever moves once money has actually arrived.
@@ -100,6 +110,13 @@ enum Role {
   COACH
 }
 
+/// Asked once, during onboarding, to pick the athlete portrait. Deliberately
+/// nullable and skippable — nobody is forced to answer it.
+enum Gender {
+  FEMALE
+  MALE
+}
+
 /// Lifecycle of an AI-processed record.
 enum ProcessingStatus {
   PENDING
@@ -121,18 +138,35 @@ enum Pose {
   BACK
 }
 
+/// Whether an athlete has agreed to be coached by this coach.
+///
+/// A coach asking to monitor someone is a request, never a grant: only the
+/// athlete can move a link to ACCEPTED, and only an ACCEPTED link is treated
+/// as authorisation to read their data.
+enum LinkStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 /// Join table linking a coach to the athletes they monitor.
 model CoachAthlete {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   coachId   String
   athleteId String
+
+  status      LinkStatus @default(PENDING)
+  /// When the athlete accepted or declined. Null while still pending.
+  respondedAt DateTime?
+
   createdAt DateTime @default(now())
 
   coach   User @relation("CoachToAthlete", fields: [coachId], references: [id], onDelete: Cascade)
   athlete User @relation("AthleteToCoach", fields: [athleteId], references: [id], onDelete: Cascade)
 
   @@unique([coachId, athleteId])
-  @@index([athleteId])
+  @@index([athleteId, status])
+  @@index([coachId, status])
 }
 
 model Meal {
@@ -165,18 +199,18 @@ model Meal {
   comments Comment[]
 
   @@index([userId, eatenAt])
-  @@index([status])
+  @@index([userId, status])
 }
 
 model Workout {
   id     String @id @default(cuid())
   userId String
 
-  audioKey   String?
-  transcript String?
-  title      String?
+  audioKey    String?
+  transcript  String?
+  title       String?
   durationMin Int?
-  notes      String?
+  notes       String?
 
   status ProcessingStatus @default(PENDING)
   error  String?
@@ -190,6 +224,7 @@ model Workout {
   comments  Comment[]
 
   @@index([userId, performedAt])
+  @@index([userId, status])
 }
 
 model Exercise {
@@ -437,7 +472,7 @@ model Payment {
   note    String?
 
   /// Razorpay event name, kept to make redeliveries legible in the log.
-  event String
+  event   String
   /// The untouched webhook body, so an UNMATCHED payment can be settled by
   /// hand months later without asking Razorpay for the record again.
   payload Json
@@ -449,4 +484,77 @@ model Payment {
 
   @@index([status])
   @@index([email])
+}
+
+// ---------------------------------------------------------------------------
+// Infrastructure
+// ---------------------------------------------------------------------------
+
+enum JobKind {
+  MEAL_ANALYSIS
+  WORKOUT_PARSE
+}
+
+enum JobState {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+/// A unit of expensive work — currently the two OpenAI round trips — moved out
+/// of the request that created it.
+///
+/// The upload enqueues and returns; the model calls happen against this row.
+/// That buys three things the previous `after()` call could not: a retry with
+/// backoff when OpenAI rate-limits us, a lease so a killed invocation is
+/// picked up again instead of stranding the record on PROCESSING, and a
+/// terminal FAILED state a human can go and look at.
+model Job {
+  id       String  @id @default(cuid())
+  kind     JobKind
+  /// The Meal or Workout this job finishes. Unique per kind, so enqueueing
+  /// twice for the same record collides rather than doubling the AI spend.
+  targetId String
+  userId   String
+
+  /// Anything the job needs that is not on the target row — the typed
+  /// description, which is not persisted until the transcript is resolved.
+  payload Json?
+
+  state       JobState @default(QUEUED)
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(4)
+
+  /// Earliest a worker may claim this. Pushed forward on each backoff.
+  runAfter   DateTime  @default(now())
+  /// Set when claimed. A RUNNING row past this was killed mid-flight and is
+  /// free for another worker to take.
+  leaseUntil DateTime?
+
+  lastError String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([kind, targetId])
+  @@index([state, runAfter])
+  @@index([userId])
+}
+
+/// One fixed rate-limit window.
+///
+/// Postgres rather than Redis because the database is already here and already
+/// pooled: one upsert per check costs less than an extra service to operate.
+/// `lib/rate-limit.ts` swaps to Upstash by changing its backend, not its
+/// callers, if the write volume ever justifies it.
+model RateLimit {
+  /// "<bucket>:<identifier>:<window start>" — the window is baked into the key
+  /// so a new window is a new row rather than a read-modify-write race.
+  key       String   @id
+  count     Int      @default(0)
+  /// When this row stops counting. Swept by the job worker.
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }

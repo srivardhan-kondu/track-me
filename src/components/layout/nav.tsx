@@ -133,16 +133,16 @@ export function SidebarNav({ groups }: { groups: NavGroup[] }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] transition-colors",
+                  "flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13.5px] transition-colors",
                   active
                     ? "bg-accent-soft font-semibold text-fg"
                     : "font-medium text-fg-muted hover:bg-hover hover:text-fg",
                 )}
               >
-                <span
+                <item.icon
                   className={cn(
-                    "h-1.5 w-1.5 shrink-0 rounded-full transition-colors",
-                    active ? "bg-accent" : "bg-line-strong",
+                    "h-[17px] w-[17px] shrink-0 transition-colors",
+                    active ? "text-accent-text" : "text-fg-faint",
                   )}
                 />
                 {item.label}
@@ -157,7 +157,7 @@ export function SidebarNav({ groups }: { groups: NavGroup[] }) {
 
 /**
  * Thumb-first bottom bar. Destinations sit flat across the bottom; logging
- * gets the one big amber button, floated clear of them.
+ * gets the one big violet button, floated clear of them.
  */
 export function BottomNav({
   groups,
@@ -177,7 +177,7 @@ export function BottomNav({
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg-sunken/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg-sunken/92 backdrop-blur-xl md:hidden">
         <div
           className="mx-auto grid max-w-lg"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -191,15 +191,15 @@ export function BottomNav({
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 py-2.5 transition-colors",
-                  active ? "text-fg" : "text-fg-faint",
+                  "flex flex-col items-center gap-1.5 py-3 transition-colors",
+                  active ? "text-accent-text" : "text-fg-faint",
                 )}
               >
-                <Icon className="h-[18px] w-[18px]" />
+                <Icon className="h-[19px] w-[19px]" />
                 <span
                   className={cn(
-                    "font-mono text-[9.5px] uppercase tracking-[0.1em]",
-                    active && "font-semibold",
+                    "text-[10px] tracking-[0.01em]",
+                    active ? "font-bold" : "font-medium",
                   )}
                 >
                   {item.short}

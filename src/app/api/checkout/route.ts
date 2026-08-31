@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { PRICES } from "@/lib/entitlements";
+import { enforce, rateLimitResponse, RateLimited } from "@/lib/rate-limit";
 import { checkoutEnabled, createOrder, keyId, liveMode } from "@/lib/razorpay";
 import { currentUser } from "@/lib/session";
 
@@ -31,6 +32,14 @@ export async function POST(req: Request) {
       { error: "Payments are not configured on this deployment" },
       { status: 503 },
     );
+  }
+
+  // Every call creates a real order on the Razorpay account.
+  try {
+    await enforce("checkout", user.id, "Too many payment attempts.");
+  } catch (err) {
+    if (err instanceof RateLimited) return rateLimitResponse(err);
+    throw err;
   }
 
   const parsed = Body.safeParse(await req.json().catch(() => null));

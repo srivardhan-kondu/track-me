@@ -1,31 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Serif, JetBrains_Mono, Manrope } from "next/font/google";
+import { Manrope } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 
 import "./globals.css";
 
+/*
+  One family carries the whole interface: Manrope's variable axis covers the
+  regular weight prose is set in and the extrabold cut the display figures use.
+*/
 const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-manrope",
-});
-
-// Instrument Serif ships one weight; the italic is used for transcripts.
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  display: "swap",
-  variable: "--font-instrument-serif",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-  variable: "--font-jetbrains-mono",
 });
 
 export const metadata: Metadata = {
@@ -56,10 +44,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#221f1c" },
-  ],
+  // Track Me is a dark-only app; the chrome matches the page's black.
+  themeColor: "#0d0c14",
+  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -73,22 +60,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${manrope.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
-    >
-      <head>
-        {/*
-          Applies the stored theme before paint to avoid a flash. Track Me is
-          designed dark, so that is the default until someone chooses light.
-        */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("trackme-theme");if(t!=="light")document.documentElement.classList.add("dark");}catch(e){document.documentElement.classList.add("dark");}})();`,
-          }}
-        />
-      </head>
+    <html lang="en" suppressHydrationWarning className={manrope.variable}>
       <body className="min-h-dvh bg-bg font-sans text-fg">
         <Providers>
           <RegisterServiceWorker />

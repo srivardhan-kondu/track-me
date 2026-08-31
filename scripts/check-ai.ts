@@ -35,11 +35,14 @@ async function main() {
     console.log("1. Whisper transcription");
     const audio = await readFile(audioPath);
     const t0 = Date.now();
-    const spoken = await transcribeAudio(audio, audioPath.split("/").pop());
+    const { text: spoken, costUnits } = await transcribeAudio(
+      audio,
+      audioPath.split("/").pop(),
+    );
     money(
       "returned a transcript",
       Boolean(spoken),
-      `${Date.now() - t0}ms`,
+      `${Date.now() - t0}ms · ~$${(costUnits / 1000).toFixed(4)}`,
     );
     if (spoken) {
       console.log(`        "${spoken}"`);

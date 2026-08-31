@@ -5,12 +5,13 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { premiumStatus, requireUser } from "@/lib/session";
+import { enqueue } from "@/lib/jobs";
+import { enforce, RateLimited } from "@/lib/rate-limit";
+import { requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
-import { transcribeAudio } from "@/services/ai/transcribe";
-import { parseWorkout } from "@/services/ai/workout";
+import { runNow } from "@/services/processing";
 import { resolveExerciseIds } from "@/services/exercises/resolve";
-import { buildKey, deleteObject, getObject, putObject } from "@/services/storage";
+import { buildKey, deleteObject, putObject } from "@/services/storage";
 
 import type { ActionResult } from "./meals";
 
@@ -97,6 +98,19 @@ export async function createWorkout(
 ): Promise<ActionResult> {
   const user = await requireUser();
 
+  // Shares the AI budget with meal logging: both spend the same OpenAI quota.
+  try {
+    await enforce("aiCreate", user.id, "You have logged a lot of sessions recently.");
+    await enforce(
+      "aiCreateDaily",
+      user.id,
+      "You have reached today's logging limit.",
+    );
+  } catch (err) {
+    if (err instanceof RateLimited) return { ok: false, error: err.message };
+    throw err;
+  }
+
   let audio;
   try {
     audio = await readUpload(formData.get("audio"), "audio");
@@ -128,6 +142,20 @@ export async function createWorkout(
     return { ok: false, error: "Invalid workout time." };
   }
 
+  if (audio) {
+    try {
+      await enforce(
+        "uploadBytes",
+        user.id,
+        "You have uploaded a lot today.",
+        audio.buffer.byteLength,
+      );
+    } catch (err) {
+      if (err instanceof RateLimited) return { ok: false, error: err.message };
+      throw err;
+    }
+  }
+
   let audioKey: string | null = null;
   try {
     if (audio) {
@@ -154,90 +182,15 @@ export async function createWorkout(
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/workouts");
 
+  const jobId = await enqueue("WORKOUT_PARSE", workout.id, user.id, {
+    description,
+  });
+
   after(async () => {
-    await processWorkout(workout.id, description);
+    await runNow(jobId);
   });
 
   return { ok: true, id: workout.id };
-}
-
-async function processWorkout(
-  workoutId: string,
-  typedDescription: string | null,
-) {
-  try {
-    const workout = await db.workout.findUnique({
-      where: { id: workoutId },
-      select: {
-        userId: true,
-        audioKey: true,
-        transcript: true,
-        durationMin: true,
-      },
-    });
-    if (!workout) return;
-
-    // Read the plan here rather than at submission: this runs in after(), and
-    // a trial that lapsed in between should not still buy a parse.
-    const { premium } = await premiumStatus(workout.userId);
-
-    let transcript = workout.transcript;
-
-    if (workout.audioKey) {
-      const audio = await getObject(workout.audioKey);
-      const spoken = await transcribeAudio(
-        audio,
-        workout.audioKey.split("/").pop() ?? "note.webm",
-        premium,
-      );
-      transcript = [spoken, typedDescription].filter(Boolean).join(". ") || null;
-    }
-
-    const result = await parseWorkout(transcript, premium);
-
-    // Attach each movement to the catalog so its sets count toward muscle
-    // volume. An unrecognised name still logs, just without attribution.
-    const catalogIds = await resolveExerciseIds(
-      result.exercises.map((e) => e.name),
-    );
-
-    await db.$transaction([
-      // Replace any prior parse so a re-run does not duplicate exercises.
-      db.exercise.deleteMany({ where: { workoutId } }),
-      db.workout.update({
-        where: { id: workoutId },
-        data: {
-          transcript,
-          title: result.title,
-          // Never overwrite a duration the athlete entered by hand.
-          durationMin: workout.durationMin ?? result.durationMin,
-          status: "COMPLETE",
-          error: null,
-          exercises: {
-            create: result.exercises.map((ex, i) => ({
-              name: ex.name,
-              weightKg: ex.weightKg,
-              sets: ex.sets,
-              reps: ex.reps,
-              position: i,
-              catalogId: catalogIds[i],
-            })),
-          },
-        },
-      }),
-    ]);
-  } catch (err) {
-    await db.workout.update({
-      where: { id: workoutId },
-      data: {
-        status: "FAILED",
-        error: (err as Error).message.slice(0, 400),
-      },
-    });
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/workouts");
 }
 
 export async function reprocessWorkout(
@@ -253,14 +206,27 @@ export async function reprocessWorkout(
     return { ok: false, error: "Workout not found." };
   }
 
+  try {
+    await enforce(
+      "aiReprocess",
+      user.id,
+      "You have re-analysed several entries recently.",
+    );
+  } catch (err) {
+    if (err instanceof RateLimited) return { ok: false, error: err.message };
+    throw err;
+  }
+
   await db.workout.update({
     where: { id: workoutId },
     data: { status: "PROCESSING", error: null },
   });
 
   revalidatePath("/dashboard/workouts");
+
+  const jobId = await enqueue("WORKOUT_PARSE", workoutId, user.id, null);
   after(async () => {
-    await processWorkout(workoutId, null);
+    await runNow(jobId);
   });
 
   return { ok: true, id: workoutId };

@@ -48,6 +48,12 @@ export async function requireCoach(): Promise<SessionUser> {
 /**
  * Authorises a coach (or the athlete themselves) to read an athlete's data.
  * Throws rather than redirecting so server actions fail closed.
+ *
+ * The ACCEPTED check is the whole protection. A coach can ask to monitor
+ * anyone, and that request writes a PENDING row — but a request is not a
+ * grant, and only the athlete can turn one into the other. Without this
+ * condition, adding somebody by email would be enough to read their entire
+ * history, which is exactly the hole this closes.
  */
 export async function assertCanViewAthlete(
   viewerId: string,
@@ -57,10 +63,12 @@ export async function assertCanViewAthlete(
 
   const link = await db.coachAthlete.findUnique({
     where: { coachId_athleteId: { coachId: viewerId, athleteId } },
-    select: { id: true },
+    select: { status: true },
   });
 
-  if (!link) throw new Error("Not authorised to view this athlete");
+  if (link?.status !== "ACCEPTED") {
+    throw new Error("Not authorised to view this athlete");
+  }
 }
 
 export type PremiumStatus = Entitlement & {

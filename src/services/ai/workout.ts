@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import { aiEnabled, openai, VISION_MODEL } from "./client";
+import { chatCostUnits } from "./pricing";
+import { withRetry } from "./retry";
 
 export type ParsedExercise = {
   name: string;
@@ -14,6 +16,8 @@ export type WorkoutResult = {
   durationMin: number | null;
   exercises: ParsedExercise[];
   aiGenerated: boolean;
+  /** What the call cost, for the caller to record. Zero for the fallback. */
+  costUnits: number;
 };
 
 const ResponseSchema = z.object({
@@ -90,7 +94,13 @@ const KNOWN_MOVEMENTS = [
 function fallbackParse(transcript: string): WorkoutResult {
   const text = transcript.trim();
   if (!text) {
-    return { title: "Workout", durationMin: null, exercises: [], aiGenerated: false };
+    return {
+      title: "Workout",
+      durationMin: null,
+      exercises: [],
+      aiGenerated: false,
+      costUnits: 0,
+    };
   }
 
   const durMatch = text.match(
@@ -155,7 +165,7 @@ function fallbackParse(transcript: string): WorkoutResult {
       ? `${exercises[0].name} session`
       : "Workout";
 
-  return { title, durationMin, exercises, aiGenerated: false };
+  return { title, durationMin, exercises, aiGenerated: false, costUnits: 0 };
 }
 
 /**
@@ -167,31 +177,41 @@ function fallbackParse(transcript: string): WorkoutResult {
  */
 export async function parseWorkout(
   transcript: string | null | undefined,
-  useAi: boolean = aiEnabled,
+  useAi: boolean = aiEnabled(),
 ): Promise<WorkoutResult> {
   const text = transcript?.trim() ?? "";
 
-  if (!useAi || !aiEnabled) return fallbackParse(text);
+  if (!useAi || !aiEnabled()) return fallbackParse(text);
   if (!text) {
-    return { title: "Workout", durationMin: null, exercises: [], aiGenerated: false };
+    return {
+      title: "Workout",
+      durationMin: null,
+      exercises: [],
+      aiGenerated: false,
+      costUnits: 0,
+    };
   }
 
-  const res = await openai().chat.completions.create({
-    model: VISION_MODEL,
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: text },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "workout_log",
-        strict: true,
-        schema: JSON_SCHEMA as unknown as Record<string, unknown>,
+  const res = await withRetry("parseWorkout", () =>
+    openai().chat.completions.create({
+      model: VISION_MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: text },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "workout_log",
+          strict: true,
+          schema: JSON_SCHEMA as unknown as Record<string, unknown>,
+        },
       },
-    },
-    max_tokens: 1200,
-  });
+      max_tokens: 1200,
+    }),
+  );
+
+  const costUnits = chatCostUnits(res.usage);
 
   const raw = res.choices[0]?.message?.content;
   if (!raw) throw new Error("Model returned an empty response");
@@ -202,5 +222,6 @@ export async function parseWorkout(
     durationMin: parsed.durationMin,
     exercises: parsed.exercises,
     aiGenerated: true,
+    costUnits,
   };
 }

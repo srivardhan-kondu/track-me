@@ -41,7 +41,9 @@ export function AddAthlete() {
       return;
     }
 
-    toast.success("Athlete added to your roster.");
+    // Deliberately not "added": nothing has been granted yet, and telling a
+    // coach otherwise both misleads them and hides that the athlete has to act.
+    toast.success("Request sent. They will see it in their settings.");
     setEmail("");
     setOpen(false);
     router.refresh();
@@ -52,16 +54,16 @@ export function AddAthlete() {
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="h-4 w-4" />
-          Add athlete
+          Request access
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add an athlete</DialogTitle>
+          <DialogTitle>Request access to an athlete</DialogTitle>
           <DialogDescription>
-            They need a Track Me account first. Once added, their timeline appears
-            on your dashboard.
+            They need a Track Me account first. They will be asked to allow it,
+            and nothing of theirs is visible to you until they do.
           </DialogDescription>
         </DialogHeader>
 
@@ -90,7 +92,7 @@ export function AddAthlete() {
             </Button>
             <Button type="submit" disabled={pending}>
               {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Add
+              Send request
             </Button>
           </DialogFooter>
         </form>

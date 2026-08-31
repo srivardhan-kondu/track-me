@@ -5,11 +5,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { premiumStatus, requireUser } from "@/lib/session";
+import { enqueue } from "@/lib/jobs";
+import { enforce, RateLimited } from "@/lib/rate-limit";
+import { requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
-import { analyzeMeal } from "@/services/ai/nutrition";
-import { transcribeAudio } from "@/services/ai/transcribe";
-import { buildKey, deleteObject, getObject, putObject } from "@/services/storage";
+import { runNow } from "@/services/processing";
+import { buildKey, deleteObject, putObject } from "@/services/storage";
 
 export type ActionResult =
   | { ok: true; id?: string }
@@ -26,6 +27,20 @@ const CreateSchema = z.object({
  */
 export async function createMeal(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
+
+  // Each meal buys a Whisper call and a gpt-4o vision call, so this is the
+  // limit that governs the OpenAI bill.
+  try {
+    await enforce("aiCreate", user.id, "You have logged a lot of meals recently.");
+    await enforce(
+      "aiCreateDaily",
+      user.id,
+      "You have reached today's logging limit.",
+    );
+  } catch (err) {
+    if (err instanceof RateLimited) return { ok: false, error: err.message };
+    throw err;
+  }
 
   let image, audio;
   try {
@@ -57,6 +72,23 @@ export async function createMeal(formData: FormData): Promise<ActionResult> {
     : new Date();
   if (Number.isNaN(eatenAt.getTime())) {
     return { ok: false, error: "Invalid meal time." };
+  }
+
+  // Storage is billed by the gigabyte; spend the real byte count so one large
+  // upload costs what a hundred small ones would.
+  const bytes = (image?.buffer.byteLength ?? 0) + (audio?.buffer.byteLength ?? 0);
+  if (bytes > 0) {
+    try {
+      await enforce(
+        "uploadBytes",
+        user.id,
+        "You have uploaded a lot today.",
+        bytes,
+      );
+    } catch (err) {
+      if (err instanceof RateLimited) return { ok: false, error: err.message };
+      throw err;
+    }
   }
 
   let imageKey: string | null = null;
@@ -93,91 +125,15 @@ export async function createMeal(formData: FormData): Promise<ActionResult> {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/meals");
 
+  const jobId = await enqueue("MEAL_ANALYSIS", meal.id, user.id, { description });
+
+  // Try it inline so an ordinary upload finishes as fast as it always did —
+  // but the queue, not this call, is what guarantees the job runs.
   after(async () => {
-    await processMeal(meal.id, description);
+    await runNow(jobId);
   });
 
   return { ok: true, id: meal.id };
-}
-
-/** Runs transcription and nutrition estimation, then finalises the meal row. */
-async function processMeal(mealId: string, typedDescription: string | null) {
-  try {
-    const meal = await db.meal.findUnique({
-      where: { id: mealId },
-      select: {
-        userId: true,
-        imageKey: true,
-        audioKey: true,
-        transcript: true,
-      },
-    });
-    if (!meal) return;
-
-    // Read the plan here rather than at submission: this runs in after(), and
-    // a trial that lapsed in between should not still buy an analysis.
-    const { premium } = await premiumStatus(meal.userId);
-
-    let transcript = meal.transcript;
-
-    if (meal.audioKey) {
-      const audio = await getObject(meal.audioKey);
-      const spoken = await transcribeAudio(
-        audio,
-        meal.audioKey.split("/").pop() ?? "note.webm",
-        premium,
-      );
-      // Fall back to the typed description when speech-to-text is unavailable.
-      transcript = [spoken, typedDescription].filter(Boolean).join(". ") || null;
-    }
-
-    let imagePayload = null;
-    if (meal.imageKey) {
-      const buffer = await getObject(meal.imageKey);
-      const ext = meal.imageKey.split(".").pop()?.toLowerCase();
-      imagePayload = {
-        buffer,
-        contentType:
-          ext === "png"
-            ? "image/png"
-            : ext === "webp"
-              ? "image/webp"
-              : "image/jpeg",
-      };
-    }
-
-    const result = await analyzeMeal(
-      { transcript, image: imagePayload },
-      premium,
-    );
-
-    await db.meal.update({
-      where: { id: mealId },
-      data: {
-        transcript,
-        title: result.title,
-        slot: result.slot ?? undefined,
-        calories: result.calories,
-        protein: result.protein,
-        carbs: result.carbs,
-        fat: result.fat,
-        items: result.items,
-        status: "COMPLETE",
-        error: null,
-      },
-    });
-  } catch (err) {
-    await db.meal.update({
-      where: { id: mealId },
-      data: {
-        status: "FAILED",
-        error: (err as Error).message.slice(0, 400),
-      },
-    });
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/meals");
 }
 
 /** Re-runs AI processing for a meal that failed or was mis-estimated. */
@@ -192,14 +148,29 @@ export async function reprocessMeal(mealId: string): Promise<ActionResult> {
     return { ok: false, error: "Meal not found." };
   }
 
+  // Tighter than logging: this re-runs the whole pipeline with no upload to
+  // slow it down.
+  try {
+    await enforce(
+      "aiReprocess",
+      user.id,
+      "You have re-analysed several entries recently.",
+    );
+  } catch (err) {
+    if (err instanceof RateLimited) return { ok: false, error: err.message };
+    throw err;
+  }
+
   await db.meal.update({
     where: { id: mealId },
     data: { status: "PROCESSING", error: null },
   });
 
   revalidatePath("/dashboard");
+
+  const jobId = await enqueue("MEAL_ANALYSIS", mealId, user.id, null);
   after(async () => {
-    await processMeal(mealId, null);
+    await runNow(jobId);
   });
 
   return { ok: true, id: mealId };

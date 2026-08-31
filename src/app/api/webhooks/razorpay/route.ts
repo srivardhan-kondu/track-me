@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { clientIp, enforce, rateLimitResponse, RateLimited } from "@/lib/rate-limit";
 import { extractPayment, verifySignature } from "@/lib/razorpay";
 import { recordPayment } from "@/services/billing";
 
@@ -24,6 +25,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  // Deliberately generous. The signature check already rejects forgeries, and
+  // throttling a genuine redelivery loses a payment — so this is here to stop
+  // someone burning invocations on HMAC work, nothing more.
+  try {
+    await enforce("global", `webhook:${await clientIp()}`, "Too many requests.");
+  } catch (err) {
+    if (err instanceof RateLimited) return rateLimitResponse(err);
+    throw err;
+  }
+
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret) {
     console.error("[razorpay] RAZORPAY_WEBHOOK_SECRET is not set");

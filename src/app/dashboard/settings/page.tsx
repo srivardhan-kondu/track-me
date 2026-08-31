@@ -1,5 +1,6 @@
 import { ExportData } from "@/components/billing/export-data";
 import { Upgrade } from "@/components/billing/upgrade";
+import { CoachAccess } from "@/components/settings/coach-access";
 import { RoleSwitcher } from "@/components/settings/role-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,8 @@ import { premiumStatus, requireUser } from "@/lib/session";
 import { cn, initials } from "@/lib/utils";
 import { safeZone } from "@/lib/tz";
 import { aiEnabled } from "@/services/ai/client";
+import { ProfileForm } from "@/components/settings/profile-form";
+import { getCoachLinksForAthlete } from "@/services/reporting";
 import { storageProvider, usingObjectStorage } from "@/services/storage";
 
 export const metadata = { title: "Settings" };
@@ -127,12 +130,11 @@ export default async function SettingsPage() {
   const status = await premiumStatus(user.id);
   const plan = planSummary(status);
 
-  const coaches = await db.coachAthlete.findMany({
-    where: { athleteId: user.id },
-    orderBy: { createdAt: "asc" },
-    include: {
-      coach: { select: { id: true, name: true, email: true, image: true } },
-    },
+  const coachLinks = await getCoachLinksForAthlete(user.id);
+
+  const profile = await db.user.findUnique({
+    where: { id: user.id },
+    select: { gender: true, age: true, heightCm: true },
   });
 
   return (
@@ -171,6 +173,17 @@ export default async function SettingsPage() {
               </Badge>
             </div>
           </section>
+
+          <Panel
+            title="About you"
+            description="What onboarding asked for. Change or clear any of it."
+          >
+            <ProfileForm
+              gender={profile?.gender ?? null}
+              age={profile?.age ?? null}
+              heightCm={profile?.heightCm ?? null}
+            />
+          </Panel>
 
           <Panel title="Plan" description={plan.detail}>
             {checkoutEnabled ? (
@@ -224,45 +237,14 @@ export default async function SettingsPage() {
         <div className="flex flex-col gap-5">
           <Panel
             title="Your coach"
-            description="Anyone listed here can see your timeline and leave notes on it."
+            description="A coach sees nothing until you allow it, and you can withdraw that at any time."
             tone="sage"
           >
-            {coaches.length === 0 ? (
-              <p className="text-[12.5px] leading-relaxed text-fg-muted">
-                No coach is monitoring you yet. Ask your trainer to add you by
-                the email you signed up with,{" "}
-                <span className="font-mono text-[12px] text-fg">
-                  {user.email}
-                </span>
-                .
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {coaches.map(({ coach, createdAt }) => (
-                  <li key={coach.id} className="flex items-center gap-3">
-                    <Avatar>
-                      {coach.image && <AvatarImage src={coach.image} alt="" />}
-                      <AvatarFallback>
-                        {initials(coach.name, coach.email)}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[12.5px] font-semibold text-fg">
-                        {coach.name ?? "Coach"}
-                      </p>
-                      <p className="mt-0.5 truncate text-[11.5px] text-fg-muted">
-                        Can see your timeline · since{" "}
-                        {createdAt.toLocaleDateString(undefined, {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <CoachAccess
+              pending={coachLinks.pending}
+              accepted={coachLinks.accepted}
+              email={user.email}
+            />
           </Panel>
 
           <Panel
@@ -281,9 +263,9 @@ export default async function SettingsPage() {
               />
               <ServiceRow
                 name="Voice & vision"
-                live={aiEnabled}
+                live={aiEnabled()}
                 detail={
-                  aiEnabled
+                  aiEnabled()
                     ? "Transcription and nutrition analysis are live."
                     : "No API key — meals fall back to the offline estimator and voice notes are stored but not transcribed."
                 }

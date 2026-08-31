@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 import { aiEnabled, openai, VISION_MODEL } from "./client";
+import { chatCostUnits } from "./pricing";
 import { estimateFromText, type EstimatedItem } from "./food-table";
+import { withRetry } from "./retry";
 
 export type MealSlotValue = "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
 
@@ -15,6 +17,8 @@ export type NutritionResult = {
   fat: number;
   /** True when a real vision model produced the estimate. */
   aiGenerated: boolean;
+  /** What the call cost, for the caller to record. Zero for the fallback. */
+  costUnits: number;
 };
 
 const ItemSchema = z.object({
@@ -138,6 +142,7 @@ function fallback(transcript: string): NutritionResult {
     carbs: est.carbs,
     fat: est.fat,
     aiGenerated: false,
+    costUnits: 0,
   };
 }
 
@@ -152,11 +157,11 @@ export async function analyzeMeal(
     transcript?: string | null;
     image?: { buffer: Buffer; contentType: string } | null;
   },
-  useAi: boolean = aiEnabled,
+  useAi: boolean = aiEnabled(),
 ): Promise<NutritionResult> {
   const transcript = input.transcript?.trim() ?? "";
 
-  if (!useAi || !aiEnabled) return fallback(transcript);
+  if (!useAi || !aiEnabled()) return fallback(transcript);
 
   const content: Array<
     | { type: "text"; text: string }
@@ -178,26 +183,32 @@ export async function analyzeMeal(
     });
   }
 
-  const res = await openai().chat.completions.create({
-    model: VISION_MODEL,
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "meal_nutrition",
-        strict: true,
-        schema: JSON_SCHEMA as unknown as Record<string, unknown>,
+  const res = await withRetry("analyzeMeal", () =>
+    openai().chat.completions.create({
+      model: VISION_MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "meal_nutrition",
+          strict: true,
+          schema: JSON_SCHEMA as unknown as Record<string, unknown>,
+        },
       },
-    },
-    // The same meal must score the same every time, or the coach is reading
-    // sampling noise instead of a trend.
-    temperature: 0,
-    seed: 1,
-    max_tokens: 1500,
-  });
+      // The same meal must score the same every time, or the coach is reading
+      // sampling noise instead of a trend.
+      temperature: 0,
+      seed: 1,
+      max_tokens: 1500,
+    }),
+  );
+
+  // Charge before parsing: the tokens were spent whether or not the response
+  // turns out to be usable.
+  const costUnits = chatCostUnits(res.usage);
 
   const raw = res.choices[0]?.message?.content;
   if (!raw) throw new Error("Vision model returned an empty response");
@@ -213,5 +224,6 @@ export async function analyzeMeal(
     carbs: parsed.carbs,
     fat: parsed.fat,
     aiGenerated: true,
+    costUnits,
   };
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
+import { enforce, RateLimited } from "@/lib/rate-limit";
 import { assertCanViewAthlete, requireUser } from "@/lib/session";
 
 import type { ActionResult } from "./meals";
@@ -24,6 +25,14 @@ const CommentSchema = z
 /** Leaves feedback on a meal, workout or weigh-in. */
 export async function addComment(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
+
+  // Writes into somebody else's timeline, so it needs a spam ceiling.
+  try {
+    await enforce("comment", user.id, "You have posted a lot of feedback.");
+  } catch (err) {
+    if (err instanceof RateLimited) return { ok: false, error: err.message };
+    throw err;
+  }
 
   const parsed = CommentSchema.safeParse({
     body: formData.get("body")?.toString() ?? "",
@@ -102,11 +111,30 @@ export async function deleteComment(id: string): Promise<ActionResult> {
   return { ok: true };
 }
 
-/** A coach adds an athlete to their roster by email. */
+/**
+ * A coach asks an athlete for access.
+ *
+ * This creates a PENDING link and nothing more. It grants no visibility of the
+ * athlete's data — only they can do that, by accepting. Previously this wrote
+ * a link that `assertCanViewAthlete` honoured immediately, which meant an
+ * email address was all anyone needed to read another person's meals, weight
+ * history and progress photos.
+ *
+ * The response is deliberately the same whether or not the address belongs to
+ * an account. Distinguishing them turns this into an oracle for testing which
+ * email addresses are registered.
+ */
 export async function linkAthlete(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
   if (user.role !== "COACH") {
-    return { ok: false, error: "Only coaches can add athletes." };
+    return { ok: false, error: "Only coaches can request access." };
+  }
+
+  try {
+    await enforce("linkAthlete", user.id, "You have sent a lot of requests today.");
+  } catch (err) {
+    if (err instanceof RateLimited) return { ok: false, error: err.message };
+    throw err;
   }
 
   const email = formData.get("email")?.toString().trim().toLowerCase();
@@ -116,25 +144,62 @@ export async function linkAthlete(formData: FormData): Promise<ActionResult> {
 
   const athlete = await db.user.findUnique({
     where: { email },
-    select: { id: true, role: true },
+    select: { id: true },
   });
-  if (!athlete) {
-    return {
-      ok: false,
-      error: "No Track Me account with that email yet. Ask them to sign up first.",
-    };
-  }
-  if (athlete.id === user.id) {
-    return { ok: false, error: "You cannot add yourself." };
+
+  // Same outcome for an unknown address as for a real one.
+  if (!athlete || athlete.id === user.id) {
+    return { ok: true };
   }
 
   await db.coachAthlete.upsert({
     where: { coachId_athleteId: { coachId: user.id, athleteId: athlete.id } },
-    create: { coachId: user.id, athleteId: athlete.id },
+    create: { coachId: user.id, athleteId: athlete.id, status: "PENDING" },
+    // A previously declined coach may ask again, but re-asking never revives
+    // an old acceptance and never clears a decision the athlete already made.
     update: {},
   });
 
   revalidatePath("/trainer");
+  return { ok: true };
+}
+
+/**
+ * The athlete answers a coach's request. This is the only path that grants
+ * access to their data.
+ */
+export async function respondToCoachRequest(
+  coachId: string,
+  accept: boolean,
+): Promise<ActionResult> {
+  const user = await requireUser();
+
+  // Scoped to the caller as the athlete, so nobody can answer on their behalf.
+  const { count } = await db.coachAthlete.updateMany({
+    where: { coachId, athleteId: user.id, status: "PENDING" },
+    data: {
+      status: accept ? "ACCEPTED" : "DECLINED",
+      respondedAt: new Date(),
+    },
+  });
+
+  if (count === 0) return { ok: false, error: "That request is no longer open." };
+
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** An athlete withdraws access they previously granted. */
+export async function revokeCoachAccess(coachId: string): Promise<ActionResult> {
+  const user = await requireUser();
+
+  await db.coachAthlete.deleteMany({
+    where: { coachId, athleteId: user.id },
+  });
+
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 
@@ -146,6 +211,7 @@ export async function unlinkAthlete(
     return { ok: false, error: "Only coaches can manage a roster." };
   }
 
+
   await db.coachAthlete.deleteMany({
     where: { coachId: user.id, athleteId },
   });
@@ -156,7 +222,16 @@ export async function unlinkAthlete(
 
 const RoleSchema = z.enum(["ATHLETE", "COACH"]);
 
-/** Switches between the athlete and coach experience. */
+/**
+ * Switches between the athlete and coach experience.
+ *
+ * Self-serve on purpose, and safe now that it is: coaching grants nothing on
+ * its own. A COACH with no ACCEPTED links can see exactly what any other
+ * account can, which is their own data. Before the consent change this
+ * function was the first step of a privilege escalation — switch role, add a
+ * victim by email, read their history — so if the link ever stops requiring
+ * acceptance, this needs a gate again.
+ */
 export async function updateRole(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
 

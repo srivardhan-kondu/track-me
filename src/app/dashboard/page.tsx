@@ -1,11 +1,12 @@
 import { DaySwitcher } from "@/components/dashboard/day-switcher";
 import { FuelPanel } from "@/components/dashboard/fuel-panel";
+import { DashboardHero } from "@/components/dashboard/hero";
 import {
   CoachNoteCard,
   ConsistencyCard,
   WeightRailCard,
 } from "@/components/dashboard/rail";
-import { EmptyState, SectionHeading } from "@/components/layout/page";
+import { EmptyState } from "@/components/layout/page";
 import { MealForm } from "@/components/log/meal-form";
 import { WeightForm } from "@/components/log/weight-form";
 import { WorkoutForm } from "@/components/log/workout-form";
@@ -32,6 +33,7 @@ import {
   getDayTotals,
   getLatestCoachNote,
   getSummary,
+  getWeekFigures,
   getWeightSeries,
 } from "@/services/reporting";
 
@@ -71,8 +73,18 @@ export default async function TodayPage({
   const date = premium || requested >= earliest ? requested : earliest;
   const isToday = isSameDayInZone(date, new Date(), zone);
 
-  const [entries, totals, summary, series, compliance, note, pending, lastWeight] =
-    await Promise.all([
+  const [
+    entries,
+    totals,
+    summary,
+    series,
+    compliance,
+    note,
+    pending,
+    lastWeight,
+    week,
+    profile,
+  ] = await Promise.all([
       getDayTimeline(user.id, date, zone),
       getDayTotals(user.id, date, zone),
       getSummary(user.id, 7, zone),
@@ -87,6 +99,11 @@ export default async function TodayPage({
         orderBy: { day: "desc" },
         select: { weightKg: true },
       }),
+      getWeekFigures(user.id, 7, zone),
+      db.user.findUnique({
+        where: { id: user.id },
+        select: { gender: true },
+      }),
     ]);
 
   const prev = addDaysInZone(date, -1, zone);
@@ -94,6 +111,19 @@ export default async function TodayPage({
 
   const firstName = user.name?.split(" ")[0] ?? "there";
   const hour = hourInZone(new Date(), zone);
+
+  /*
+    The hero ring reports how much of the week was actually logged: each day
+    can score a meal, a workout and a weigh-in, and the ring is what share of
+    those the athlete filled in.
+  */
+  const slots = compliance.length * 3;
+  const filled = compliance.reduce(
+    (n, d) =>
+      n + (d.meals > 0 ? 1 : 0) + (d.workouts > 0 ? 1 : 0) + (d.weighedIn ? 1 : 0),
+    0,
+  );
+  const consistencyPct = slots > 0 ? Math.round((filled / slots) * 100) : 0;
 
   // A genuine day one: nothing logged, ever.
   const dayOne =
@@ -103,27 +133,31 @@ export default async function TodayPage({
     <>
       <ProcessingWatcher initialPending={pending} />
 
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        <div className="min-w-0">
-          <p className="mono-label mb-2.5">
-            {formatDateInZone(date, zone, {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            })}
-          </p>
-          <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[33px]">
-            {isToday ? `${greeting(hour)}, ${firstName}` : "That day"}
-          </h1>
-        </div>
-
-        <DaySwitcher
-          prevHref={`/dashboard?date=${toDateParam(prev, zone)}`}
-          todayHref="/dashboard"
-          nextHref={`/dashboard?date=${toDateParam(next, zone)}`}
-          isToday={isToday}
+      {isToday ? (
+        <DashboardHero
+          greeting={greeting(hour)}
+          name={firstName}
+          gender={profile?.gender ?? null}
+          consistencyPct={consistencyPct}
+          week={week}
         />
-      </div>
+      ) : (
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+          <div className="min-w-0">
+            <p className="mono-label mb-2.5">
+              {formatDateInZone(date, zone, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
+            </p>
+            <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[33px]">
+              That day
+            </h1>
+          </div>
+        </div>
+      )}
+
 
       <FuelPanel
         totals={totals}
@@ -152,15 +186,19 @@ export default async function TodayPage({
 
       <div className="grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:items-start">
         <section className="flex min-w-0 flex-col gap-3.5">
-          <SectionHeading
-            meta={
-              totals.workoutCount > 0
-                ? `${totals.workoutCount} session${totals.workoutCount === 1 ? "" : "s"}`
-                : undefined
-            }
-          >
-            Timeline
-          </SectionHeading>
+          {/*
+            The day switcher lives on the timeline it actually controls, rather
+            than floating in its own row above the page.
+          */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-[12.5px] font-semibold text-fg">Timeline</h2>
+            <DaySwitcher
+              prevHref={`/dashboard?date=${toDateParam(prev, zone)}`}
+              todayHref="/dashboard"
+              nextHref={`/dashboard?date=${toDateParam(next, zone)}`}
+              isToday={isToday}
+            />
+          </div>
 
           <Timeline
             entries={entries}

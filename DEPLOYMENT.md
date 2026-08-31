@@ -74,9 +74,12 @@ No CORS configuration is needed: uploads pass through the server, not the browse
 > R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY   from Storage → S3 Access Keys
 > ```
 
-`R2_PUBLIC_BASE_URL` is optional. Leave it blank and the app issues presigned
-URLs valid for one hour. Set it only if you attach a public custom domain to
-the bucket.
+Keep the media bucket **private**. Meal photos, progress photos and voice notes
+are always served through presigned URLs valid for one hour — never through a
+public link. `PUBLIC_ASSET_BASE_URL` exists for assets that are genuinely
+public and must not be pointed at the media bucket: an unauthenticated CDN URL
+never expires and cannot be revoked, and the object keys are not secret, since
+the data export returns them in plaintext.
 
 ## 3. Generate an auth secret
 
@@ -196,5 +199,70 @@ MVP. OpenAI is the only metered cost — roughly a fraction of a cent per meal
 | `Access blocked: app not verified` | The consent screen is in Testing and the account is not a listed test user. |
 | Upload fails with a storage error | R2 variables missing or the token lacks Object Read & Write on that bucket. |
 | `Error: P1001 can't reach database` | Wrong `DATABASE_URL`, or `sslmode=require` missing. |
-| Photos 404 after upload | `R2_PUBLIC_BASE_URL` points at a bucket without a public custom domain. Clear it to fall back to presigned URLs. |
+| Photos 404 after upload | Bucket credentials lack read access, or the key was written to a different bucket than the one being read. |
+| Meals stay on "Analysing" | The job queue is not being drained. Check `CRON_SECRET` is set and the Vercel Cron for `/api/jobs/run` is registered; call it by hand with `Authorization: Bearer $CRON_SECRET` to see the queue state. |
 | Macros never arrive | `OPENAI_API_KEY` unset or out of credit — check the function logs. |
+
+## Background jobs
+
+The two OpenAI calls a meal or workout needs — transcription and analysis — run
+as queued jobs rather than inside the upload request. The upload enqueues,
+tries the job inline so an ordinary log still feels instant, and returns; a
+Vercel Cron drains whatever the inline attempt could not finish.
+
+Set before deploying:
+
+```
+CRON_SECRET       openssl rand -hex 32
+AI_MAX_IN_FLIGHT  20 by default; size it to your OpenAI tier
+```
+
+`vercel.json` registers the every-minute cron. Vercel sends the secret as a
+bearer token automatically; nothing else may call the endpoint.
+
+Without `CRON_SECRET` the worker refuses every request, and any job the inline
+attempt fails to finish — a killed invocation, a rate-limited OpenAI call —
+stays queued with nothing to pick it up. Check it is set.
+
+## The OpenAI budget
+
+`AI_DAILY_BUDGET_USD` is a hard ceiling on what the key may spend in a day.
+Past it, queued analysis is parked until the window rolls over rather than run
+or failed — logging keeps working and the macros arrive the next day.
+
+This is the limit that matters at scale. The per-user rate limits bound what
+one athlete can do; they do nothing about ten thousand athletes each doing
+their allowance, and every sign-up gets a seven-day trial, so "users" means
+sign-ups rather than customers. Sixty AI logs a day across ten thousand trial
+accounts is roughly 600,000 model calls.
+
+Spend is recorded from the usage the API reports back, in tenths of a cent, and
+the current figure comes back on every worker pass:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://<host>/api/jobs/run
+# { ..., "budget": { "spentUsd": 3.184, "budgetUsd": 25, "exhausted": false } }
+```
+
+Start low, watch that number for a week, and raise it knowingly.
+
+One rule when working on `src/services/ai/`: **those modules must not import
+anything that reaches the Prisma client.** The client reads `.env` when it
+initialises, and `aiEnabled` is derived from `OPENAI_API_KEY` — so a database
+import in that graph silently switches the offline fallback off and makes the
+test suite spend real money against the production key. The cost maths lives in
+`pricing.ts`, which imports nothing; the ledger lives in `budget.ts`, which is
+only touched by callers that already have a database. `tests/ai-isolation.test.ts`
+enforces the split.
+
+## Rate limits
+
+Every limited surface is declared in one place, `src/lib/rate-limit.ts`, keyed
+by user id wherever there is a session. Windows are stored in Postgres and
+swept by the job worker.
+
+The one limit that is **not** in application code is the global per-IP ceiling:
+rejecting a flood in a route handler still costs a function invocation, so it
+belongs at the edge. Configure it in **Vercel → Firewall** — 300 requests per
+minute per IP is a reasonable starting point, above anything a real client
+does. Vercel's managed DDoS protection sits in front of that.

@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { Mark } from "@/components/layout/mark";
 import { BottomNav, SidebarNav, type NavGroup } from "@/components/layout/nav";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserCard, UserMenu } from "@/components/layout/user-menu";
 import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -75,15 +74,12 @@ export function AppShell({
             role={user.role}
           />
 
-          <div className="flex items-center justify-between pl-3">
-            <Link
-              href="/dashboard/settings"
-              className="text-[12.5px] font-medium text-fg-dim transition-colors hover:text-fg"
-            >
-              Settings
-            </Link>
-            <ThemeToggle />
-          </div>
+          <Link
+            href="/dashboard/settings"
+            className="pl-3 text-[12.5px] font-medium text-fg-dim transition-colors hover:text-fg"
+          >
+            Settings
+          </Link>
         </div>
       </aside>
 
@@ -99,7 +95,6 @@ export function AppShell({
           </div>
 
           <div className="flex items-center gap-1">
-            <ThemeToggle />
             <UserMenu
               name={user.name}
               email={user.email}

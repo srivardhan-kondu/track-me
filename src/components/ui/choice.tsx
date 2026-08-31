@@ -31,10 +31,10 @@ export function ChoiceTile({
       disabled={disabled}
       aria-pressed={selected}
       className={cn(
-        "rounded-xl border p-3.5 text-left transition-colors disabled:opacity-60",
+        "rounded-[16px] border p-3.5 text-left transition-colors disabled:opacity-60",
         selected
-          ? "border-accent-line bg-accent-soft"
-          : "border-line-strong hover:bg-hover",
+          ? "border-accent bg-accent-soft ring-1 ring-accent"
+          : "border-line hover:border-line-strong hover:bg-hover",
         className,
       )}
     >
