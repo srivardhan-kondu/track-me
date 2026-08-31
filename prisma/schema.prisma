@@ -121,18 +121,35 @@ enum Pose {
   BACK
 }
 
+/// Whether an athlete has agreed to be coached by this coach.
+///
+/// A coach asking to monitor someone is a request, never a grant: only the
+/// athlete can move a link to ACCEPTED, and only an ACCEPTED link is treated
+/// as authorisation to read their data.
+enum LinkStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 /// Join table linking a coach to the athletes they monitor.
 model CoachAthlete {
   id        String   @id @default(cuid())
   coachId   String
   athleteId String
+
+  status      LinkStatus @default(PENDING)
+  /// When the athlete accepted or declined. Null while still pending.
+  respondedAt DateTime?
+
   createdAt DateTime @default(now())
 
   coach   User @relation("CoachToAthlete", fields: [coachId], references: [id], onDelete: Cascade)
   athlete User @relation("AthleteToCoach", fields: [athleteId], references: [id], onDelete: Cascade)
 
   @@unique([coachId, athleteId])
-  @@index([athleteId])
+  @@index([athleteId, status])
+  @@index([coachId, status])
 }
 
 model Meal {

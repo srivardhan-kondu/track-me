@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { requireCoach } from "@/lib/session";
 import { cn, initials } from "@/lib/utils";
-import { getCoachRoster } from "@/services/reporting";
+import { getCoachRoster, getPendingRequests } from "@/services/reporting";
 
 export const metadata = { title: "Coach dashboard" };
 
@@ -70,7 +70,10 @@ function Figure({
 
 export default async function TrainerPage() {
   const coach = await requireCoach();
-  const roster = await getCoachRoster(coach.id);
+  const [roster, pending] = await Promise.all([
+    getCoachRoster(coach.id),
+    getPendingRequests(coach.id),
+  ]);
 
   return (
     <>
@@ -89,10 +92,41 @@ export default async function TrainerPage() {
         <AddAthlete />
       </div>
 
+      {pending.length > 0 && (
+        <section className="rounded-2xl border border-line-strong bg-surface p-5">
+          <p className="mono-label">Waiting on the athlete</p>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-fg-muted">
+            You will see nothing of their training until they allow it. Ask them
+            to check Settings on their own account.
+          </p>
+          <ul className="mt-3.5 flex flex-col gap-2">
+            {pending.map(({ athlete }) => (
+              <li
+                key={athlete.id}
+                className="flex items-center gap-3 border-t border-line pt-2.5 first:border-0 first:pt-0"
+              >
+                <Avatar className="h-8 w-8">
+                  {athlete.image && <AvatarImage src={athlete.image} alt="" />}
+                  <AvatarFallback className="text-[11px]">
+                    {initials(athlete.name, athlete.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[12.5px] font-medium text-fg">
+                    {athlete.name ?? athlete.email}
+                  </p>
+                </div>
+                <Badge variant="warning">Pending</Badge>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {roster.length === 0 ? (
         <EmptyState
           title="Your roster is empty"
-          body="Add an athlete by the email they signed up with. Their meals, workouts and weigh-ins appear here as they log them — and you can leave a note on any of it."
+          body="Request access using the email an athlete signed up with. Once they allow it, their meals, workouts and weigh-ins appear here as they log them — and you can leave a note on any of it."
           action={<AddAthlete />}
         />
       ) : (

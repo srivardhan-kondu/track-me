@@ -381,9 +381,25 @@ export async function getCompliance(
 }
 
 /** Roster rows for the coach dashboard. */
+const ROSTER_DAYS = 7;
+
+/**
+ * The coach's roster, with each athlete's week and today at a glance.
+ *
+ * Batched deliberately. The obvious shape — map over the roster and call
+ * `getSummary` and `getDayTotals` per athlete — costs six round trips each,
+ * so a coach with fifty athletes issued over three hundred queries to render
+ * one page, all fired at once against a connection pool holding one connection
+ * per instance. This runs a fixed four queries regardless of roster size:
+ * fetch the widest window any athlete needs, then bucket in memory against
+ * each athlete's own timezone, which is what made the per-athlete queries look
+ * necessary in the first place.
+ */
 export async function getCoachRoster(coachId: string) {
   const links = await db.coachAthlete.findMany({
-    where: { coachId },
+    // Only accepted links. A pending request must not surface any of the
+    // athlete's figures — that would leak exactly what acceptance gates.
+    where: { coachId, status: "ACCEPTED" },
     orderBy: { createdAt: "asc" },
     include: {
       athlete: {
@@ -392,26 +408,179 @@ export async function getCoachRoster(coachId: string) {
     },
   });
 
-  return Promise.all(
-    links.map(async (link) => {
-      // Each athlete's figures are bucketed in their own zone.
-      const zone = safeZone(link.athlete.timeZone);
-      const [summary, todayTotals, lastMeal] = await Promise.all([
-        getSummary(link.athlete.id, 7, zone),
-        getDayTotals(link.athlete.id, new Date(), zone),
-        db.meal.findFirst({
-          where: { userId: link.athlete.id },
-          orderBy: { eatenAt: "desc" },
-          select: { eatenAt: true },
-        }),
-      ]);
+  if (links.length === 0) return [];
 
-      return {
-        athlete: link.athlete,
-        summary,
-        todayTotals,
-        lastLoggedAt: lastMeal?.eatenAt ?? null,
-      };
+  const now = new Date();
+
+  // Each athlete's own windows, in their own zone.
+  const windows = links.map((link) => {
+    const zone = safeZone(link.athlete.timeZone);
+    return {
+      athlete: link.athlete,
+      zone,
+      weekFrom: startOfDayInZone(addDaysInZone(now, -(ROSTER_DAYS - 1), zone), zone),
+      weekTo: endOfDayInZone(now, zone),
+      dayFrom: startOfDayInZone(now, zone),
+      dayTo: endOfDayInZone(now, zone),
+    };
+  });
+
+  const userIds = windows.map((w) => w.athlete.id);
+  // One span covering every athlete's window; zones differ by at most a day.
+  const spanFrom = new Date(Math.min(...windows.map((w) => w.weekFrom.getTime())));
+  const spanTo = new Date(Math.max(...windows.map((w) => w.weekTo.getTime())));
+
+  const [meals, workouts, weights, lastMeals] = await Promise.all([
+    db.meal.findMany({
+      where: { userId: { in: userIds }, eatenAt: { gte: spanFrom, lte: spanTo } },
+      select: {
+        userId: true,
+        calories: true,
+        protein: true,
+        carbs: true,
+        fat: true,
+        eatenAt: true,
+      },
     }),
+    db.workout.findMany({
+      where: {
+        userId: { in: userIds },
+        performedAt: { gte: spanFrom, lte: spanTo },
+      },
+      select: { userId: true, performedAt: true },
+    }),
+    db.weightEntry.findMany({
+      where: {
+        userId: { in: userIds },
+        day: {
+          gte: dayKeyInZone(spanFrom, "UTC"),
+          lte: dayKeyInZone(spanTo, "UTC"),
+        },
+      },
+      orderBy: { day: "asc" },
+      select: { userId: true, weightKg: true, day: true },
+    }),
+    // The most recent meal per athlete, for "logged 3h ago". One grouped
+    // aggregate rather than a findFirst each.
+    db.meal.groupBy({
+      by: ["userId"],
+      where: { userId: { in: userIds } },
+      _max: { eatenAt: true },
+    }),
+  ]);
+
+  const by = <T extends { userId: string }>(rows: T[]) => {
+    const map = new Map<string, T[]>();
+    for (const row of rows) {
+      const list = map.get(row.userId);
+      if (list) list.push(row);
+      else map.set(row.userId, [row]);
+    }
+    return map;
+  };
+
+  const mealsBy = by(meals);
+  const workoutsBy = by(workouts);
+  const weightsBy = by(weights);
+  const lastLoggedBy = new Map(
+    lastMeals.map((row) => [row.userId, row._max.eatenAt ?? null]),
   );
+
+  return windows.map((w) => {
+    const inWeek = (mealsBy.get(w.athlete.id) ?? []).filter(
+      (m) => m.eatenAt >= w.weekFrom && m.eatenAt <= w.weekTo,
+    );
+    const dayMeals = inWeek.filter(
+      (m) => m.eatenAt >= w.dayFrom && m.eatenAt <= w.dayTo,
+    );
+    const athleteWorkouts = workoutsBy.get(w.athlete.id) ?? [];
+    const weekWorkouts = athleteWorkouts.filter(
+      (x) => x.performedAt >= w.weekFrom && x.performedAt <= w.weekTo,
+    );
+    const dayWorkouts = athleteWorkouts.filter(
+      (x) => x.performedAt >= w.dayFrom && x.performedAt <= w.dayTo,
+    );
+
+    const weekWeights = (weightsBy.get(w.athlete.id) ?? []).filter(
+      (x) =>
+        x.day >= dayKeyInZone(w.weekFrom, w.zone) &&
+        x.day <= dayKeyInZone(w.weekTo, w.zone),
+    );
+
+    const loggedDays = new Set(inWeek.map((m) => toDateParam(m.eatenAt, w.zone)));
+    const sum = (pick: (m: (typeof inWeek)[number]) => number | null) =>
+      inWeek.reduce((acc, m) => acc + (pick(m) ?? 0), 0);
+    // Average across days actually logged, so a missed day does not read as a
+    // starvation day.
+    const divisor = Math.max(1, loggedDays.size);
+
+    const startWeight = weekWeights[0]?.weightKg ?? null;
+    const endWeight = weekWeights[weekWeights.length - 1]?.weightKg ?? null;
+
+    const summary: WeeklySummary = {
+      from: w.weekFrom,
+      to: w.weekTo,
+      avgCalories: round(sum((m) => m.calories) / divisor) ?? 0,
+      avgProtein: round(sum((m) => m.protein) / divisor) ?? 0,
+      avgCarbs: round(sum((m) => m.carbs) / divisor) ?? 0,
+      avgFat: round(sum((m) => m.fat) / divisor) ?? 0,
+      totalMeals: inWeek.length,
+      totalWorkouts: weekWorkouts.length,
+      mealComplianceDays: loggedDays.size,
+      weighInDays: weekWeights.length,
+      daysElapsed: ROSTER_DAYS,
+      weightChangeKg:
+        startWeight !== null && endWeight !== null && weekWeights.length > 1
+          ? round(endWeight - startWeight, 1)
+          : null,
+      startWeightKg: startWeight,
+      endWeightKg: endWeight,
+    };
+
+    const todayTotals: DayTotals = {
+      calories: round(dayMeals.reduce((a, m) => a + (m.calories ?? 0), 0)) ?? 0,
+      protein: round(dayMeals.reduce((a, m) => a + (m.protein ?? 0), 0)) ?? 0,
+      carbs: round(dayMeals.reduce((a, m) => a + (m.carbs ?? 0), 0)) ?? 0,
+      fat: round(dayMeals.reduce((a, m) => a + (m.fat ?? 0), 0)) ?? 0,
+      mealCount: dayMeals.length,
+      workoutCount: dayWorkouts.length,
+    };
+
+    return {
+      athlete: w.athlete,
+      summary,
+      todayTotals,
+      lastLoggedAt: lastLoggedBy.get(w.athlete.id) ?? null,
+    };
+  });
+}
+
+/** Requests this coach has sent that the athlete has not answered yet. */
+export async function getPendingRequests(coachId: string) {
+  return db.coachAthlete.findMany({
+    where: { coachId, status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+    select: {
+      createdAt: true,
+      athlete: { select: { id: true, name: true, email: true, image: true } },
+    },
+  });
+}
+
+/** Coaches asking to monitor this athlete, and those already accepted. */
+export async function getCoachLinksForAthlete(athleteId: string) {
+  const links = await db.coachAthlete.findMany({
+    where: { athleteId, status: { in: ["PENDING", "ACCEPTED"] } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      status: true,
+      createdAt: true,
+      coach: { select: { id: true, name: true, email: true, image: true } },
+    },
+  });
+
+  return {
+    pending: links.filter((l) => l.status === "PENDING"),
+    accepted: links.filter((l) => l.status === "ACCEPTED"),
+  };
 }
