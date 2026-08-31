@@ -35,7 +35,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "trackme-dialog fixed left-1/2 top-1/2 z-50 grid max-h-[92vh] w-[calc(100%-2rem)] max-w-lg",
+        "trackme-dialog fixed left-1/2 top-1/2 z-50 grid max-h-[92vh] w-[calc(100%-2rem)] max-w-lg [&>*]:min-w-0",
         "-translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-[18px] border border-line-strong",
         "bg-bg p-6 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.7)]",
         className,

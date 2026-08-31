@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
+import { MealItemSchema, totalsOf } from "@/lib/meal-items";
 import { enqueue } from "@/lib/jobs";
 import { enforce, RateLimited } from "@/lib/rate-limit";
 import { requireUser } from "@/lib/session";
@@ -176,31 +177,30 @@ export async function reprocessMeal(mealId: string): Promise<ActionResult> {
   return { ok: true, id: mealId };
 }
 
-const MacroSchema = z.object({
+const ItemsSchema = z.object({
   mealId: z.string().min(1),
-  title: z.string().max(120).optional(),
-  calories: z.coerce.number().min(0).max(20000),
-  protein: z.coerce.number().min(0).max(2000),
-  carbs: z.coerce.number().min(0).max(2000),
-  fat: z.coerce.number().min(0).max(2000),
+  title: z.string().trim().max(120).optional(),
+  slot: z.enum(["BREAKFAST", "LUNCH", "DINNER", "SNACK"]).nullable().optional(),
+  items: z.array(MealItemSchema).max(40),
 });
 
-/** Lets an athlete correct the AI's estimate. */
-export async function updateMealMacros(
-  formData: FormData,
+export type UpdateMealItemsInput = z.input<typeof ItemsSchema>;
+
+/**
+ * Replaces a meal's ingredient breakdown with the athlete's corrected one.
+ *
+ * The totals are recomputed from the lines rather than accepted from the
+ * client: they are a derived figure, and letting a caller send both invites a
+ * meal whose parts do not add up to its own total.
+ */
+export async function updateMealItems(
+  input: UpdateMealItemsInput,
 ): Promise<ActionResult> {
   const user = await requireUser();
 
-  const parsed = MacroSchema.safeParse({
-    mealId: formData.get("mealId"),
-    title: formData.get("title")?.toString() || undefined,
-    calories: formData.get("calories"),
-    protein: formData.get("protein"),
-    carbs: formData.get("carbs"),
-    fat: formData.get("fat"),
-  });
+  const parsed = ItemsSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "Enter valid numbers for each macro." };
+    return { ok: false, error: "Check the ingredient rows and try again." };
   }
 
   const meal = await db.meal.findUnique({
@@ -211,15 +211,22 @@ export async function updateMealMacros(
     return { ok: false, error: "Meal not found." };
   }
 
+  const items = parsed.data.items;
+  const totals = totalsOf(items);
+
   await db.meal.update({
     where: { id: parsed.data.mealId },
     data: {
-      title: parsed.data.title,
-      calories: parsed.data.calories,
-      protein: parsed.data.protein,
-      carbs: parsed.data.carbs,
-      fat: parsed.data.fat,
+      items,
+      ...totals,
+      ...(parsed.data.title !== undefined
+        ? { title: parsed.data.title || null }
+        : {}),
+      ...(parsed.data.slot !== undefined ? { slot: parsed.data.slot } : {}),
+      // A meal the athlete has read and corrected is finished, whatever the
+      // job that produced it went on to do.
       status: "COMPLETE",
+      error: null,
     },
   });
 

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { MoreHorizontal, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { deleteMeal, reprocessMeal, updateMealMacros } from "@/app/actions/meals";
+import { deleteMeal, reprocessMeal, updateMealItems } from "@/app/actions/meals";
+import { IngredientTable } from "@/components/log/ingredient-table";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { seedMealItems, type MealItem } from "@/lib/meal-items";
 import { runAction } from "@/lib/run-action";
 
 export function MealActions({
@@ -35,33 +37,40 @@ export function MealActions({
     protein: number | null;
     carbs: number | null;
     fat: number | null;
+    items?: unknown;
   };
 }) {
   const router = useRouter();
   const [editing, setEditing] = React.useState(false);
   const [pending, setPending] = React.useState(false);
 
-  const [form, setForm] = React.useState({
-    title: meal.title ?? "",
-    calories: meal.calories?.toString() ?? "",
-    protein: meal.protein?.toString() ?? "",
-    carbs: meal.carbs?.toString() ?? "",
-    fat: meal.fat?.toString() ?? "",
-  });
+  const [title, setTitle] = React.useState(meal.title ?? "");
+  const [items, setItems] = React.useState<MealItem[]>([]);
+
+  /*
+    Seeded when the dialog opens rather than at mount, so reopening it after a
+    re-run shows what the new estimate produced instead of the stale rows.
+    A meal analysed before ingredients were stored has none; it starts with one
+    blank line so there is something to type into.
+  */
+  function beginEditing() {
+    setTitle(meal.title ?? "");
+    setItems(seedMealItems(meal));
+    setEditing(true);
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
 
-    const fd = new FormData();
-    fd.set("mealId", meal.id);
-    fd.set("title", form.title);
-    fd.set("calories", form.calories || "0");
-    fd.set("protein", form.protein || "0");
-    fd.set("carbs", form.carbs || "0");
-    fd.set("fat", form.fat || "0");
-
-    const res = await runAction(() => updateMealMacros(fd));
+    const cleaned = items.filter((item) => item.name.trim().length > 0);
+    const res = await runAction(() =>
+      updateMealItems({
+        mealId: meal.id,
+        title: title.trim() || undefined,
+        items: cleaned,
+      }),
+    );
     setPending(false);
 
     if (!res.ok) {
@@ -108,9 +117,9 @@ export function MealActions({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setEditing(true)}>
+          <DropdownMenuItem onClick={beginEditing}>
             <Pencil className="mr-2 h-4 w-4" />
-            Correct macros
+            Correct ingredients
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleReprocess}>
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -127,49 +136,33 @@ export function MealActions({
       </DropdownMenu>
 
       <Dialog open={editing} onOpenChange={setEditing}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>Correct the estimate</DialogTitle>
             <DialogDescription>
               Your numbers replace the AI&apos;s and are what your coach sees.
+              The totals follow the rows.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={save} className="flex flex-col gap-4">
+          <form onSubmit={save} className="flex min-w-0 flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="edit-title">Meal</Label>
               <Input
                 id="edit-title"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="Chicken and rice"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {(
-                [
-                  ["calories", "Calories (kcal)"],
-                  ["protein", "Protein (g)"],
-                  ["carbs", "Carbs (g)"],
-                  ["fat", "Fat (g)"],
-                ] as const
-              ).map(([key, label]) => (
-                <div key={key} className="space-y-2">
-                  <Label htmlFor={`edit-${key}`}>{label}</Label>
-                  <Input
-                    id={`edit-${key}`}
-                    type="number"
-                    min={0}
-                    step="0.1"
-                    inputMode="decimal"
-                    value={form[key]}
-                    onChange={(e) =>
-                      setForm({ ...form, [key]: e.target.value })
-                    }
-                  />
-                </div>
-              ))}
+            <div className="flex min-w-0 flex-col gap-2">
+              <Label>Ingredients</Label>
+              <IngredientTable
+                items={items}
+                onChange={setItems}
+                disabled={pending}
+              />
             </div>
 
             <DialogFooter>
