@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { PRICES } from "@/lib/entitlements";
+import { rupees } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
 /**
@@ -8,14 +10,21 @@ import { cn } from "@/lib/utils";
  * Deliberately a hairline note rather than a modal or an overlay: the athlete
  * came here to train, and a paywall that interrupts that is a paywall they
  * resent. It states what is behind the plan and gets out of the way.
+ *
+ * The price rides on the link rather than waiting behind it. ₹99 is a small
+ * enough number that saying it here answers the question the note provokes,
+ * where making somebody navigate to find it mostly loses them.
  */
 export function PremiumNotice({
   title,
   body,
+  cta,
   className,
 }: {
   title: string;
   body: string;
+  /** Overrides the default "from ₹99 a month" call to action. */
+  cta?: string;
   className?: string;
 }) {
   return (
@@ -31,7 +40,7 @@ export function PremiumNotice({
         href="/dashboard/settings"
         className="mt-3 inline-flex text-[11.5px] font-medium text-accent-text underline-offset-4 hover:underline"
       >
-        See plans →
+        {cta ?? `See plans — from ${rupees(PRICES.MONTHLY)} a month`} →
       </Link>
     </div>
   );

@@ -1,5 +1,6 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
 
+import { AnalysisNote } from "@/components/billing/analysis-note";
 import { AudioNote } from "@/components/timeline/audio-note";
 import { CommentThread } from "@/components/timeline/comment-thread";
 import { MacroRow, MacroSplitBar } from "@/components/timeline/macros";
@@ -68,6 +69,7 @@ export async function Timeline({
   isOwner,
   canComment,
   emptyState,
+  upsell = false,
 }: {
   entries: TimelineEntry[];
   viewerId: string;
@@ -76,6 +78,8 @@ export async function Timeline({
   isOwner: boolean;
   canComment: boolean;
   emptyState?: React.ReactNode;
+  /** The viewer owns these entries and is on the free plan. */
+  upsell?: boolean;
 }) {
   if (entries.length === 0) {
     return (
@@ -160,6 +164,7 @@ export async function Timeline({
                     imageUrl={imageUrl}
                     audioUrl={audioUrl}
                     isOwner={isOwner}
+                    upsell={upsell}
                   />
                 )}
 
@@ -168,6 +173,7 @@ export async function Timeline({
                     workout={entry.data}
                     audioUrl={audioUrl}
                     isOwner={isOwner}
+                    upsell={upsell}
                   />
                 )}
 
@@ -210,18 +216,26 @@ function MealBody({
   imageUrl,
   audioUrl,
   isOwner,
+  upsell,
 }: {
   meal: Extract<TimelineEntry, { kind: "meal" }>["data"];
   imageUrl: string | null;
   audioUrl: string | null;
   isOwner: boolean;
+  upsell: boolean;
 }) {
   const items = readItems(meal.items);
+  const complete = meal.status === "COMPLETE";
+
+  // A voice note that was never sent for transcription is not a failed
+  // analysis, and must not be reported as one.
+  const untranscribed =
+    complete && !meal.aiGenerated && Boolean(meal.audioKey) && !meal.transcript;
 
   // Analysis finished but found nothing recognisable — an unclear photo, or a
   // voice note that picked up no speech. Say so rather than showing zeros.
   const foundNothing =
-    meal.status === "COMPLETE" && items.length === 0 && !meal.calories;
+    complete && items.length === 0 && !meal.calories && !untranscribed;
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -286,6 +300,15 @@ function MealBody({
           </p>
         </div>
       )}
+
+      <AnalysisNote
+        kind="meal"
+        analysed={meal.aiGenerated}
+        complete={complete}
+        hasAudio={Boolean(meal.audioKey)}
+        hasTranscript={Boolean(meal.transcript)}
+        upsell={upsell && isOwner}
+      />
 
       {audioUrl && <AudioNote src={audioUrl} />}
 
@@ -352,10 +375,12 @@ function WorkoutBody({
   workout,
   audioUrl,
   isOwner,
+  upsell,
 }: {
   workout: Extract<TimelineEntry, { kind: "workout" }>["data"];
   audioUrl: string | null;
   isOwner: boolean;
+  upsell: boolean;
 }) {
   return (
     <div className="flex flex-col gap-3.5">
@@ -403,6 +428,15 @@ function WorkoutBody({
           {workout.notes}
         </p>
       )}
+
+      <AnalysisNote
+        kind="workout"
+        analysed={workout.aiGenerated}
+        complete={workout.status === "COMPLETE"}
+        hasAudio={Boolean(workout.audioKey)}
+        hasTranscript={Boolean(workout.transcript)}
+        upsell={upsell && isOwner}
+      />
 
       {audioUrl && <AudioNote src={audioUrl} />}
 

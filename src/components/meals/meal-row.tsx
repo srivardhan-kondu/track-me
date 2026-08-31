@@ -1,5 +1,6 @@
 import { ChevronDown, Loader2 } from "lucide-react";
 
+import { AnalysisNote, EstimateTag } from "@/components/billing/analysis-note";
 import { AudioNote } from "@/components/timeline/audio-note";
 import { CommentThread } from "@/components/timeline/comment-thread";
 import { MacroSplitBar, MacroTicks } from "@/components/timeline/macros";
@@ -34,6 +35,7 @@ export function MealRow({
   isOwner,
   canComment,
   dim = false,
+  upsell = false,
 }: {
   meal: TimelineMeal;
   imageUrl: string | null;
@@ -44,14 +46,18 @@ export function MealRow({
   canComment: boolean;
   /** Rows from earlier days recede a step. */
   dim?: boolean;
+  /** The viewer owns this meal and is on the free plan. */
+  upsell?: boolean;
 }) {
   const items = readItems(meal.items);
   const analysing = meal.status === "PENDING" || meal.status === "PROCESSING";
+  const complete = meal.status === "COMPLETE";
   const hasDetail =
     Boolean(audioUrl || meal.transcript) ||
     items.length > 0 ||
     meal.comments.length > 0 ||
-    canComment;
+    canComment ||
+    (complete && !meal.aiGenerated);
 
   return (
     <div
@@ -88,6 +94,7 @@ export function MealRow({
             <span className="tabular">{time}</span>
             {meal.slot && <span>{SLOT_LABEL[meal.slot] ?? meal.slot}</span>}
             {audioUrl && <span className="text-fg-faint">voice</span>}
+            {complete && <EstimateTag analysed={meal.aiGenerated} />}
             {analysing && (
               <span className="flex items-center gap-1.5 text-accent-text">
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -132,6 +139,15 @@ export function MealRow({
               <MacroSplitBar macros={meal} />
               <MacroTicks macros={meal} />
             </div>
+
+            <AnalysisNote
+              kind="meal"
+              analysed={meal.aiGenerated}
+              complete={complete}
+              hasAudio={Boolean(meal.audioKey)}
+              hasTranscript={Boolean(meal.transcript)}
+              upsell={upsell && isOwner}
+            />
 
             {audioUrl && <AudioNote src={audioUrl} />}
 

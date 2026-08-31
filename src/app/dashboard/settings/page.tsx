@@ -1,5 +1,5 @@
 import { ExportData } from "@/components/billing/export-data";
-import { Upgrade } from "@/components/billing/upgrade";
+import { PlanSection, planSummary } from "@/components/billing/plan-section";
 import { CoachAccess } from "@/components/settings/coach-access";
 import { RoleSwitcher } from "@/components/settings/role-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -93,38 +93,6 @@ function ServiceRow({
   );
 }
 
-/** One line describing what the account currently has, and until when. */
-function planSummary(status: {
-  plan: string;
-  planExpiresAt: Date | null;
-  trialEndsAt: Date | null;
-  premium: boolean;
-  trialing: boolean;
-}): { label: string; detail: string } {
-  const on = (d: Date) =>
-    d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
-
-  if (status.plan === "PREMIUM" && !status.planExpiresAt) {
-    return { label: "Lifetime", detail: "Paid once. Nothing to renew." };
-  }
-  if (status.premium && !status.trialing) {
-    return {
-      label: "Premium",
-      detail: `Renews on ${on(status.planExpiresAt!)}.`,
-    };
-  }
-  if (status.trialing) {
-    return {
-      label: "Trial",
-      detail: `Free premium until ${on(status.trialEndsAt!)}.`,
-    };
-  }
-  return {
-    label: "Free",
-    detail: "Workout logging, routines and weight tracking.",
-  };
-}
-
 export default async function SettingsPage() {
   const user = await requireUser();
   const status = await premiumStatus(user.id);
@@ -147,6 +115,8 @@ export default async function SettingsPage() {
           Your account, your coach, and what&apos;s wired up.
         </p>
       </div>
+
+      <PlanSection status={status} />
 
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <div className="flex flex-col gap-5">
@@ -183,25 +153,6 @@ export default async function SettingsPage() {
               age={profile?.age ?? null}
               heightCm={profile?.heightCm ?? null}
             />
-          </Panel>
-
-          <Panel title="Plan" description={plan.detail}>
-            {checkoutEnabled ? (
-              <>
-                <Upgrade currentTerm={status.planTerm} />
-                {!liveMode && (
-                  <p className="mt-3 text-[11.5px] leading-relaxed text-fg-dim">
-                    Razorpay is in test mode on this deployment — use a test
-                    card. No money moves.
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="text-[12.5px] leading-relaxed text-fg-muted">
-                Payments are not configured here. Set RAZORPAY_KEY_ID and
-                RAZORPAY_KEY_SECRET to enable the payment sheet.
-              </p>
-            )}
           </Panel>
 
           {status.premium && (

@@ -15,7 +15,8 @@ import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { Timeline } from "@/components/timeline/timeline";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
-import { FREE_HISTORY_DAYS, historyDays } from "@/lib/entitlements";
+import { PremiumNotice } from "@/components/billing/premium-notice";
+import { FREE_HISTORY_DAYS, historyDays, trialLapsed } from "@/lib/entitlements";
 import { premiumStatus, requireUser } from "@/lib/session";
 import {
   addDaysInZone,
@@ -58,7 +59,11 @@ export default async function TodayPage({
   const user = await requireUser();
   const { date: dateParam } = await searchParams;
 
-  const { premium } = await premiumStatus(user.id);
+  const status = await premiumStatus(user.id);
+  const { premium } = status;
+  // Somebody who has seen Premium work is a different conversation from
+  // somebody who never has, so the notice asks which of the two this is.
+  const lapsed = trialLapsed(status);
 
   const zone = safeZone(user.timeZone);
   const railDays = historyDays(premium, RAIL_DAYS);
@@ -171,6 +176,22 @@ export default async function TodayPage({
         }}
       />
 
+      {!premium && (
+        <PremiumNotice
+          title={
+            lapsed
+              ? "Your trial has ended"
+              : `You are seeing the last ${FREE_HISTORY_DAYS} days`
+          }
+          body={
+            lapsed
+              ? `Everything you logged during the trial is still here, untouched — this page just stops ${FREE_HISTORY_DAYS} days back, meals are estimated rather than read, and progress photos are paused. Premium brings all of it back.`
+              : "Premium opens your whole history, reads your meal photographs properly, and adds progress photos, strength charts and export."
+          }
+          cta={lapsed ? "Pick up where you left off" : undefined}
+        />
+      )}
+
       <InstallBanner />
 
       <div className="flex flex-wrap items-center gap-2.5">
@@ -206,6 +227,7 @@ export default async function TodayPage({
             timeZone={zone}
             isOwner
             canComment
+            upsell={!premium}
             emptyState={
               dayOne ? (
                 <EmptyState

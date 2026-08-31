@@ -5,8 +5,10 @@ import { ATHLETE_NAV, COACH_NAV } from "@/components/layout/nav";
 import { AppShell } from "@/components/layout/shell";
 import { TimeZoneSync } from "@/components/layout/timezone-sync";
 import { MealForm } from "@/components/log/meal-form";
+import { TrialStrip } from "@/components/billing/trial-strip";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { trialDaysLeft } from "@/lib/entitlements";
+import { premiumStatus, requireUser } from "@/lib/session";
 
 export default async function DashboardLayout({
   children,
@@ -14,6 +16,8 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+
+  const daysLeft = trialDaysLeft(await premiumStatus(user.id));
 
   /*
     Athletes meet onboarding once, before anything else. Coaches never do —
@@ -34,6 +38,7 @@ export default async function DashboardLayout({
       <AppShell
         groups={user.role === "COACH" ? COACH_NAV : ATHLETE_NAV}
         user={user}
+        banner={daysLeft !== null && <TrialStrip daysLeft={daysLeft} />}
         mobileAction={
           <MealForm
             trigger={

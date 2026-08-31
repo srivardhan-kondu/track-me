@@ -1,3 +1,4 @@
+import { PremiumNotice } from "@/components/billing/premium-notice";
 import { DayDivider, EmptyState } from "@/components/layout/page";
 import { MealForm } from "@/components/log/meal-form";
 import { MealRow } from "@/components/meals/meal-row";
@@ -5,7 +6,7 @@ import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { FilterPills } from "@/components/ui/filter-pills";
 import { Metric, MetricStrip } from "@/components/ui/metric";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { premiumStatus, requireUser } from "@/lib/session";
 import {
   addDaysInZone,
   formatDateInZone,
@@ -41,6 +42,8 @@ export default async function MealsPage({
 }) {
   const user = await requireUser();
   const { slot: slotParam } = await searchParams;
+
+  const { premium } = await premiumStatus(user.id);
 
   const slot =
     SLOTS.find((s) => s.value && s.value === slotParam)?.value ?? null;
@@ -117,6 +120,13 @@ export default async function MealsPage({
 
         <MealForm />
       </div>
+
+      {!premium && (
+        <PremiumNotice
+          title="These macros are estimated, not analysed"
+          body="On the free plan a meal is matched against a word list — it never reaches the model. Premium reads the photograph itself and returns the breakdown per ingredient, and turns a spoken note into a logged meal without you typing anything."
+        />
+      )}
 
       <MetricStrip>
         <Metric
@@ -200,6 +210,7 @@ export default async function MealsPage({
                       isOwner
                       canComment
                       dim={!isToday}
+                      upsell={!premium}
                     />
                   ))}
               </section>

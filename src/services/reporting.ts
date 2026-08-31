@@ -26,6 +26,7 @@ export type TimelineMeal = {
   carbs: number | null;
   fat: number | null;
   items: unknown;
+  aiGenerated: boolean | null;
   status: string;
   error: string | null;
   eatenAt: Date;
@@ -39,6 +40,7 @@ export type TimelineWorkout = {
   transcript: string | null;
   durationMin: number | null;
   notes: string | null;
+  aiGenerated: boolean | null;
   status: string;
   error: string | null;
   performedAt: Date;
