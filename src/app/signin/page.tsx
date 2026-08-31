@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { SignInForm } from "@/components/auth/signin-form";
 import { Logo } from "@/components/layout/shell";
-import { devLoginEnabled, googleEnabled } from "@/lib/auth";
+import { devLoginEnabled, googleEnabled, reviewLoginEnabled } from "@/lib/auth";
 import { currentUser } from "@/lib/session";
 
 export const metadata = { title: "Sign in" };
@@ -27,6 +27,7 @@ export default async function SignInPage({
         <SignInForm
           googleEnabled={googleEnabled}
           devLoginEnabled={devLoginEnabled}
+          reviewLoginEnabled={reviewLoginEnabled}
           defaultRole={role === "COACH" ? "COACH" : "ATHLETE"}
           error={error}
         />

@@ -36,16 +36,19 @@ function GoogleMark() {
 export function SignInForm({
   googleEnabled,
   devLoginEnabled,
+  reviewLoginEnabled,
   defaultRole,
   error,
 }: {
   googleEnabled: boolean;
   devLoginEnabled: boolean;
+  reviewLoginEnabled: boolean;
   defaultRole: "ATHLETE" | "COACH";
   error?: string;
 }) {
   const [pending, setPending] = React.useState<string | null>(null);
   const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [role, setRole] = React.useState<"ATHLETE" | "COACH">(defaultRole);
 
   React.useEffect(() => {
@@ -71,6 +74,18 @@ export function SignInForm({
       return;
     }
     window.location.href = role === "COACH" ? "/trainer" : "/dashboard";
+  }
+
+  async function handleReview(e: React.FormEvent) {
+    e.preventDefault();
+    setPending("review");
+    const res = await signIn("review", { email, password, redirect: false });
+    if (res?.error) {
+      setPending(null);
+      toast.error("Those credentials were not recognised.");
+      return;
+    }
+    window.location.href = "/dashboard";
   }
 
   return (
@@ -106,6 +121,56 @@ export function SignInForm({
             <span className="mono-label">or</span>
             <span className="h-px flex-1 bg-line" />
           </div>
+        )}
+
+        {reviewLoginEnabled && (
+          <>
+            {googleEnabled && (
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-line" />
+                <span className="mono-label">or</span>
+                <span className="h-px flex-1 bg-line" />
+              </div>
+            )}
+
+            <form onSubmit={handleReview} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="review-email">Email</Label>
+                <Input
+                  id="review-email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="review-password">Password</Label>
+                <Input
+                  id="review-password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={pending !== null}
+              >
+                {pending === "review" && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                Sign in
+              </Button>
+            </form>
+          </>
         )}
 
         {devLoginEnabled && (
@@ -164,7 +229,7 @@ export function SignInForm({
           </form>
         )}
 
-        {!googleEnabled && !devLoginEnabled && (
+        {!googleEnabled && !devLoginEnabled && !reviewLoginEnabled && (
           <p className="text-[12.5px] leading-relaxed text-fg-dim">
             No sign-in provider is configured. Set{" "}
             <code className="font-mono text-fg-muted">AUTH_GOOGLE_ID</code> and{" "}

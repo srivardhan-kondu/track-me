@@ -22,7 +22,8 @@
     "db:catalog": "tsx prisma/seed-catalog.ts",
     "check:exercises": "node --import tsx --env-file=.env scripts/check-exercises.ts",
     "payments": "node --import tsx --env-file=.env scripts/payments.ts",
-    "webhook:test": "node --import tsx --env-file=.env scripts/webhook-test.ts"
+    "webhook:test": "node --import tsx --env-file=.env scripts/webhook-test.ts",
+    "seed:review": "node --import tsx --env-file=.env scripts/seed-review.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

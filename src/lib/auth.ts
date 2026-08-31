@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto";
+
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -18,6 +20,27 @@ export const googleEnabled = Boolean(
  */
 export const devLoginEnabled = process.env.NODE_ENV !== "production";
 
+/**
+ * A single password account, for people who must inspect the app but cannot
+ * be given a Google login — a payment gateway's activation reviewers, chiefly.
+ *
+ * Both variables have to be set for the provider to exist at all, so clearing
+ * either one and redeploying removes the door entirely. It is worth removing
+ * once a review is over: it is one shared password, and it never expires on
+ * its own.
+ */
+export const reviewLoginEnabled = Boolean(
+  process.env.REVIEW_EMAIL && process.env.REVIEW_PASSWORD,
+);
+
+/** Constant-time, so a wrong password cannot be found one character at a time. */
+function passwordMatches(given: string, expected: string): boolean {
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -36,6 +59,42 @@ if (googleEnabled) {
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
       allowDangerousEmailAccountLinking: true,
+    }),
+  );
+}
+
+if (reviewLoginEnabled) {
+  providers.push(
+    Credentials({
+      id: "review",
+      name: "Reviewer sign-in",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(creds) {
+        const email = String(creds?.email ?? "").trim().toLowerCase();
+        const password = String(creds?.password ?? "");
+        const expectedEmail = process.env.REVIEW_EMAIL!.trim().toLowerCase();
+
+        if (email !== expectedEmail) return null;
+        if (!passwordMatches(password, process.env.REVIEW_PASSWORD!)) return null;
+
+        // Always an athlete: a reviewer has no business reading other
+        // people's timelines, which is what the coach role grants.
+        const user = await db.user.upsert({
+          where: { email },
+          update: {},
+          create: { email, name: "Reviewer", role: "ATHLETE" },
+        });
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      },
     }),
   );
 }
