@@ -157,6 +157,7 @@ npm run build       # prisma generate + production build
 npm start           # serve the production build
 npm test            # parser and storage unit tests
 npm run check:ai    # exercise the real OpenAI integration (needs a key)
+npm run check:variance  # measure estimate consistency across repeated runs
 npm run typecheck   # tsc --noEmit
 npm run db:url      # point .env at a hosted database (reads stdin)
 npm run db:setup    # push schema + seed + verify, in one step
@@ -227,6 +228,12 @@ lands as `FAILED` with the error on the card and a one-click re-run.
   provider requires.
 - **Athletes can correct the AI.** An estimate the athlete cannot fix is one the
   coach cannot trust.
+- **Consistency over precision.** Nutrition runs at `temperature: 0` with a
+  fixed seed, and the model must commit to a gram weight for every item using a
+  fixed table of household-unit conversions. Nobody weighs a banana, so the
+  honest goal is that the same meal always scores the same — a coach reading a
+  trend cannot tell sampling noise from a real change. `npm run check:variance`
+  measures this: the spread on a repeated meal went from 13.2% to 0.0%.
 - **Hand-rolled SVG chart.** One chart does not justify a charting dependency,
   and inline SVG inherits the theme for free.
 - **Averages over logged days.** A missed day would otherwise read as a

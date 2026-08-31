@@ -137,6 +137,8 @@ function quantityFor(text: string, fact: FoodFact): number {
 export type EstimatedItem = {
   name: string;
   quantity: string;
+  /** Portion in grams (or ml for liquids) — the basis for every figure below. */
+  grams: number;
   calories: number;
   protein: number;
   carbs: number;
@@ -163,6 +165,7 @@ export function estimateFromText(text: string): {
     items.push({
       name: fact.label,
       quantity: `${Math.round(grams)} g`,
+      grams: Math.round(grams),
       calories: Math.round(fact.kcal * k),
       protein: Math.round(fact.protein * k * 10) / 10,
       carbs: Math.round(fact.carbs * k * 10) / 10,

@@ -17,7 +17,8 @@
     "db:url": "node scripts/set-db-url.mjs",
     "check:ai": "node --import tsx --env-file=.env scripts/check-ai.ts",
     "check:storage": "node --import tsx --env-file=.env scripts/check-storage.ts",
-    "env:vercel": "node scripts/vercel-env.mjs"
+    "env:vercel": "node scripts/vercel-env.mjs",
+    "check:variance": "node --import tsx --env-file=.env scripts/check-variance.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
