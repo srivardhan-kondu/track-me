@@ -5,7 +5,6 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { deleteProgressPhoto } from "@/app/actions/weight";
-import { Button } from "@/components/ui/button";
 import { runAction } from "@/lib/run-action";
 
 export function ProgressPhotoCard({
@@ -34,34 +33,38 @@ export function ProgressPhotoCard({
   }
 
   return (
-    <figure className="group relative overflow-hidden rounded-lg border border-border bg-muted">
+    <figure className="group relative aspect-[3/4] overflow-hidden rounded-[11px] border border-line bg-surface-inset">
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={url}
           alt={`${pose} pose taken ${takenAt}`}
-          className="aspect-[3/4] w-full object-cover"
+          className="h-full w-full object-cover"
         />
       ) : (
-        <div className="grid aspect-[3/4] w-full place-items-center text-xs text-muted-foreground">
-          Unavailable
+        <div className="hatched grid h-full w-full place-items-center">
+          <span className="mono-label">Unavailable</span>
         </div>
       )}
 
-      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-[11px] font-medium text-white">
-        {pose} · {takenAt}
+      <figcaption className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/75 to-transparent px-2.5 py-2">
+        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/90">
+          {takenAt}
+        </span>
+        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/60">
+          {pose}
+        </span>
       </figcaption>
 
       {canDelete && (
-        <Button
-          size="icon"
-          variant="secondary"
+        <button
+          type="button"
           onClick={remove}
           aria-label="Delete photo"
-          className="absolute right-1.5 top-1.5 h-7 w-7 opacity-0 shadow transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-black/55 text-white opacity-0 backdrop-blur transition-opacity hover:bg-black/75 focus-visible:opacity-100 group-hover:opacity-100"
         >
           <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        </button>
       )}
     </figure>
   );

@@ -93,7 +93,7 @@ export function ExercisePicker({
         </DialogHeader>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-faint" />
           <Input
             autoFocus
             value={query}
@@ -102,25 +102,25 @@ export function ExercisePicker({
             className="pl-9"
           />
           {isFetching && (
-            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-fg-faint" />
           )}
         </div>
 
         <div className="-mx-1 max-h-[52vh] overflow-y-auto px-1">
           {groups.length === 0 && !isFetching && (
-            <p className="py-6 text-center text-sm text-muted-foreground">
+            <p className="py-6 text-center text-[12.5px] text-fg-dim">
               No match — you can still type the name by hand.
             </p>
           )}
 
           {groups.map((group) => (
             <section key={group.groupId}>
-              <h3 className="sticky top-0 z-10 flex items-baseline gap-2 bg-card/95 py-1.5 backdrop-blur">
-                <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-primary/10 text-[11px] font-bold text-primary">
+              <h3 className="sticky top-0 z-10 flex items-baseline gap-2 bg-bg/95 py-2 backdrop-blur">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px] bg-accent-soft text-[10px] font-semibold text-accent-text">
                   {group.name.charAt(0)}
                 </span>
-                <span className="text-sm font-semibold">{group.name}</span>
-                <span className="tabular text-xs text-muted-foreground">
+                <span className="text-[12.5px] font-semibold text-fg">{group.name}</span>
+                <span className="tabular font-mono text-[11px] text-fg-faint">
                   {group.exercises.length}
                 </span>
               </h3>
@@ -131,9 +131,9 @@ export function ExercisePicker({
                     <button
                       type="button"
                       onClick={() => pick(ex)}
-                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
+                      className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-left transition-colors hover:bg-hover"
                     >
-                      <span className="min-w-0 flex-1 truncate text-sm">
+                      <span className="min-w-0 flex-1 truncate text-[12.5px] text-fg-muted">
                         {ex.name}
                       </span>
                       <Badge
@@ -151,7 +151,7 @@ export function ExercisePicker({
         </div>
 
         {total > 0 && (
-          <p className="text-xs text-muted-foreground">
+          <p className="mono-label">
             {total} exercise{total === 1 ? "" : "s"} across {groups.length}{" "}
             group{groups.length === 1 ? "" : "s"}
           </p>

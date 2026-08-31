@@ -2,7 +2,6 @@ import { AlertCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { PATTERN_LABELS } from "@/../prisma/data/taxonomy";
-import { cn } from "@/lib/utils";
 import { pushPullBalance, type VolumeReport } from "@/services/exercises/volume";
 
 /** Rough weekly landmarks for direct sets per muscle group. */
@@ -27,9 +26,11 @@ export function VolumeBreakdown({
 
   if (report.groups.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card/50 px-6 py-10 text-center">
-        <p className="text-sm font-medium">No attributed volume yet</p>
-        <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+      <div className="rounded-xl border border-dashed border-line-strong px-6 py-8 text-center">
+        <p className="text-[13px] font-semibold text-fg">
+          No attributed volume yet
+        </p>
+        <p className="mx-auto mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-fg-dim">
           Log a workout and each set is credited to the muscles it trains.
         </p>
       </div>
@@ -37,48 +38,48 @@ export function VolumeBreakdown({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="space-y-2.5">
-        {report.groups.map((group) => (
-          <div key={group.groupId}>
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-sm font-medium">{group.name}</span>
-              <span className="tabular text-xs text-muted-foreground">
-                {group.sets} sets
-                {group.sets !== group.directSets && (
-                  <span className="ml-1 opacity-70">
-                    ({group.directSets} direct)
-                  </span>
-                )}
-              </span>
-            </div>
+    <div className="flex flex-col gap-5">
+      <div className="grid gap-x-8 gap-y-3.5 lg:grid-cols-2">
+        {report.groups.map((group) => {
+          const direct = Math.min(100, (group.directSets / max) * 100);
+          const assisting = Math.min(
+            100 - direct,
+            ((group.sets - group.directSets) / max) * 100,
+          );
 
-            <div className="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-muted">
-              {/* Direct work, then assisting work in a lighter tone. */}
-              <div
-                className="bg-primary"
-                style={{ width: `${Math.min(100, (group.directSets / max) * 100)}%` }}
-              />
-              <div
-                className="bg-primary/40"
-                style={{
-                  width: `${Math.min(
-                    100 - Math.min(100, (group.directSets / max) * 100),
-                    ((group.sets - group.directSets) / max) * 100,
-                  )}%`,
-                }}
-              />
-            </div>
+          return (
+            <div key={group.groupId}>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[12.5px] font-medium text-fg-muted">
+                  {group.name}
+                </span>
+                <span className="tabular font-mono text-[11px] text-fg-dim">
+                  {group.sets} sets
+                  {group.sets !== group.directSets && (
+                    <span className="ml-1 text-fg-faint">
+                      ({group.directSets} direct)
+                    </span>
+                  )}
+                </span>
+              </div>
 
-            <p className="mt-1 truncate text-[11px] text-muted-foreground">
-              {group.exercises.slice(0, 4).join(" · ")}
-              {group.exercises.length > 4 && ` +${group.exercises.length - 4}`}
-            </p>
-          </div>
-        ))}
+              <div className="mt-1.5 flex h-[5px] w-full overflow-hidden rounded-full bg-track">
+                {/* Direct work, then assisting work in a lighter tone. */}
+                <div className="bg-accent" style={{ width: `${direct}%` }} />
+                <div className="bg-accent/40" style={{ width: `${assisting}%` }} />
+              </div>
+
+              <p className="mt-1.5 truncate text-[11px] text-fg-faint">
+                {group.exercises.slice(0, 4).join(" · ")}
+                {group.exercises.length > 4 &&
+                  ` +${group.exercises.length - 4}`}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
+      <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
         {balance && (
           <Badge
             variant={
@@ -99,12 +100,7 @@ export function VolumeBreakdown({
       </div>
 
       {report.unattributedSets > 0 && (
-        <p
-          className={cn(
-            "flex items-start gap-2 rounded-lg border border-dashed border-border",
-            "bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground",
-          )}
-        >
+        <p className="flex items-start gap-2.5 rounded-xl border border-dashed border-line-strong p-3.5 text-[11.5px] leading-relaxed text-fg-dim">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
             {report.unattributedSets} of {report.totalSets} sets in the last{" "}

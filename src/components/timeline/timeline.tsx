@@ -1,11 +1,6 @@
-import {
-  AlertTriangle,
-  Dumbbell,
-  Loader2,
-  Scale,
-  UtensilsCrossed,
-} from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 
+import { AudioNote } from "@/components/timeline/audio-note";
 import { CommentThread } from "@/components/timeline/comment-thread";
 import { MacroRow, MacroSplitBar } from "@/components/timeline/macros";
 import { MealActions } from "@/components/timeline/meal-actions";
@@ -15,17 +10,22 @@ import {
 } from "@/components/timeline/record-actions";
 import { Badge } from "@/components/ui/badge";
 import { formatTimeInZone } from "@/lib/tz";
-import { cn } from "@/lib/utils";
+import { cn, round } from "@/lib/utils";
 import { mediaUrl } from "@/services/storage";
 import type { TimelineEntry } from "@/services/reporting";
-
-
 
 const SLOT_LABEL: Record<string, string> = {
   BREAKFAST: "Breakfast",
   LUNCH: "Lunch",
   DINNER: "Dinner",
   SNACK: "Snack",
+};
+
+/** Each kind gets its own dot colour, so a day reads by shape alone. */
+const DOT: Record<TimelineEntry["kind"], string> = {
+  meal: "bg-accent",
+  workout: "bg-blue",
+  weight: "bg-sage",
 };
 
 type MealItem = {
@@ -41,21 +41,10 @@ function readItems(raw: unknown): MealItem[] {
   return Array.isArray(raw) ? (raw as MealItem[]) : [];
 }
 
-function Rail({ icon: Icon }: { icon: React.ElementType }) {
-  return (
-    <div className="flex flex-col items-center">
-      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border bg-card text-muted-foreground">
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="mt-1 w-px flex-1 bg-border" />
-    </div>
-  );
-}
-
 function StatusBadge({ status }: { status: string }) {
   if (status === "PROCESSING" || status === "PENDING") {
     return (
-      <Badge variant="secondary" className="gap-1">
+      <Badge variant="secondary">
         <Loader2 className="h-3 w-3 animate-spin" />
         Analysing
       </Badge>
@@ -63,7 +52,7 @@ function StatusBadge({ status }: { status: string }) {
   }
   if (status === "FAILED") {
     return (
-      <Badge variant="destructive" className="gap-1">
+      <Badge variant="destructive">
         <AlertTriangle className="h-3 w-3" />
         Failed
       </Badge>
@@ -90,11 +79,9 @@ export async function Timeline({
 }) {
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+      <div className="rounded-2xl border border-dashed border-line-strong px-6 py-10">
         {emptyState ?? (
-          <p className="text-sm text-muted-foreground">
-            Nothing logged yet today.
-          </p>
+          <p className="text-[13px] text-fg-dim">Nothing logged yet today.</p>
         )}
       </div>
     );
@@ -111,7 +98,11 @@ export async function Timeline({
         };
       }
       if (entry.kind === "weight") {
-        return { entry, imageUrl: await mediaUrl(entry.data.photoKey), audioUrl: null };
+        return {
+          entry,
+          imageUrl: await mediaUrl(entry.data.photoKey),
+          audioUrl: null,
+        };
       }
       return {
         entry,
@@ -122,37 +113,47 @@ export async function Timeline({
   );
 
   return (
-    <ol className="space-y-1">
+    <ol className="flex flex-col">
       {resolved.map(({ entry, imageUrl, audioUrl }, index) => {
         const last = index === resolved.length - 1;
+        const rich = entry.kind === "meal";
 
         return (
-          <li key={`${entry.kind}-${entry.id}`} className="flex gap-3">
-            <div className={cn("flex flex-col items-center", last && "pb-2")}>
-              <Rail
-                icon={
-                  entry.kind === "meal"
-                    ? UtensilsCrossed
-                    : entry.kind === "workout"
-                      ? Dumbbell
-                      : Scale
-                }
+          <li key={`${entry.kind}-${entry.id}`} className="flex gap-3.5">
+            <div className="w-[56px] shrink-0 pt-4 text-right">
+              <span className="tabular font-mono text-[11px] text-fg-faint">
+                {entry.kind === "weight"
+                  ? "AM"
+                  : formatTimeInZone(entry.at, timeZone)}
+              </span>
+            </div>
+
+            <div
+              className={cn(
+                "relative w-px shrink-0",
+                last
+                  ? "bg-gradient-to-b from-line to-transparent"
+                  : "bg-line",
+              )}
+              aria-hidden="true"
+            >
+              <span
+                className={cn(
+                  "absolute left-[-3px] top-[17px] h-[7px] w-[7px] rounded-full ring-4 ring-bg",
+                  DOT[entry.kind],
+                )}
               />
             </div>
 
-            <div className="min-w-0 flex-1 pb-5">
-              <div className="mb-1.5 flex items-center gap-2">
-                <span className="tabular text-xs font-medium text-muted-foreground">
-                  {entry.kind === "weight"
-                    ? "Morning"
-                    : formatTimeInZone(entry.at, timeZone)}
-                </span>
-                {entry.kind !== "weight" && (
-                  <StatusBadge status={entry.data.status} />
+            <div className={cn("min-w-0 flex-1", last ? "pb-1" : "pb-3.5")}>
+              <div
+                className={cn(
+                  "rounded-[14px] border p-4",
+                  rich
+                    ? "border-line-strong bg-surface-raised"
+                    : "border-line bg-surface-muted",
                 )}
-              </div>
-
-              <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+              >
                 {entry.kind === "meal" && (
                   <MealBody
                     meal={entry.data}
@@ -223,48 +224,60 @@ function MealBody({
     meal.status === "COMPLETE" && items.length === 0 && !meal.calories;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-start gap-3">
+    <div className="flex flex-col gap-3.5">
+      <div className="flex items-start gap-3.5">
         {imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
             alt={meal.title ?? "Meal"}
-            className="h-16 w-16 shrink-0 rounded-lg object-cover"
+            className="h-[52px] w-[52px] shrink-0 rounded-[11px] object-cover"
           />
         )}
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="truncate font-semibold leading-tight">
+              <h3 className="truncate text-[14.5px] font-semibold leading-tight tracking-[-0.005em] text-fg">
                 {meal.title ?? "Logged meal"}
               </h3>
-              {meal.slot && (
-                <span className="text-xs text-muted-foreground">
-                  {SLOT_LABEL[meal.slot] ?? meal.slot}
+              <p className="mt-1 flex items-center gap-2 text-[11.5px] text-fg-dim">
+                {meal.slot && <span>{SLOT_LABEL[meal.slot] ?? meal.slot}</span>}
+                {meal.slot && items.length > 0 && <span>·</span>}
+                {items.length > 0 && (
+                  <span>
+                    {items.length} ingredient{items.length === 1 ? "" : "s"}
+                  </span>
+                )}
+                <StatusBadge status={meal.status} />
+              </p>
+            </div>
+
+            <div className="flex shrink-0 items-start gap-1">
+              {!foundNothing && (
+                <span className="tabular font-mono text-[13px] text-fg">
+                  {round(meal.calories) ?? "—"} kcal
                 </span>
               )}
+              {isOwner && <MealActions meal={meal} />}
             </div>
-            {isOwner && <MealActions meal={meal} />}
           </div>
-
-          {foundNothing ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              No food identified.
-            </p>
-          ) : (
-            <MacroRow macros={meal} className="mt-2" />
-          )}
         </div>
       </div>
 
-      {!foundNothing && <MacroSplitBar macros={meal} />}
+      {!foundNothing && (
+        <div className="flex flex-col gap-2.5">
+          <MacroSplitBar macros={meal} />
+          <MacroRow macros={meal} />
+        </div>
+      )}
 
       {foundNothing && (
-        <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3">
-          <p className="text-sm font-medium">Nothing recognisable in this one</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        <div className="rounded-[11px] border border-dashed border-line-strong p-3.5">
+          <p className="text-[13px] font-semibold text-fg">
+            Nothing recognisable in this one
+          </p>
+          <p className="mt-1.5 text-[12px] leading-relaxed text-fg-dim">
             The photo may not show food, or the voice note may not have picked
             up any speech.{" "}
             {isOwner
@@ -274,41 +287,52 @@ function MealBody({
         </div>
       )}
 
+      {audioUrl && <AudioNote src={audioUrl} />}
+
       {meal.transcript && (
-        <p className="text-sm italic leading-relaxed text-muted-foreground">
+        <p className="font-serif text-[13.5px] italic leading-relaxed text-fg-muted">
           &ldquo;{meal.transcript}&rdquo;
         </p>
       )}
 
       {items.length > 0 && (
         <details className="group">
-          <summary className="cursor-pointer text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
-            {items.length} ingredient{items.length === 1 ? "" : "s"}
+          <summary className="mono-label cursor-pointer list-none transition-colors marker:content-none hover:text-fg">
+            Per ingredient
           </summary>
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="text-muted-foreground">
-                <tr className="border-b border-border">
-                  <th className="py-1 text-left font-medium">Item</th>
-                  <th className="py-1 text-right font-medium">kcal</th>
-                  <th className="py-1 text-right font-medium">P</th>
-                  <th className="py-1 text-right font-medium">C</th>
-                  <th className="py-1 text-right font-medium">F</th>
+
+          <div className="mt-2.5 overflow-x-auto">
+            <table className="w-full text-[11.5px]">
+              <thead>
+                <tr className="border-b border-line">
+                  <th className="mono-label py-1.5 text-left">Item</th>
+                  <th className="mono-label py-1.5 text-right">kcal</th>
+                  <th className="mono-label py-1.5 text-right">P</th>
+                  <th className="mono-label py-1.5 text-right">C</th>
+                  <th className="mono-label py-1.5 text-right">F</th>
                 </tr>
               </thead>
-              <tbody className="tabular">
+              <tbody className="tabular text-fg-muted">
                 {items.map((item, i) => (
-                  <tr key={i} className="border-b border-border/50 last:border-0">
-                    <td className="py-1 pr-2">
+                  <tr key={i} className="border-b border-line/60 last:border-0">
+                    <td className="py-1.5 pr-3">
                       {item.name}
-                      <span className="ml-1 text-muted-foreground">
+                      <span className="ml-1.5 text-fg-faint">
                         {item.quantity}
                       </span>
                     </td>
-                    <td className="py-1 text-right">{Math.round(item.calories)}</td>
-                    <td className="py-1 text-right">{Math.round(item.protein)}</td>
-                    <td className="py-1 text-right">{Math.round(item.carbs)}</td>
-                    <td className="py-1 text-right">{Math.round(item.fat)}</td>
+                    <td className="py-1.5 text-right">
+                      {Math.round(item.calories)}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {Math.round(item.protein)}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {Math.round(item.carbs)}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {Math.round(item.fat)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -317,12 +341,8 @@ function MealBody({
         </details>
       )}
 
-      {audioUrl && (
-        <audio controls src={audioUrl} className="h-8 w-full max-w-xs" />
-      )}
-
       {meal.status === "FAILED" && meal.error && (
-        <p className="text-xs text-destructive">{meal.error}</p>
+        <p className="text-[11.5px] text-clay-text">{meal.error}</p>
       )}
     </div>
   );
@@ -338,61 +358,62 @@ function WorkoutBody({
   isOwner: boolean;
 }) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-start justify-between gap-2">
+    <div className="flex flex-col gap-3.5">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate font-semibold leading-tight">
+          <h3 className="truncate text-[13.5px] font-semibold leading-tight text-fg">
             {workout.title ?? "Workout"}
           </h3>
-          <p className="text-xs text-muted-foreground">
-            {workout.exercises.length} exercise
-            {workout.exercises.length === 1 ? "" : "s"}
-            {workout.durationMin ? ` · ${workout.durationMin} min` : ""}
+          <p className="mt-1 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
+            <span>
+              {workout.exercises.length} exercise
+              {workout.exercises.length === 1 ? "" : "s"}
+            </span>
+            {workout.durationMin ? <span>· {workout.durationMin} min</span> : null}
+            <StatusBadge status={workout.status} />
           </p>
         </div>
+
         {isOwner && <WorkoutActions workoutId={workout.id} />}
       </div>
 
       {workout.exercises.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <tbody className="tabular">
-              {workout.exercises.map((ex) => (
-                <tr key={ex.id} className="border-b border-border/50 last:border-0">
-                  <td className="py-1.5 pr-2 font-medium">{ex.name}</td>
-                  <td className="py-1.5 text-right text-muted-foreground">
-                    {ex.weightKg !== null ? `${ex.weightKg} kg` : "BW"}
-                  </td>
-                  <td className="w-20 py-1.5 text-right text-muted-foreground">
-                    {ex.sets !== null && ex.reps !== null
-                      ? `${ex.sets} × ${ex.reps}`
-                      : ex.sets !== null
-                        ? `${ex.sets} sets`
-                        : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="flex flex-col gap-2 border-t border-line pt-3.5">
+          {workout.exercises.map((ex) => (
+            <li
+              key={ex.id}
+              className="flex items-baseline gap-4 text-[12.5px] text-fg-muted"
+            >
+              <span className="min-w-0 flex-1 truncate">{ex.name}</span>
+              <span className="tabular shrink-0 font-mono text-[11.5px] text-fg-dim">
+                {ex.weightKg !== null ? `${ex.weightKg} kg` : "BW"}
+                {ex.sets !== null && ex.reps !== null
+                  ? ` · ${ex.sets} × ${ex.reps}`
+                  : ex.sets !== null
+                    ? ` · ${ex.sets} sets`
+                    : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
 
       {workout.notes && (
-        <p className="text-sm text-muted-foreground">{workout.notes}</p>
+        <p className="text-[12.5px] leading-relaxed text-fg-dim">
+          {workout.notes}
+        </p>
       )}
 
+      {audioUrl && <AudioNote src={audioUrl} />}
+
       {workout.transcript && (
-        <p className="text-sm italic leading-relaxed text-muted-foreground">
+        <p className="font-serif text-[13.5px] italic leading-relaxed text-fg-muted">
           &ldquo;{workout.transcript}&rdquo;
         </p>
       )}
 
-      {audioUrl && (
-        <audio controls src={audioUrl} className="h-8 w-full max-w-xs" />
-      )}
-
       {workout.status === "FAILED" && workout.error && (
-        <p className="text-xs text-destructive">{workout.error}</p>
+        <p className="text-[11.5px] text-clay-text">{workout.error}</p>
       )}
     </div>
   );
@@ -408,35 +429,35 @@ function WeightBody({
   isOwner: boolean;
 }) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-start gap-3">
-        {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt="Check-in"
-            className="h-16 w-16 shrink-0 rounded-lg object-cover"
-          />
-        )}
+    <div className="flex items-start gap-3.5">
+      {imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt="Check-in"
+          className="h-[52px] w-[52px] shrink-0 rounded-[11px] object-cover"
+        />
+      )}
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="font-semibold leading-tight">Weigh-in</h3>
-              <p className="tabular mt-0.5 text-lg font-semibold">
-                {entry.weightKg}
-                <span className="ml-1 text-xs font-normal text-muted-foreground">
-                  kg
-                </span>
-              </p>
-            </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="text-[13.5px] font-semibold leading-tight text-fg">
+            Morning check-in
+          </h3>
+
+          <div className="flex shrink-0 items-center gap-1">
+            <span className="tabular font-mono text-[12.5px] text-sage-text">
+              {entry.weightKg} kg
+            </span>
             {isOwner && <WeightActions entryId={entry.id} />}
           </div>
-
-          {entry.notes && (
-            <p className="mt-1 text-sm text-muted-foreground">{entry.notes}</p>
-          )}
         </div>
+
+        {entry.notes && (
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-fg-dim">
+            {entry.notes}
+          </p>
+        )}
       </div>
     </div>
   );

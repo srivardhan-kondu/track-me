@@ -51,8 +51,8 @@ export function ImagePicker({
   }
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <span className="text-sm font-medium">{label}</span>
+    <div className={cn("flex flex-col gap-2.5", className)}>
+      <span className="text-[12.5px] font-medium text-fg-muted">{label}</span>
 
       <input
         ref={galleryRef}
@@ -71,37 +71,37 @@ export function ImagePicker({
       />
 
       {preview ? (
-        <div className="relative overflow-hidden rounded-lg border border-border">
+        <div className="relative overflow-hidden rounded-[14px] border border-line-strong">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={preview}
-            alt="Selected meal"
-            className="h-48 w-full object-cover"
+            alt="Selected photo"
+            className="h-44 w-full object-cover"
           />
+
           {value && (
-            <span className="absolute bottom-2 left-2 rounded bg-black/60 px-1.5 py-0.5 text-[11px] font-medium text-white">
+            <span className="absolute bottom-2.5 left-2.5 rounded bg-black/55 px-2 py-1 font-mono text-[9.5px] uppercase tracking-[0.1em] text-white/90 backdrop-blur">
               {formatBytes(value.size)}
             </span>
           )}
-          <Button
+
+          <button
             type="button"
-            size="icon"
-            variant="secondary"
-            className="absolute right-2 top-2 h-7 w-7 rounded-full shadow"
             onClick={() => onChange(null)}
             aria-label="Remove photo"
+            className="absolute right-2.5 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-black/55 text-white backdrop-blur transition-colors hover:bg-black/75"
           >
             <X className="h-3.5 w-3.5" />
-          </Button>
+          </button>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3">
-          <div className="flex gap-2">
+        <div className="rounded-[14px] border border-dashed border-line-strong p-3.5">
+          <div className="flex gap-2.5">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="flex-1 gap-2"
+              className="flex-1"
               disabled={working}
               onClick={() => cameraRef.current?.click()}
             >
@@ -116,7 +116,7 @@ export function ImagePicker({
               type="button"
               variant="outline"
               size="sm"
-              className="flex-1 gap-2"
+              className="flex-1"
               disabled={working}
               onClick={() => galleryRef.current?.click()}
             >
@@ -124,7 +124,8 @@ export function ImagePicker({
               Gallery
             </Button>
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+
+          <p className="mt-2.5 text-[11.5px] leading-relaxed text-fg-dim">
             {working ? "Preparing photo…" : hint}
           </p>
         </div>

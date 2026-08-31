@@ -1,35 +1,53 @@
-import { round } from "@/lib/utils";
+import { cn, round } from "@/lib/utils";
 
 export type Point = { day: Date; weightKg: number };
 
-const W = 720;
-const H = 220;
-const PAD = { top: 16, right: 16, bottom: 26, left: 40 };
+const W = 900;
+const H = 210;
 
 /**
- * Weight trend as an inline SVG so it inherits the theme and ships no
- * charting library. Scales to its container via viewBox.
+ * The weight trend as inline SVG, so it inherits the theme and ships no
+ * charting library.
+ *
+ * The shaded band is where the last week has actually been sitting — the line
+ * to notice, since Track Me stores no goal weight to draw one against.
  */
-export function WeightChart({ points }: { points: Point[] }) {
+export function WeightChart({
+  points,
+  className,
+}: {
+  points: Point[];
+  className?: string;
+}) {
   if (points.length === 0) {
     return (
-      <div className="grid h-[220px] place-items-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
-        No check-ins yet — log your weight to start the trend.
+      <div
+        className={cn(
+          "grid h-[210px] place-items-center rounded-xl border border-dashed border-line-strong px-6 text-center",
+          className,
+        )}
+      >
+        <p className="text-[13px] leading-relaxed text-fg-dim">
+          No check-ins yet. Weigh in tomorrow morning and the trend starts here.
+        </p>
       </div>
     );
   }
 
   if (points.length === 1) {
     return (
-      <div className="grid h-[220px] place-items-center rounded-lg border border-dashed border-border">
-        <div className="text-center">
-          <p className="tabular text-3xl font-semibold">
+      <div
+        className={cn(
+          "grid h-[210px] place-items-center rounded-xl border border-dashed border-line-strong px-6 text-center",
+          className,
+        )}
+      >
+        <div>
+          <p className="tabular font-serif text-[42px] leading-none text-fg">
             {points[0].weightKg}
-            <span className="ml-1 text-sm font-normal text-muted-foreground">
-              kg
-            </span>
+            <span className="ml-1.5 text-[13px] text-fg-dim">kg</span>
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-3 text-[12.5px] text-fg-dim">
             One more check-in and the trend line appears.
           </p>
         </div>
@@ -42,19 +60,16 @@ export function WeightChart({ points }: { points: Point[] }) {
   const rawMax = Math.max(...values);
   // Pad the domain so the line never hugs the frame.
   const span = Math.max(1, rawMax - rawMin);
-  const min = rawMin - span * 0.15;
-  const max = rawMax + span * 0.15;
+  const min = rawMin - span * 0.18;
+  const max = rawMax + span * 0.18;
 
   const times = points.map((p) => new Date(p.day).getTime());
   const tMin = Math.min(...times);
   const tMax = Math.max(...times);
   const tSpan = Math.max(1, tMax - tMin);
 
-  const plotW = W - PAD.left - PAD.right;
-  const plotH = H - PAD.top - PAD.bottom;
-
-  const x = (t: number) => PAD.left + ((t - tMin) / tSpan) * plotW;
-  const y = (v: number) => PAD.top + (1 - (v - min) / (max - min)) * plotH;
+  const x = (t: number) => ((t - tMin) / tSpan) * W;
+  const y = (v: number) => (1 - (v - min) / (max - min)) * H;
 
   const coords = points.map((p) => ({
     cx: x(new Date(p.day).getTime()),
@@ -62,119 +77,102 @@ export function WeightChart({ points }: { points: Point[] }) {
     ...p,
   }));
 
-  const line = coords
-    .map((c, i) => `${i === 0 ? "M" : "L"}${c.cx.toFixed(1)},${c.cy.toFixed(1)}`)
-    .join(" ");
+  const line = coords.map((c) => `${c.cx.toFixed(1)},${c.cy.toFixed(1)}`).join(" ");
 
-  const area =
-    `${line} L${coords[coords.length - 1].cx.toFixed(1)},${(H - PAD.bottom).toFixed(1)}` +
-    ` L${coords[0].cx.toFixed(1)},${(H - PAD.bottom).toFixed(1)} Z`;
+  // Where the last week has actually sat — the band scales with the athlete's
+  // own noise rather than a fixed half-kilo, which would swallow a flat chart.
+  const recent = points.slice(-7).map((p) => p.weightKg);
+  const recentAvg = recent.reduce((a, v) => a + v, 0) / Math.max(1, recent.length);
+  const recentLow = Math.min(...recent);
+  const recentHigh = Math.max(...recent);
+  const bandTop = y(recentHigh);
+  const bandHeight = Math.max(3, y(recentLow) - bandTop);
 
-  // Four horizontal gridlines across the padded domain.
-  const ticks = Array.from({ length: 4 }, (_, i) => {
-    const v = min + ((max - min) * i) / 3;
-    return { v, y: y(v) };
+  const last = coords[coords.length - 1];
+  const first = coords[0];
+
+  const axis = [0, 1, 2, 3].map((i) => {
+    const t = tMin + (tSpan * i) / 3;
+    return new Date(t).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
   });
 
-  const first = coords[0];
-  const last = coords[coords.length - 1];
-
   return (
-    <div className="w-full overflow-x-auto">
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        className="h-[220px] w-full min-w-[320px]"
-        role="img"
-        aria-label={`Weight trend from ${round(first.weightKg, 1)} to ${round(last.weightKg, 1)} kilograms`}
-      >
-        <defs>
-          <linearGradient id="weight-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="0%"
-              stopColor="var(--primary)"
-              stopOpacity="0.22"
-            />
-            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {ticks.map((t, i) => (
-          <g key={i}>
+    <div className={className}>
+      <div className="relative h-[210px] w-full">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+          className="h-[210px] w-full"
+          role="img"
+          aria-label={`Weight trend from ${round(first.weightKg, 1)} to ${round(last.weightKg, 1)} kilograms`}
+        >
+          {[0.2, 0.45, 0.7].map((f) => (
             <line
-              x1={PAD.left}
-              x2={W - PAD.right}
-              y1={t.y}
-              y2={t.y}
-              stroke="var(--border)"
+              key={f}
+              x1={0}
+              x2={W}
+              y1={H * f}
+              y2={H * f}
+              stroke="var(--line-strong)"
               strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
             />
-            <text
-              x={PAD.left - 8}
-              y={t.y + 3.5}
-              textAnchor="end"
-              fontSize="10"
-              fill="var(--muted-foreground)"
-              style={{ fontVariantNumeric: "tabular-nums" }}
-            >
-              {t.v.toFixed(1)}
-            </text>
-          </g>
-        ))}
+          ))}
 
-        <path d={area} fill="url(#weight-fill)" />
-        <path
-          d={line}
-          fill="none"
-          stroke="var(--primary)"
-          strokeWidth="2"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
+          <rect
+            x={0}
+            y={bandTop}
+            width={W}
+            height={bandHeight}
+            fill="var(--sage)"
+            opacity="0.09"
+          />
+          <line
+            x1={0}
+            x2={W}
+            y1={y(recentAvg)}
+            y2={y(recentAvg)}
+            stroke="var(--sage)"
+            strokeWidth="1"
+            strokeDasharray="5 6"
+            opacity="0.6"
+            vectorEffect="non-scaling-stroke"
+          />
 
-        {coords.map((c, i) => (
-          <circle
-            key={i}
-            cx={c.cx}
-            cy={c.cy}
-            r={i === coords.length - 1 ? 4 : 2.5}
-            fill="var(--primary)"
-            stroke="var(--card)"
-            strokeWidth="1.5"
-          >
-            <title>
-              {new Date(c.day).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              })}
-              : {c.weightKg} kg
-            </title>
-          </circle>
-        ))}
+          <polyline
+            points={line}
+            fill="none"
+            stroke="var(--accent)"
+            strokeWidth="2.2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
 
-        <text
-          x={PAD.left}
-          y={H - 8}
-          fontSize="10"
-          fill="var(--muted-foreground)"
+        {/* Drawn in HTML: the SVG is stretched, which would distort text. */}
+        <span
+          className="absolute right-0 -translate-y-1/2 rounded-md bg-accent px-2 py-[3px] font-mono text-[10.5px] font-semibold text-accent-ink"
+          style={{ top: `${(last.cy / H) * 100}%` }}
         >
-          {new Date(first.day).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          })}
-        </text>
-        <text
-          x={W - PAD.right}
-          y={H - 8}
-          textAnchor="end"
-          fontSize="10"
-          fill="var(--muted-foreground)"
-        >
-          {new Date(last.day).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          })}
-        </text>
-      </svg>
+          {last.weightKg}
+        </span>
+
+        <span className="mono-label absolute bottom-2.5 left-0">
+          Last week {round(recentLow, 1)}–{round(recentHigh, 1)}
+        </span>
+      </div>
+
+      <div className="mt-1.5 flex justify-between border-t border-line pt-2.5">
+        {axis.map((label, i) => (
+          <span key={i} className="mono-label">
+            {label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

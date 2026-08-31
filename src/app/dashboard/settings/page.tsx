@@ -1,48 +1,88 @@
-import { CheckCircle2, CircleDashed } from "lucide-react";
-
 import { RoleSwitcher } from "@/components/settings/role-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { db } from "@/lib/db";
 import { googleEnabled } from "@/lib/auth";
 import { requireUser } from "@/lib/session";
-import { initials } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
+import { safeZone } from "@/lib/tz";
 import { aiEnabled } from "@/services/ai/client";
 import { storageProvider, usingObjectStorage } from "@/services/storage";
 
 export const metadata = { title: "Settings" };
 
-function IntegrationRow({
-  name,
-  active,
-  activeLabel,
-  inactiveLabel,
+function Panel({
+  title,
+  description,
+  tone = "default",
+  children,
 }: {
-  name: string;
-  active: boolean;
-  activeLabel: string;
-  inactiveLabel: string;
+  title: string;
+  description?: string;
+  tone?: "default" | "sage";
+  children?: React.ReactNode;
 }) {
   return (
-    <li className="flex items-start gap-3 py-2.5">
-      {active ? (
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
-      ) : (
-        <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+    <section
+      className={cn(
+        "rounded-2xl border p-[22px]",
+        tone === "sage"
+          ? "border-sage-line bg-sage-soft"
+          : "border-line-strong bg-surface",
       )}
-      <div className="min-w-0">
-        <p className="text-sm font-medium">{name}</p>
-        <p className="text-xs text-muted-foreground">
-          {active ? activeLabel : inactiveLabel}
+    >
+      <h2 className="text-[13px] font-semibold text-fg">{title}</h2>
+      {description && (
+        <p className="mt-1.5 text-[12.5px] leading-relaxed text-fg-dim">
+          {description}
+        </p>
+      )}
+      {children && <div className="mt-4">{children}</div>}
+    </section>
+  );
+}
+
+/** One wired-up service, and whether this deployment actually has it. */
+function ServiceRow({
+  name,
+  detail,
+  live,
+}: {
+  name: string;
+  detail: string;
+  live: boolean;
+}) {
+  return (
+    <li className="flex items-start gap-3 border-b border-line py-3 last:border-0">
+      <span
+        className={cn(
+          "mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full",
+          live ? "bg-sage" : "bg-line-strong",
+        )}
+      />
+
+      <div className="min-w-0 flex-1">
+        <p
+          className={cn(
+            "text-[12.5px] font-medium",
+            live ? "text-fg" : "text-fg-muted",
+          )}
+        >
+          {name}
+        </p>
+        <p className="mt-0.5 text-[11.5px] leading-relaxed text-fg-dim">
+          {detail}
         </p>
       </div>
+
+      <span
+        className={cn(
+          "mt-0.5 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em]",
+          live ? "text-sage-text" : "text-fg-faint",
+        )}
+      >
+        {live ? "Live" : "Off"}
+      </span>
     </li>
   );
 }
@@ -52,121 +92,148 @@ export default async function SettingsPage() {
 
   const coaches = await db.coachAthlete.findMany({
     where: { athleteId: user.id },
+    orderBy: { createdAt: "asc" },
     include: {
       coach: { select: { id: true, name: true, email: true, image: true } },
     },
   });
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your account and how Track Me is wired up.
+    <>
+      <div className="min-w-0">
+        <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
+          Settings
+        </h1>
+        <p className="mt-2.5 text-[13px] text-fg-dim">
+          Your account, your coach, and what&apos;s wired up.
         </p>
-      </header>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Account</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center gap-3">
-          <Avatar className="h-12 w-12">
-            {user.image && <AvatarImage src={user.image} alt="" />}
-            <AvatarFallback>{initials(user.name, user.email)}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="truncate font-medium">{user.name ?? "Unnamed"}</p>
-            <p className="truncate text-sm text-muted-foreground">
-              {user.email}
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <div className="flex flex-col gap-5">
+          <section className="rounded-2xl border border-line-strong bg-surface p-[22px]">
+            <div className="flex items-center gap-3.5">
+              <Avatar className="h-11 w-11">
+                {user.image && <AvatarImage src={user.image} alt="" />}
+                <AvatarFallback className="text-[12px]">
+                  {initials(user.name, user.email)}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-semibold text-fg">
+                  {user.name ?? "Unnamed"}
+                </p>
+                <p className="mt-0.5 truncate text-[12px] text-fg-dim">
+                  {user.email}
+                </p>
+              </div>
+
+              <Badge>{user.role === "COACH" ? "Coach" : "Athlete"}</Badge>
+            </div>
+          </section>
+
+          <Panel
+            title="Mode"
+            description="Log your own training, or monitor athletes."
+          >
+            <RoleSwitcher role={user.role} />
+          </Panel>
+
+          <Panel title="Where your days are counted">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-[12.5px] text-fg-muted">Time zone</p>
+              <p className="tabular rounded-lg border border-line-strong px-3 py-1.5 font-mono text-[12px] text-fg">
+                {safeZone(user.timeZone)}
+              </p>
+            </div>
+            <p className="mt-3 text-[11.5px] leading-relaxed text-fg-dim">
+              Detected from your browser, and kept up to date as you travel.
+              Every day boundary — meals, weigh-ins, the timeline — uses it.
             </p>
-          </div>
-          <Badge className="ml-auto" variant="secondary">
-            {user.role === "COACH" ? "Coach" : "Athlete"}
-          </Badge>
-        </CardContent>
-      </Card>
+          </Panel>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Mode</CardTitle>
-          <CardDescription>
-            Switch between logging your own training and monitoring athletes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RoleSwitcher role={user.role} />
-        </CardContent>
-      </Card>
+        <div className="flex flex-col gap-5">
+          <Panel
+            title="Your coach"
+            description="Anyone listed here can see your timeline and leave notes on it."
+            tone="sage"
+          >
+            {coaches.length === 0 ? (
+              <p className="text-[12.5px] leading-relaxed text-fg-muted">
+                No coach is monitoring you yet. Ask your trainer to add you by
+                the email you signed up with,{" "}
+                <span className="font-mono text-[12px] text-fg">
+                  {user.email}
+                </span>
+                .
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {coaches.map(({ coach, createdAt }) => (
+                  <li key={coach.id} className="flex items-center gap-3">
+                    <Avatar>
+                      {coach.image && <AvatarImage src={coach.image} alt="" />}
+                      <AvatarFallback>
+                        {initials(coach.name, coach.email)}
+                      </AvatarFallback>
+                    </Avatar>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Your coaches</CardTitle>
-          <CardDescription>
-            Anyone listed here can see your timeline and leave feedback.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {coaches.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No coach is monitoring you yet. Ask your trainer to add you by
-              your email address, {user.email}.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {coaches.map(({ coach }) => (
-                <li key={coach.id} className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    {coach.image && <AvatarImage src={coach.image} alt="" />}
-                    <AvatarFallback className="text-[10px]">
-                      {initials(coach.name, coach.email)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {coach.name ?? "Coach"}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {coach.email}
-                    </p>
-                  </div>
-                </li>
-              ))}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[12.5px] font-semibold text-fg">
+                        {coach.name ?? "Coach"}
+                      </p>
+                      <p className="mt-0.5 truncate text-[11.5px] text-fg-muted">
+                        Can see your timeline · since{" "}
+                        {createdAt.toLocaleDateString(undefined, {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel
+            title="Connected services"
+            description="What this deployment currently has configured."
+          >
+            <ul className="flex flex-col">
+              <ServiceRow
+                name="Google sign-in"
+                live={googleEnabled}
+                detail={
+                  googleEnabled
+                    ? "OAuth configured."
+                    : "Not configured — using the local development sign-in."
+                }
+              />
+              <ServiceRow
+                name="Voice & vision"
+                live={aiEnabled}
+                detail={
+                  aiEnabled
+                    ? "Transcription and nutrition analysis are live."
+                    : "No API key — meals fall back to the offline estimator and voice notes are stored but not transcribed."
+                }
+              />
+              <ServiceRow
+                name="Media storage"
+                live={usingObjectStorage}
+                detail={
+                  usingObjectStorage
+                    ? `Photos and voice notes are stored in ${storageProvider}.`
+                    : "Not configured — media is written to .uploads/ on this machine. This cannot work in production."
+                }
+              />
             </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Integrations</CardTitle>
-          <CardDescription>
-            What this deployment currently has configured.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="divide-y divide-border">
-            <IntegrationRow
-              name="Google sign-in"
-              active={googleEnabled}
-              activeLabel="OAuth configured."
-              inactiveLabel="Not configured — using the local development sign-in."
-            />
-            <IntegrationRow
-              name="OpenAI (Whisper + Vision)"
-              active={aiEnabled}
-              activeLabel="Transcription and nutrition analysis are live."
-              inactiveLabel="No API key — meals fall back to the offline estimator and voice notes are stored but not transcribed."
-            />
-            <IntegrationRow
-              name="Object storage"
-              active={usingObjectStorage}
-              activeLabel={`Media is stored in ${storageProvider}.`}
-              inactiveLabel="Not configured — media is written to .uploads/ on this machine. This cannot work in production."
-            />
-          </ul>
-        </CardContent>
-      </Card>
-    </div>
+          </Panel>
+        </div>
+      </div>
+    </>
   );
 }

@@ -37,8 +37,8 @@ export function WorkoutActions({ workoutId }: { workoutId: string }) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground"
+          size="icon-sm"
+          className="h-7 w-7 shrink-0 text-fg-faint"
           aria-label="Workout options"
         >
           <MoreHorizontal className="h-4 w-4" />
@@ -51,7 +51,7 @@ export function WorkoutActions({ workoutId }: { workoutId: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={remove}
-          className="text-destructive focus:text-destructive"
+          className="text-clay-text focus:text-clay-text"
         >
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
@@ -76,8 +76,8 @@ export function WeightActions({ entryId }: { entryId: string }) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground"
+          size="icon-sm"
+          className="h-7 w-7 shrink-0 text-fg-faint"
           aria-label="Check-in options"
         >
           <MoreHorizontal className="h-4 w-4" />
@@ -86,7 +86,7 @@ export function WeightActions({ entryId }: { entryId: string }) {
       <DropdownMenuContent align="end">
         <DropdownMenuItem
           onClick={remove}
-          className="text-destructive focus:text-destructive"
+          className="text-clay-text focus:text-clay-text"
         >
           <Trash2 className="mr-2 h-4 w-4" />
           Delete

@@ -1,18 +1,23 @@
+import { DayDivider, EmptyState } from "@/components/layout/page";
 import { MealForm } from "@/components/log/meal-form";
-import { StatTile } from "@/components/timeline/macros";
+import { MealRow } from "@/components/meals/meal-row";
 import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
-import { Timeline } from "@/components/timeline/timeline";
+import { FilterPills } from "@/components/ui/filter-pills";
+import { Metric, MetricStrip } from "@/components/ui/metric";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import {
   addDaysInZone,
   formatDateInZone,
+  formatTimeInZone,
   fromDateParam,
+  isSameDayInZone,
   safeZone,
   startOfDayInZone,
   toDateParam,
 } from "@/lib/tz";
-import { getSummary, type TimelineEntry } from "@/services/reporting";
+import { getSummary, type TimelineMeal } from "@/services/reporting";
+import { mediaUrl } from "@/services/storage";
 
 export const metadata = { title: "Meals" };
 // Meal and workout logging run transcription and analysis in after(), which
@@ -21,15 +26,38 @@ export const maxDuration = 60;
 
 const DAYS = 14;
 
-export default async function MealsPage() {
+const SLOTS = [
+  { label: "All", value: null },
+  { label: "Breakfast", value: "BREAKFAST" },
+  { label: "Lunch", value: "LUNCH" },
+  { label: "Dinner", value: "DINNER" },
+  { label: "Snack", value: "SNACK" },
+] as const;
+
+export default async function MealsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ slot?: string }>;
+}) {
   const user = await requireUser();
+  const { slot: slotParam } = await searchParams;
+
+  const slot =
+    SLOTS.find((s) => s.value && s.value === slotParam)?.value ?? null;
 
   const zone = safeZone(user.timeZone);
-  const from = startOfDayInZone(addDaysInZone(new Date(), -(DAYS - 1), zone), zone);
+  const from = startOfDayInZone(
+    addDaysInZone(new Date(), -(DAYS - 1), zone),
+    zone,
+  );
 
   const [meals, summary, pending] = await Promise.all([
     db.meal.findMany({
-      where: { userId: user.id, eatenAt: { gte: from } },
+      where: {
+        userId: user.id,
+        eatenAt: { gte: from },
+        ...(slot ? { slot } : {}),
+      },
       orderBy: { eatenAt: "desc" },
       include: {
         comments: {
@@ -46,116 +74,139 @@ export default async function MealsPage() {
     }),
   ]);
 
+  // Signed media URLs have to be resolved on the server.
+  const resolved = await Promise.all(
+    meals.map(async (meal) => ({
+      meal: meal as unknown as TimelineMeal,
+      imageUrl: await mediaUrl(meal.imageKey),
+      audioUrl: await mediaUrl(meal.audioKey),
+    })),
+  );
+
   // Group into day buckets, newest first.
-  const groups = new Map<string, typeof meals>();
-  for (const meal of meals) {
-    const key = toDateParam(meal.eatenAt, zone);
+  const groups = new Map<string, typeof resolved>();
+  for (const row of resolved) {
+    const key = toDateParam(row.meal.eatenAt, zone);
     const bucket = groups.get(key);
-    if (bucket) bucket.push(meal);
-    else groups.set(key, [meal]);
+    if (bucket) bucket.push(row);
+    else groups.set(key, [row]);
   }
 
+  const perDay =
+    summary.mealComplianceDays > 0
+      ? Math.round((summary.totalMeals / summary.mealComplianceDays) * 10) / 10
+      : 0;
+
+  const pillHref = (value: string | null) =>
+    value ? `/dashboard/meals?slot=${value}` : "/dashboard/meals";
+
   return (
-    <div className="space-y-6">
+    <>
       <ProcessingWatcher initialPending={pending} />
 
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Meals</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            The last {DAYS} days of logging.
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div className="min-w-0">
+          <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
+            Meals
+          </h1>
+          <p className="mt-2.5 text-[13px] text-fg-dim">
+            Last {DAYS} days
+            {perDay > 0 && ` · ${perDay} meals a day on average`}
           </p>
         </div>
-        <MealForm />
-      </header>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
-          7-day daily average
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile
-            label="Calories"
-            value={summary.avgCalories}
-            unit="kcal"
-            hint={`${summary.totalMeals} meals logged`}
-          />
-          <StatTile
-            label="Protein"
-            value={summary.avgProtein}
-            unit="g"
-            accent="var(--chart-protein)"
-          />
-          <StatTile
-            label="Carbs"
-            value={summary.avgCarbs}
-            unit="g"
-            accent="var(--chart-carbs)"
-          />
-          <StatTile
-            label="Fat"
-            value={summary.avgFat}
-            unit="g"
-            accent="var(--chart-fat)"
-          />
-        </div>
-      </section>
+        <MealForm />
+      </div>
+
+      <MetricStrip>
+        <Metric
+          label="Daily calories"
+          value={summary.avgCalories.toLocaleString()}
+          note="7-day average"
+        />
+        <Metric label="Protein" value={summary.avgProtein} unit="g / day" />
+        <Metric label="Carbs" value={summary.avgCarbs} unit="g / day" />
+        <Metric label="Fat" value={summary.avgFat} unit="g / day" />
+      </MetricStrip>
+
+      <FilterPills
+        active={slot}
+        options={SLOTS.map((s) => ({
+          label: s.label,
+          value: s.value,
+          href: pillHref(s.value),
+        }))}
+      />
 
       {groups.size === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
-          <p className="text-sm font-medium">No meals logged yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Photograph your next plate and say what&apos;s on it.
-          </p>
-        </div>
+        <EmptyState
+          title={slot ? "Nothing in this slot yet" : "No meals logged yet"}
+          body={
+            slot
+              ? "Try another part of the day, or log one now."
+              : "Photograph your next plate and say what's on it — the macros get filled in for you."
+          }
+          action={<MealForm />}
+        />
       ) : (
-        <div className="space-y-8">
-          {[...groups.entries()].map(([key, dayMeals]) => {
+        <div className="flex flex-col gap-2.5">
+          {[...groups.entries()].map(([key, rows]) => {
             const day = fromDateParam(key, zone);
-            const entries: TimelineEntry[] = dayMeals
-              .slice()
-              .sort((a, b) => a.eatenAt.getTime() - b.eatenAt.getTime())
-              .map((m) => ({
-                kind: "meal" as const,
-                at: m.eatenAt,
-                id: m.id,
-                // Prisma's row shape matches TimelineMeal.
-                data: m as unknown as Extract<
-                  TimelineEntry,
-                  { kind: "meal" }
-                >["data"],
-              }));
+            const isToday = isSameDayInZone(day, new Date(), zone);
 
-            const kcal = dayMeals.reduce((a, m) => a + (m.calories ?? 0), 0);
-            const protein = dayMeals.reduce((a, m) => a + (m.protein ?? 0), 0);
+            const kcal = rows.reduce(
+              (a, r) => a + (r.meal.calories ?? 0),
+              0,
+            );
+            const protein = rows.reduce(
+              (a, r) => a + (r.meal.protein ?? 0),
+              0,
+            );
 
             return (
-              <section key={key}>
-                <div className="mb-3 flex items-baseline justify-between border-b border-border pb-2">
-                  <h2 className="text-sm font-semibold">
-                    {formatDateInZone(day, zone, {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </h2>
-                  <span className="tabular text-xs text-muted-foreground">
-                    {Math.round(kcal)} kcal · {Math.round(protein)}g protein
-                  </span>
-                </div>
-
-                <Timeline
-                  entries={entries}
-                  viewerId={user.id}
-                  timeZone={zone}
-                  isOwner
-                  canComment
+              <section key={key} className="flex flex-col gap-2.5">
+                <DayDivider
+                  className={isToday ? undefined : "pt-4"}
+                  label={
+                    isToday
+                      ? `Today · ${formatDateInZone(day, zone, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}`
+                      : formatDateInZone(day, zone, {
+                          weekday: "long",
+                          month: "short",
+                          day: "numeric",
+                        })
+                  }
+                  meta={`${Math.round(kcal).toLocaleString()} kcal · ${Math.round(protein)} p`}
                 />
+
+                {rows
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      b.meal.eatenAt.getTime() - a.meal.eatenAt.getTime(),
+                  )
+                  .map(({ meal, imageUrl, audioUrl }) => (
+                    <MealRow
+                      key={meal.id}
+                      meal={meal}
+                      imageUrl={imageUrl}
+                      audioUrl={audioUrl}
+                      time={formatTimeInZone(meal.eatenAt, zone)}
+                      viewerId={user.id}
+                      isOwner
+                      canComment
+                      dim={!isToday}
+                    />
+                  ))}
               </section>
             );
           })}
         </div>
       )}
-    </div>
+    </>
   );
 }

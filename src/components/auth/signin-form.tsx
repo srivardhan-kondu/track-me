@@ -6,16 +6,9 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { ChoiceTile } from "@/components/ui/choice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
 function GoogleMark() {
   return (
@@ -71,11 +64,7 @@ export function SignInForm({
       return;
     }
     setPending("dev");
-    const res = await signIn("dev", {
-      email,
-      role,
-      redirect: false,
-    });
+    const res = await signIn("dev", { email, role, redirect: false });
     if (res?.error) {
       setPending(null);
       toast.error("Sign-in failed.");
@@ -85,15 +74,15 @@ export function SignInForm({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Welcome to Track Me</CardTitle>
-        <CardDescription>
-          Log training in seconds. Share it with your coach automatically.
-        </CardDescription>
-      </CardHeader>
+    <div className="rounded-[18px] border border-line-strong bg-surface p-6">
+      <h1 className="font-serif text-[26px] leading-none text-fg">
+        Welcome to Track Me
+      </h1>
+      <p className="mt-2.5 text-[12.5px] leading-relaxed text-fg-dim">
+        Log training in seconds. Your coach sees it automatically.
+      </p>
 
-      <CardContent className="space-y-5">
+      <div className="mt-6 flex flex-col gap-5">
         {googleEnabled && (
           <Button
             onClick={handleGoogle}
@@ -113,21 +102,26 @@ export function SignInForm({
 
         {googleEnabled && devLoginEnabled && (
           <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">or</span>
-            <div className="h-px flex-1 bg-border" />
+            <span className="h-px flex-1 bg-line" />
+            <span className="mono-label">or</span>
+            <span className="h-px flex-1 bg-line" />
           </div>
         )}
 
         {devLoginEnabled && (
-          <form onSubmit={handleDev} className="space-y-4">
-            <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+          <form onSubmit={handleDev} className="flex flex-col gap-4">
+            <p className="rounded-xl border border-dashed border-line-strong p-3.5 text-[11.5px] leading-relaxed text-fg-dim">
               Google OAuth is not configured, so Track Me is using its local
-              development sign-in. Set <code>AUTH_GOOGLE_ID</code> and{" "}
-              <code>AUTH_GOOGLE_SECRET</code> to switch it off.
-            </div>
+              development sign-in. Set{" "}
+              <code className="font-mono text-fg-muted">AUTH_GOOGLE_ID</code>{" "}
+              and{" "}
+              <code className="font-mono text-fg-muted">
+                AUTH_GOOGLE_SECRET
+              </code>{" "}
+              to switch it off.
+            </p>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -140,24 +134,21 @@ export function SignInForm({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label>Sign in as</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {(["ATHLETE", "COACH"] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={cn(
-                      "rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                      role === r
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground hover:bg-accent",
-                    )}
-                  >
-                    {r === "ATHLETE" ? "Athlete" : "Coach"}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-2.5">
+                <ChoiceTile
+                  title="Athlete"
+                  blurb="Log meals, workouts and weight."
+                  selected={role === "ATHLETE"}
+                  onClick={() => setRole("ATHLETE")}
+                />
+                <ChoiceTile
+                  title="Coach"
+                  blurb="Monitor athletes, leave feedback."
+                  selected={role === "COACH"}
+                  onClick={() => setRole("COACH")}
+                />
               </div>
             </div>
 
@@ -167,22 +158,21 @@ export function SignInForm({
               size="lg"
               disabled={pending !== null}
             >
-              {pending === "dev" && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
+              {pending === "dev" && <Loader2 className="h-4 w-4 animate-spin" />}
               Continue
             </Button>
           </form>
         )}
 
         {!googleEnabled && !devLoginEnabled && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[12.5px] leading-relaxed text-fg-dim">
             No sign-in provider is configured. Set{" "}
-            <code>AUTH_GOOGLE_ID</code> and <code>AUTH_GOOGLE_SECRET</code> to
-            enable Google login.
+            <code className="font-mono text-fg-muted">AUTH_GOOGLE_ID</code> and{" "}
+            <code className="font-mono text-fg-muted">AUTH_GOOGLE_SECRET</code>{" "}
+            to enable Google login.
           </p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

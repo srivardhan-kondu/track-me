@@ -131,6 +131,11 @@ export function fromDateParam(value: string | undefined, timeZone: string): Date
   return Number.isNaN(at.getTime()) ? new Date() : at;
 }
 
+/** Local hour of day (0–23), for greetings and time-of-day copy. */
+export function hourInZone(date: Date, timeZone: string): number {
+  return partsInZone(date, timeZone).hour;
+}
+
 export function formatTimeInZone(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat(undefined, {
     timeZone,

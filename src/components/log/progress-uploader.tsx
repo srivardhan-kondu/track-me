@@ -17,9 +17,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ChoiceTile } from "@/components/ui/choice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { runAction } from "@/lib/run-action";
 
 const POSES = [
@@ -33,7 +33,11 @@ function todayInput(d = new Date()) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function ProgressUploader() {
+export function ProgressUploader({
+  trigger,
+}: {
+  trigger?: React.ReactNode;
+}) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
@@ -78,10 +82,12 @@ export function ProgressUploader() {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Camera className="h-4 w-4" />
-          Add photo
-        </Button>
+        {trigger ?? (
+          <Button>
+            <Camera className="h-4 w-4" />
+            Add photo
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent>
@@ -93,24 +99,17 @@ export function ProgressUploader() {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label>Pose</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
               {POSES.map((p) => (
-                <button
+                <ChoiceTile
                   key={p.value}
-                  type="button"
+                  title={p.label}
+                  selected={pose === p.value}
                   onClick={() => setPose(p.value)}
-                  className={cn(
-                    "rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                    pose === p.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:bg-accent",
-                  )}
-                >
-                  {p.label}
-                </button>
+                />
               ))}
             </div>
           </div>
@@ -122,7 +121,7 @@ export function ProgressUploader() {
             hint="Neutral background, relaxed posture."
           />
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="progress-date">Taken on</Label>
             <Input
               id="progress-date"

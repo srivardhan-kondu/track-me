@@ -171,7 +171,7 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
     >
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button className="gap-2">
+          <Button>
             <Dumbbell className="h-4 w-4" />
             Log workout
           </Button>
@@ -199,7 +199,7 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
           </TabsList>
 
           <TabsContent value="voice">
-            <form onSubmit={submitVoice} className="space-y-4">
+            <form onSubmit={submitVoice} className="flex flex-col gap-4">
               <VoiceRecorder
                 value={audio}
                 onChange={setAudio}
@@ -207,10 +207,10 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
                 hint="Name each exercise with its weight, sets and reps."
               />
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="workout-description">
                   Or type it{" "}
-                  <span className="text-muted-foreground">(optional)</span>
+                  <span className="text-fg-faint">(optional)</span>
                 </Label>
                 <Textarea
                   id="workout-description"
@@ -248,11 +248,11 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
           </TabsContent>
 
           <TabsContent value="manual">
-            <form onSubmit={submitManual} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={submitManual} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="workout-title">
                   Session name{" "}
-                  <span className="text-muted-foreground">(optional)</span>
+                  <span className="text-fg-faint">(optional)</span>
                 </Label>
                 <Input
                   id="workout-title"
@@ -262,22 +262,22 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label>Exercises</Label>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   {rows.map((row, i) => (
                     <div
                       key={row.key}
-                      className="rounded-lg border border-border p-2.5"
+                      className="rounded-[12px] border border-line p-3"
                     >
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setPickerFor(row.key)}
-                          className="min-w-0 flex-1 truncate rounded-md border border-input bg-card px-3 py-1.5 text-left text-sm shadow-sm transition-colors hover:bg-accent"
+                          className="min-w-0 flex-1 truncate rounded-[10px] border border-line-strong bg-surface-inset px-3 py-2 text-left text-[12.5px] text-fg transition-colors hover:bg-hover"
                         >
                           {row.name || (
-                            <span className="text-muted-foreground">
+                            <span className="text-fg-faint">
                               Choose exercise {i + 1}…
                             </span>
                           )}
@@ -287,8 +287,8 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
                           <Button
                             type="button"
                             variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0 text-muted-foreground"
+                            size="icon-sm"
+                            className="h-8 w-8 shrink-0 text-fg-faint hover:text-clay-text"
                             onClick={() =>
                               setRows((rs) => rs.filter((r) => r.key !== row.key))
                             }
@@ -343,7 +343,7 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="w-full gap-2"
+                  className="w-full"
                   onClick={() => setRows((rs) => [...rs, emptyRow()])}
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -406,7 +406,7 @@ function SharedFields({
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="workout-duration">Duration (min)</Label>
           <Input
             id="workout-duration"
@@ -419,7 +419,7 @@ function SharedFields({
             onChange={(e) => setDurationMin(e.target.value)}
           />
         </div>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="workout-time">Performed at</Label>
           <Input
             id="workout-time"
@@ -430,10 +430,10 @@ function SharedFields({
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="workout-notes">
           How did it feel?{" "}
-          <span className="text-muted-foreground">(optional)</span>
+          <span className="text-fg-faint">(optional)</span>
         </Label>
         <Input
           id="workout-notes"

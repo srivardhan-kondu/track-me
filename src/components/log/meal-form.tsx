@@ -108,14 +108,14 @@ export function MealForm({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <ImagePicker value={image} onChange={setImage} />
 
           <VoiceRecorder value={audio} onChange={setAudio} />
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="meal-description">
-              Notes <span className="text-muted-foreground">(optional)</span>
+              Notes <span className="text-fg-faint">(optional)</span>
             </Label>
             <Textarea
               id="meal-description"
@@ -126,7 +126,7 @@ export function MealForm({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="meal-time">Eaten at</Label>
             <Input
               id="meal-time"

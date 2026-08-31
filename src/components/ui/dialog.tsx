@@ -18,7 +18,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/55 backdrop-blur-sm trackme-overlay",
+      "trackme-overlay fixed inset-0 z-50 bg-black/60 backdrop-blur-[3px]",
       className,
     )}
     {...props}
@@ -35,13 +35,18 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-border bg-card p-6 shadow-lg sm:rounded-xl max-h-[92vh] overflow-y-auto trackme-dialog",
+        "trackme-dialog fixed left-1/2 top-1/2 z-50 grid max-h-[92vh] w-[calc(100%-2rem)] max-w-lg",
+        "-translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-[18px] border border-line-strong",
+        "bg-bg p-6 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.7)]",
         className,
       )}
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
+      <DialogPrimitive.Close
+        className="absolute right-5 top-5 rounded-md text-fg-faint transition-colors hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
+        aria-label="Close"
+      >
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
@@ -54,12 +59,7 @@ function DialogHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("flex flex-col space-y-1.5 text-left", className)}
-      {...props}
-    />
-  );
+  return <div className={cn("flex flex-col gap-2 pr-8", className)} {...props} />;
 }
 
 function DialogFooter({
@@ -69,7 +69,7 @@ function DialogFooter({
   return (
     <div
       className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        "flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end",
         className,
       )}
       {...props}
@@ -83,7 +83,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    className={cn("font-serif text-2xl leading-none text-fg", className)}
     {...props}
   />
 ));
@@ -95,11 +95,16 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-[12.5px] leading-relaxed text-fg-dim", className)}
     {...props}
   />
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
+
+/** The mono step marker used across the multi-step logging dialogs. */
+function DialogStep({ children }: { children: React.ReactNode }) {
+  return <p className="mono-label">{children}</p>;
+}
 
 export {
   Dialog,
@@ -112,4 +117,5 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
+  DialogStep,
 };

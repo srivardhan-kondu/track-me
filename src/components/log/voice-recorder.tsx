@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Mic, Pause, Play, RotateCcw, Square } from "lucide-react";
+import { Mic, RotateCcw, Square } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { AudioNote } from "@/components/timeline/audio-note";
 import { cn } from "@/lib/utils";
 
 /** Picks a container the browser can actually record. Safari differs from Chrome. */
@@ -25,7 +25,8 @@ function formatDuration(seconds: number) {
 }
 
 const MAX_SECONDS = 180;
-const BAR_COUNT = 32;
+const BAR_COUNT = 24;
+const FLOOR = 0.08;
 
 export function VoiceRecorder({
   value,
@@ -40,11 +41,10 @@ export function VoiceRecorder({
 }) {
   const [recording, setRecording] = React.useState(false);
   const [elapsed, setElapsed] = React.useState(0);
-  const [levels, setLevels] = React.useState<number[]>(
-    () => new Array(BAR_COUNT).fill(0.06),
+  const [levels, setLevels] = React.useState<number[]>(() =>
+    new Array(BAR_COUNT).fill(FLOOR),
   );
   const [error, setError] = React.useState<string | null>(null);
-  const [playing, setPlaying] = React.useState(false);
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
   const recorderRef = React.useRef<MediaRecorder | null>(null);
@@ -53,7 +53,6 @@ export function VoiceRecorder({
   const audioCtxRef = React.useRef<AudioContext | null>(null);
   const rafRef = React.useRef<number | null>(null);
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
-  const audioElRef = React.useRef<HTMLAudioElement | null>(null);
 
   // Keep an object URL alive only while a recording exists.
   React.useEffect(() => {
@@ -144,7 +143,7 @@ export function VoiceRecorder({
         }
         setLevels((prev) => [
           ...prev.slice(1),
-          Math.max(0.06, Math.min(1, peak * 1.9)),
+          Math.max(FLOOR, Math.min(1, peak * 1.9)),
         ]);
         rafRef.current = requestAnimationFrame(tick);
       };
@@ -160,126 +159,82 @@ export function VoiceRecorder({
     if (recorder && recorder.state !== "inactive") recorder.stop();
     recorderRef.current = null;
     setRecording(false);
-    setLevels(new Array(BAR_COUNT).fill(0.06));
+    setLevels(new Array(BAR_COUNT).fill(FLOOR));
   }
 
   function reset() {
     onChange(null);
     setElapsed(0);
-    setPlaying(false);
-  }
-
-  function togglePlayback() {
-    const el = audioElRef.current;
-    if (!el) return;
-    if (playing) {
-      el.pause();
-    } else {
-      void el.play();
-    }
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between">
-        <span className="text-sm font-medium">{label}</span>
-        {recording && (
-          <span className="tabular text-xs text-muted-foreground">
-            {formatDuration(elapsed)} / {formatDuration(MAX_SECONDS)}
+        <span className="text-[12.5px] font-medium text-fg-muted">{label}</span>
+        {(recording || value) && (
+          <span className="tabular font-mono text-[11px] text-fg-dim">
+            {formatDuration(elapsed)}
+            {recording && ` / ${formatDuration(MAX_SECONDS)}`}
           </span>
         )}
       </div>
 
-      <div className="rounded-lg border border-border bg-muted/40 p-3">
-        {!value && !recording && (
-          <div className="flex items-center gap-3">
-            <Button type="button" onClick={start} size="sm" className="gap-2">
-              <Mic className="h-4 w-4" />
-              Record
-            </Button>
-            <p className="text-xs leading-relaxed text-muted-foreground">
+      {value && !recording ? (
+        <div className="flex items-center gap-2.5">
+          {previewUrl && <AudioNote src={previewUrl} className="min-w-0 flex-1" />}
+          <button
+            type="button"
+            onClick={reset}
+            aria-label="Discard recording and start again"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-line-strong text-fg-dim transition-colors hover:bg-hover hover:text-fg"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-4 rounded-[14px] border border-line bg-surface-inset px-4 py-6">
+          <button
+            type="button"
+            onClick={recording ? stop : start}
+            aria-label={recording ? "Stop recording" : "Start recording"}
+            className={cn(
+              "grid h-16 w-16 place-items-center rounded-full bg-accent text-accent-ink transition-transform active:scale-95",
+              recording && "trackme-listening",
+            )}
+          >
+            {recording ? (
+              <Square className="h-5 w-5 fill-current" />
+            ) : (
+              <Mic className="h-6 w-6" />
+            )}
+          </button>
+
+          {recording ? (
+            <>
+              <div
+                className="flex h-9 items-center gap-[3px]"
+                aria-hidden="true"
+              >
+                {levels.map((level, i) => (
+                  <span
+                    key={i}
+                    className="w-[3px] rounded-full bg-accent/70 transition-[height] duration-75"
+                    style={{ height: `${Math.max(6, Math.round(level * 34))}px` }}
+                  />
+                ))}
+              </div>
+              <p className="mono-label">Tap to finish</p>
+            </>
+          ) : (
+            <p className="max-w-xs text-center text-[12px] leading-relaxed text-fg-dim">
               {hint}
             </p>
-          </div>
-        )}
-
-        {recording && (
-          <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              onClick={stop}
-              size="sm"
-              variant="destructive"
-              className="gap-2"
-            >
-              <Square className="h-3.5 w-3.5" />
-              Stop
-            </Button>
-
-            <div
-              className="flex h-8 flex-1 items-center gap-[2px]"
-              aria-hidden="true"
-            >
-              {levels.map((lvl, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-full bg-primary/70"
-                  style={{ height: `${Math.round(lvl * 100)}%` }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {value && !recording && (
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              onClick={togglePlayback}
-              size="icon"
-              variant="outline"
-              aria-label={playing ? "Pause" : "Play recording"}
-            >
-              {playing ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
-
-            <div className="flex-1">
-              <p className="text-sm font-medium">Voice note ready</p>
-              <p className="tabular text-xs text-muted-foreground">
-                {formatDuration(elapsed)} · {(value.size / 1024).toFixed(0)} KB
-              </p>
-            </div>
-
-            <Button
-              type="button"
-              onClick={reset}
-              size="icon"
-              variant="ghost"
-              aria-label="Discard recording"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-
-            {previewUrl && (
-              <audio
-                ref={audioElRef}
-                src={previewUrl}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onEnded={() => setPlaying(false)}
-                className="hidden"
-              />
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {error && (
-        <p className={cn("text-xs", "text-destructive")} role="alert">
+        <p className="text-[11.5px] text-clay-text" role="alert">
           {error}
         </p>
       )}

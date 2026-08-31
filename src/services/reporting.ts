@@ -280,6 +280,39 @@ export async function getWeightSeries(
   return rows;
 }
 
+export type CoachNote = {
+  body: string;
+  createdAt: Date;
+  author: { name: string | null; image: string | null };
+};
+
+/**
+ * The most recent comment left on this athlete's logs by anyone else, so the
+ * dashboard can surface it instead of burying it inside one timeline card.
+ */
+export async function getLatestCoachNote(
+  userId: string,
+): Promise<CoachNote | null> {
+  const note = await db.comment.findFirst({
+    where: {
+      authorId: { not: userId },
+      OR: [
+        { meal: { userId } },
+        { workout: { userId } },
+        { weightEntry: { userId } },
+      ],
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      body: true,
+      createdAt: true,
+      author: { select: { name: true, image: true } },
+    },
+  });
+
+  return note;
+}
+
 export type ComplianceDay = {
   day: Date;
   meals: number;

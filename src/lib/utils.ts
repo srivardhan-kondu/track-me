@@ -37,6 +37,27 @@ export function formatMacro(n: number | null | undefined, unit = "g"): string {
   return r === null ? "—" : `${r}${unit}`;
 }
 
+/**
+ * Tonnes moved in a session: weight × sets × reps, summed. Bodyweight and
+ * part-filled entries contribute nothing rather than guessing a load.
+ */
+export function tonnesLifted(
+  exercises: {
+    weightKg: number | null;
+    sets: number | null;
+    reps: number | null;
+  }[],
+): number {
+  const kg = exercises.reduce((total, ex) => {
+    if (ex.weightKg === null || ex.sets === null || ex.reps === null) {
+      return total;
+    }
+    return total + ex.weightKg * ex.sets * ex.reps;
+  }, 0);
+
+  return Math.round(kg) / 1000;
+}
+
 export function initials(name?: string | null, email?: string | null): string {
   const source = name?.trim() || email?.split("@")[0] || "?";
   const parts = source.split(/[\s._-]+/).filter(Boolean);

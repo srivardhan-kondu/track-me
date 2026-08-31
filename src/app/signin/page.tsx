@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Activity } from "lucide-react";
 
 import { SignInForm } from "@/components/auth/signin-form";
+import { Logo } from "@/components/layout/shell";
 import { devLoginEnabled, googleEnabled } from "@/lib/auth";
 import { currentUser } from "@/lib/session";
 
@@ -20,13 +19,10 @@ export default async function SignInPage({
 
   return (
     <main className="grid min-h-dvh place-items-center px-6 py-12">
-      <div className="w-full max-w-sm">
-        <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Activity className="h-4 w-4" />
-          </div>
-          <span className="text-xl font-semibold tracking-tight">Track Me</span>
-        </Link>
+      <div className="w-full max-w-[380px]">
+        <div className="mb-9 flex justify-center">
+          <Logo href="/" />
+        </div>
 
         <SignInForm
           googleEnabled={googleEnabled}
