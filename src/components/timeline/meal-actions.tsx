@@ -99,8 +99,8 @@ export function MealActions({
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground"
+            size="icon-sm"
+            className="h-7 w-7 shrink-0 text-fg-faint"
             aria-label="Meal options"
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -118,7 +118,7 @@ export function MealActions({
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={handleDelete}
-            className="text-destructive focus:text-destructive"
+            className="text-clay-text focus:text-clay-text"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
@@ -135,8 +135,8 @@ export function MealActions({
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={save} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={save} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="edit-title">Meal</Label>
               <Input
                 id="edit-title"

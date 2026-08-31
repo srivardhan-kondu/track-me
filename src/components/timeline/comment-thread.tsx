@@ -71,43 +71,49 @@ export function CommentThread({
   const hasContent = comments.length > 0 || composing;
 
   return (
-    <div className={hasContent ? "mt-3 space-y-2" : "mt-2"}>
+    <div className={hasContent ? "mt-3.5 flex flex-col gap-2.5" : "mt-2.5"}>
       {comments.map((c) => (
-        <div key={c.id} className="flex gap-2">
+        <div key={c.id} className="flex gap-2.5">
           <Avatar className="h-6 w-6">
             {c.author.image && <AvatarImage src={c.author.image} alt="" />}
-            <AvatarFallback className="text-[10px]">
+            <AvatarFallback className="text-[8px]">
               {initials(c.author.name)}
             </AvatarFallback>
           </Avatar>
 
-          <div className="min-w-0 flex-1 rounded-lg bg-muted/60 px-3 py-2">
+          <div className="min-w-0 flex-1 rounded-xl border border-sage-line bg-sage-soft px-3 py-2.5">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="truncate text-xs font-semibold">
+              <span className="truncate text-[11.5px] font-semibold text-fg">
                 {c.author.name ?? "Coach"}
               </span>
-              <span className="shrink-0 text-[11px] text-muted-foreground">
+              {/*
+                Formatted in the reader's own locale and zone, which the server
+                cannot know — so the first client render legitimately differs.
+              */}
+              <span
+                suppressHydrationWarning
+                className="shrink-0 font-mono text-[10px] uppercase tracking-[0.1em] text-fg-dim"
+              >
                 {new Date(c.createdAt).toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
                 })}
               </span>
             </div>
-            <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed">
+            <p className="mt-1 whitespace-pre-wrap break-words text-[12.5px] leading-relaxed text-fg-muted">
               {c.body}
             </p>
           </div>
 
           {c.author.id === viewerId && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0 text-muted-foreground"
+            <button
+              type="button"
               onClick={() => remove(c.id)}
               aria-label="Delete comment"
+              className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-fg-faint transition-colors hover:text-clay-text"
             >
               <Trash2 className="h-3 w-3" />
-            </Button>
+            </button>
           )}
         </div>
       ))}
@@ -116,7 +122,7 @@ export function CommentThread({
         <button
           type="button"
           onClick={() => setComposing(true)}
-          className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="mono-label flex items-center gap-1.5 transition-colors hover:text-fg"
         >
           <MessageSquarePlus className="h-3.5 w-3.5" />
           Add feedback
@@ -124,14 +130,13 @@ export function CommentThread({
       )}
 
       {canComment && composing && (
-        <form onSubmit={submit} className="space-y-2">
+        <form onSubmit={submit} className="flex flex-col gap-2.5">
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Increase protein intake tonight."
+            placeholder="Add a shake after your evening walk and we're set."
             rows={2}
             autoFocus
-            className="text-sm"
           />
           <div className="flex justify-end gap-2">
             <Button

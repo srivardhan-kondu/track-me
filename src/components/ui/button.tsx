@@ -5,26 +5,27 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[11px] text-[13px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
+        // One amber action per screen; everything else stays a hairline.
         default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "bg-accent font-semibold text-accent-ink hover:brightness-[1.06] active:brightness-95",
         outline:
-          "border border-border bg-card shadow-sm hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-line-strong text-fg hover:bg-hover hover:border-line-strong",
+        secondary: "bg-surface-inset text-fg hover:bg-hover",
+        ghost: "text-fg-muted hover:bg-hover hover:text-fg",
+        destructive:
+          "border border-clay-line text-clay-text hover:bg-clay-soft",
+        link: "h-auto rounded-none px-0 text-accent-text underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-11 rounded-lg px-6 text-base",
-        icon: "h-9 w-9",
+        default: "h-[38px] px-4",
+        sm: "h-8 rounded-[9px] px-3 text-xs",
+        lg: "h-[42px] px-5 text-sm",
+        icon: "h-[38px] w-[38px] px-0",
+        "icon-sm": "h-8 w-8 rounded-[9px] px-0",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

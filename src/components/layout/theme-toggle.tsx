@@ -3,10 +3,10 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function ThemeToggle() {
-  const [dark, setDark] = React.useState(false);
+export function ThemeToggle({ className }: { className?: string }) {
+  const [dark, setDark] = React.useState(true);
 
   React.useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
@@ -24,13 +24,16 @@ export function ThemeToggle() {
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
+    <button
+      type="button"
       onClick={toggle}
       aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+      className={cn(
+        "grid h-8 w-8 place-items-center rounded-[9px] text-fg-faint transition-colors hover:bg-hover hover:text-fg",
+        className,
+      )}
     >
       {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </Button>
+    </button>
   );
 }

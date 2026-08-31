@@ -23,13 +23,13 @@ export function Progress({
       aria-valuemin={0}
       aria-valuemax={max}
       className={cn(
-        "h-2 w-full overflow-hidden rounded-full bg-muted",
+        "h-1.5 w-full overflow-hidden rounded-full bg-track",
         className,
       )}
     >
       <div
         className={cn(
-          "h-full rounded-full bg-primary transition-all",
+          "h-full rounded-full bg-accent transition-[width] duration-500",
           indicatorClassName,
         )}
         style={{ width: `${pct}%` }}

@@ -135,44 +135,49 @@ export function InstallButton({
       <Dialog open={showIosHelp} onOpenChange={setShowIosHelp}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Add Track Me to your home screen</DialogTitle>
+            <DialogTitle>Add to your home screen</DialogTitle>
             <DialogDescription>
               {browser.label} installs web apps from its Share menu.
             </DialogDescription>
           </DialogHeader>
 
-          <ol className="space-y-3 text-sm">
+          <ol className="flex flex-col gap-4 text-[12.5px] leading-relaxed text-fg-muted">
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold">
+              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-accent-line font-mono text-[10px] font-medium text-accent-text">
                 1
               </span>
               <span className="flex flex-wrap items-center gap-1.5">
-                Tap <Share className="inline h-4 w-4 text-primary" />
-                <strong>Share</strong> {browser.where}.
+                Tap <Share className="inline h-4 w-4 text-accent-text" />
+                <strong className="font-semibold text-fg">Share</strong>{" "}
+                {browser.where}.
               </span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold">
+              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-line-strong font-mono text-[10px] font-medium text-fg-dim">
                 2
               </span>
               <span className="flex flex-wrap items-center gap-1.5">
                 Scroll and choose{" "}
-                <SquarePlus className="inline h-4 w-4 text-primary" />
-                <strong>Add to Home Screen</strong>.
+                <SquarePlus className="inline h-4 w-4 text-accent-text" />
+                <strong className="font-semibold text-fg">
+                  Add to Home Screen
+                </strong>
+                .
               </span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold">
+              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-line-strong font-mono text-[10px] font-medium text-fg-dim">
                 3
               </span>
               <span>
-                Tap <strong>Add</strong>. Track Me opens full screen, with the
-                camera and microphone ready.
+                Tap <strong className="font-semibold text-fg">Add</strong>.
+                Track Me opens full screen, with the camera and microphone
+                ready.
               </span>
             </li>
           </ol>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[11.5px] leading-relaxed text-fg-faint">
             Works in Safari, Chrome, Edge and Firefox on iOS 16.4 and later.
           </p>
         </DialogContent>
@@ -220,14 +225,16 @@ export function InstallBanner() {
   if (!visible) return null;
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10">
-        <Download className="h-4 w-4 text-primary" />
+    <div className="flex flex-wrap items-center gap-3 rounded-[14px] border border-line bg-surface p-3">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-accent-soft">
+        <Download className="h-4 w-4 text-accent-text" />
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">Add Track Me to your home screen</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[12.5px] font-semibold text-fg">
+          Add Track Me to your home screen
+        </p>
+        <p className="mt-0.5 text-[11.5px] text-fg-dim">
           {ios
             ? "Opens full screen, straight to the camera."
             : "Log a meal in two taps, without opening a browser."}
@@ -236,15 +243,14 @@ export function InstallBanner() {
 
       <InstallButton variant="outline" className="shrink-0" />
 
-      <Button
-        variant="ghost"
-        size="icon"
+      <button
+        type="button"
         onClick={dismiss}
         aria-label="Dismiss"
-        className="h-7 w-7 shrink-0 text-muted-foreground"
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-[9px] text-fg-faint transition-colors hover:bg-hover hover:text-fg"
       >
         <X className="h-4 w-4" />
-      </Button>
+      </button>
     </div>
   );
 }

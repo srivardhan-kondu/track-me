@@ -50,7 +50,7 @@ export function AddAthlete() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button>
           <UserPlus className="h-4 w-4" />
           Add athlete
         </Button>
@@ -65,8 +65,8 @@ export function AddAthlete() {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="athlete-email">Athlete email</Label>
             <Input
               id="athlete-email"

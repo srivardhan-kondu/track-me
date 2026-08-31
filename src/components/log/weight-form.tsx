@@ -101,9 +101,9 @@ export function WeightForm({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="weight-kg">Weight (kg)</Label>
               <Input
                 id="weight-kg"
@@ -119,7 +119,7 @@ export function WeightForm({
                 autoFocus
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="weight-day">Date</Label>
               <Input
                 id="weight-day"
@@ -131,9 +131,9 @@ export function WeightForm({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="weight-notes">
-              Notes <span className="text-muted-foreground">(optional)</span>
+              Notes <span className="text-fg-faint">(optional)</span>
             </Label>
             <Input
               id="weight-notes"

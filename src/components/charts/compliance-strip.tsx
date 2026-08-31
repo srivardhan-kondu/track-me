@@ -1,30 +1,36 @@
 import { cn } from "@/lib/utils";
 import type { ComplianceDay } from "@/services/reporting";
 
-/** One cell per day: colour intensity shows how much was logged. */
-export function ComplianceStrip({ days }: { days: ComplianceDay[] }) {
+/**
+ * A fortnight of logging as a calendar grid: one cell per day, warmer the
+ * more that day held.
+ */
+export function ComplianceStrip({
+  days,
+  caption,
+}: {
+  days: ComplianceDay[];
+  caption?: React.ReactNode;
+}) {
   return (
-    <div className="space-y-2">
-      <div className="flex gap-1">
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-7 gap-1">
         {days.map((d) => {
           const score =
             (d.meals > 0 ? 1 : 0) +
             (d.workouts > 0 ? 1 : 0) +
             (d.weighedIn ? 1 : 0);
 
-          const tone =
-            score === 0
-              ? "bg-muted"
-              : score === 1
-                ? "bg-primary/25"
-                : score === 2
-                  ? "bg-primary/55"
-                  : "bg-primary";
-
           return (
             <div
               key={d.day.toISOString()}
-              className={cn("h-8 flex-1 rounded", tone)}
+              className={cn(
+                "h-4 rounded-[3px]",
+                score === 0 && "bg-track",
+                score === 1 && "bg-accent/35",
+                score === 2 && "bg-accent/65",
+                score === 3 && "bg-accent",
+              )}
               title={`${d.day.toLocaleDateString(undefined, {
                 weekday: "short",
                 month: "short",
@@ -39,15 +45,19 @@ export function ComplianceStrip({ days }: { days: ComplianceDay[] }) {
         })}
       </div>
 
-      <div className="flex justify-between text-[11px] text-muted-foreground">
-        <span>
-          {days[0]?.day.toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          })}
-        </span>
-        <span>Today</span>
-      </div>
+      {caption ? (
+        <p className="text-[12px] leading-relaxed text-fg-dim">{caption}</p>
+      ) : (
+        <div className="flex justify-between">
+          <span className="mono-label">
+            {days[0]?.day.toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+          <span className="mono-label">Today</span>
+        </div>
+      )}
     </div>
   );
 }

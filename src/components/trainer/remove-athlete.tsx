@@ -24,10 +24,10 @@ export function RemoveAthlete({ athleteId }: { athleteId: string }) {
   return (
     <Button
       variant="ghost"
-      size="icon"
+      size="icon-sm"
       onClick={remove}
       aria-label="Remove athlete"
-      className="text-muted-foreground"
+      className="text-fg-faint hover:text-clay-text"
     >
       <UserMinus className="h-4 w-4" />
     </Button>

@@ -2,119 +2,251 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---------------------------------------------------------------------------
+   Track Me — the warm-charcoal system.
+
+   One amber accent carries every primary action. Sage means "going well",
+   clay means "look at this". Everything else is a warm neutral at one of six
+   steps, so a screen reads as depth rather than as a grid of boxes.
+
+   Type: Manrope for interface text, Instrument Serif for the one number that
+   matters on a screen, JetBrains Mono for labels, times and units.
+--------------------------------------------------------------------------- */
+
+/* Light — the same palette on warm paper instead of warm charcoal. */
 :root {
-  --background: oklch(0.99 0.003 250);
-  --foreground: oklch(0.21 0.02 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.02 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.02 260);
-  --primary: oklch(0.55 0.19 258);
-  --primary-foreground: oklch(0.99 0.005 250);
-  --secondary: oklch(0.96 0.006 255);
-  --secondary-foreground: oklch(0.28 0.02 260);
-  --muted: oklch(0.96 0.006 255);
-  --muted-foreground: oklch(0.53 0.02 258);
-  --accent: oklch(0.95 0.02 255);
-  --accent-foreground: oklch(0.28 0.02 260);
-  --destructive: oklch(0.58 0.21 27);
-  --destructive-foreground: oklch(0.99 0.005 250);
-  --success: oklch(0.62 0.16 150);
-  --warning: oklch(0.72 0.16 70);
-  --border: oklch(0.91 0.008 258);
-  --input: oklch(0.91 0.008 258);
-  --ring: oklch(0.55 0.19 258);
+  --bg: oklch(0.977 0.005 80);
+  --bg-sunken: oklch(0.955 0.007 80);
+  --surface: oklch(1 0 0);
+  --surface-raised: oklch(0.993 0.004 80);
+  --surface-muted: oklch(0.968 0.005 80);
+  --surface-inset: oklch(0.947 0.007 80);
+  --hover: oklch(0.955 0.007 80);
+  --line: oklch(0.9 0.007 80);
+  --line-strong: oklch(0.855 0.009 80);
+  --track: oklch(0.905 0.008 80);
 
-  --chart-protein: oklch(0.62 0.17 258);
-  --chart-carbs: oklch(0.72 0.15 70);
-  --chart-fat: oklch(0.68 0.16 20);
-  --chart-calories: oklch(0.58 0.15 300);
+  --fg: oklch(0.24 0.012 70);
+  --fg-muted: oklch(0.43 0.012 75);
+  --fg-dim: oklch(0.52 0.012 75);
+  --fg-faint: oklch(0.62 0.012 75);
 
-  --radius: 0.7rem;
+  --accent: oklch(0.74 0.13 68);
+  --accent-ink: oklch(0.24 0.05 60);
+  --accent-text: oklch(0.53 0.12 60);
+  --accent-soft: oklch(0.945 0.035 75);
+  --accent-line: oklch(0.83 0.08 72);
+
+  --sage: oklch(0.62 0.11 158);
+  --sage-text: oklch(0.5 0.1 158);
+  --sage-soft: oklch(0.955 0.028 158);
+  --sage-line: oklch(0.86 0.05 158);
+
+  --clay: oklch(0.62 0.15 32);
+  --clay-text: oklch(0.53 0.16 30);
+  --clay-soft: oklch(0.96 0.028 32);
+  --clay-line: oklch(0.87 0.055 32);
+
+  --blue: oklch(0.6 0.13 245);
+  --blue-text: oklch(0.52 0.13 250);
+  --blue-soft: oklch(0.955 0.028 245);
+
+  --radius: 0.75rem;
 }
 
+/* Dark — the canonical look. */
 .dark {
-  --background: oklch(0.17 0.015 260);
-  --foreground: oklch(0.96 0.005 250);
-  --card: oklch(0.21 0.018 260);
-  --card-foreground: oklch(0.96 0.005 250);
-  --popover: oklch(0.21 0.018 260);
-  --popover-foreground: oklch(0.96 0.005 250);
-  --primary: oklch(0.68 0.16 258);
-  --primary-foreground: oklch(0.17 0.015 260);
-  --secondary: oklch(0.27 0.02 260);
-  --secondary-foreground: oklch(0.96 0.005 250);
-  --muted: oklch(0.27 0.02 260);
-  --muted-foreground: oklch(0.68 0.015 258);
-  --accent: oklch(0.3 0.025 260);
-  --accent-foreground: oklch(0.96 0.005 250);
-  --destructive: oklch(0.65 0.19 27);
-  --destructive-foreground: oklch(0.98 0.005 250);
-  --success: oklch(0.7 0.15 150);
-  --warning: oklch(0.78 0.15 70);
-  --border: oklch(0.3 0.02 260);
-  --input: oklch(0.32 0.02 260);
-  --ring: oklch(0.68 0.16 258);
+  --bg: oklch(0.17 0.006 70);
+  --bg-sunken: oklch(0.152 0.006 70);
+  --surface: oklch(0.205 0.006 70);
+  --surface-raised: oklch(0.215 0.007 70);
+  --surface-muted: oklch(0.19 0.006 70);
+  --surface-inset: oklch(0.183 0.006 70);
+  --hover: oklch(0.235 0.008 70);
+  --line: oklch(0.245 0.006 70);
+  --line-strong: oklch(0.27 0.007 70);
+  --track: oklch(0.27 0.007 70);
 
-  --chart-protein: oklch(0.7 0.16 258);
-  --chart-carbs: oklch(0.79 0.14 70);
-  --chart-fat: oklch(0.74 0.15 20);
-  --chart-calories: oklch(0.68 0.14 300);
+  --fg: oklch(0.95 0.01 80);
+  --fg-muted: oklch(0.68 0.012 80);
+  --fg-dim: oklch(0.6 0.012 80);
+  --fg-faint: oklch(0.5 0.012 80);
+
+  --accent: oklch(0.79 0.11 72);
+  --accent-ink: oklch(0.21 0.04 72);
+  --accent-text: oklch(0.79 0.11 72);
+  --accent-soft: oklch(0.235 0.01 72);
+  --accent-line: oklch(0.45 0.06 72);
+
+  --sage: oklch(0.79 0.09 158);
+  --sage-text: oklch(0.79 0.09 158);
+  --sage-soft: oklch(0.19 0.012 158);
+  --sage-line: oklch(0.29 0.02 158);
+
+  --clay: oklch(0.75 0.1 32);
+  --clay-text: oklch(0.75 0.1 32);
+  --clay-soft: oklch(0.235 0.02 32);
+  --clay-line: oklch(0.32 0.03 32);
+
+  --blue: oklch(0.79 0.09 240);
+  --blue-text: oklch(0.79 0.09 240);
+  --blue-soft: oklch(0.235 0.02 240);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --color-bg: var(--bg);
+  --color-bg-sunken: var(--bg-sunken);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-inset: var(--surface-inset);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-track: var(--track);
+
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-dim: var(--fg-dim);
+  --color-fg-faint: var(--fg-faint);
+
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
 
-  --color-protein: var(--chart-protein);
-  --color-carbs: var(--chart-carbs);
-  --color-fat: var(--chart-fat);
-  --color-calories: var(--chart-calories);
+  --color-sage: var(--sage);
+  --color-sage-text: var(--sage-text);
+  --color-sage-soft: var(--sage-soft);
+  --color-sage-line: var(--sage-line);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --color-clay: var(--clay);
+  --color-clay-text: var(--clay-text);
+  --color-clay-soft: var(--clay-soft);
+  --color-clay-line: var(--clay-line);
+
+  --color-blue: var(--blue);
+  --color-blue-text: var(--blue-text);
+  --color-blue-soft: var(--blue-soft);
+
+  /* Macro colours: protein reads cool, carbs take the accent, fat is clay. */
+  --color-protein: var(--blue);
+  --color-carbs: var(--accent);
+  --color-fat: var(--clay);
+
+  /* Aliases kept so shared primitives read in the usual vocabulary. */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--fg);
+  --color-popover: var(--surface-raised);
+  --color-popover-foreground: var(--fg);
+  --color-muted: var(--surface-muted);
+  --color-muted-foreground: var(--fg-dim);
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--accent);
+  --color-destructive: var(--clay);
+  --color-success: var(--sage);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1rem;
 }
 
 @layer base {
   * {
-    border-color: var(--border);
+    border-color: var(--line);
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--bg);
+    color: var(--fg);
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
   }
 
-  /* Numeric columns line up in macro tables and weight logs. */
-  .tabular {
-    font-variant-numeric: tabular-nums;
+  /* Instrument Serif has no bold cut; keep headings at its single weight. */
+  .font-serif {
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* The small uppercase mono label that titles every panel and column. */
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 400;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+  }
+
+  /* Four hairline-separated figures instead of four heavy stat cards. */
+  .metric-strip {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 0.875rem;
+  }
+
+  .metric-strip > * + * {
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 640px) {
+    .metric-strip {
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+    }
+    .metric-strip > * + * {
+      border-top: 0;
+      border-left: 1px solid var(--line);
+    }
+  }
+
+  /* Placeholder tile for media that has not loaded or was never added. */
+  .hatched {
+    background-image: repeating-linear-gradient(
+      135deg,
+      var(--line-strong) 0 6px,
+      var(--surface-muted) 6px 12px
+    );
   }
 }
 
 @layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -122,6 +254,24 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
+
+/* Scrollbars in the app's own neutrals rather than the browser's. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 99px;
 }
 
 /* Dialog transitions — hand-rolled so no animation plugin is needed. */
@@ -135,6 +285,18 @@
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
+/* The listening ring on the record button. */
+@keyframes trackme-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 10px color-mix(in oklch, var(--accent) 14%, transparent),
+                0 0 0 22px color-mix(in oklch, var(--accent) 6%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 14px color-mix(in oklch, var(--accent) 18%, transparent),
+                0 0 0 30px color-mix(in oklch, var(--accent) 7%, transparent);
+  }
+}
+
 .trackme-overlay[data-state="open"] {
   animation: trackme-fade-in 150ms ease-out;
 }
@@ -143,9 +305,14 @@
   animation: trackme-pop-in 170ms ease-out;
 }
 
+.trackme-listening {
+  animation: trackme-pulse 1.8s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .trackme-overlay[data-state="open"],
-  .trackme-dialog[data-state="open"] {
+  .trackme-dialog[data-state="open"],
+  .trackme-listening {
     animation: none;
   }
 }
