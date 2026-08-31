@@ -105,6 +105,7 @@ async function runMealAnalysis(mealId: string, typedDescription: string | null) 
       carbs: result.carbs,
       fat: result.fat,
       items: result.items,
+      aiGenerated: result.aiGenerated,
       status: "COMPLETE",
       error: null,
     },
@@ -166,6 +167,7 @@ async function runWorkoutParse(
         title: result.title,
         // Never overwrite a duration the athlete entered by hand.
         durationMin: workout.durationMin ?? result.durationMin,
+        aiGenerated: result.aiGenerated,
         status: "COMPLETE",
         error: null,
         exercises: {

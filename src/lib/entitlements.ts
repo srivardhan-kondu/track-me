@@ -94,6 +94,35 @@ export function isTrialing(user: Entitlement, now: Date = new Date()): boolean {
   return isPremium(user, now) && !isPaid(user, now);
 }
 
+/**
+ * Whole days left in the trial, or null when the account is not trialing.
+ *
+ * Rounded up, so the last part-day still reads "1 day left" rather than "0" —
+ * the countdown should never tell somebody their trial is already over while
+ * they can still use it.
+ */
+export function trialDaysLeft(
+  user: Entitlement,
+  now: Date = new Date(),
+): number | null {
+  if (!isTrialing(user, now)) return null;
+
+  const ms = user.trialEndsAt!.getTime() - now.getTime();
+  return Math.max(1, Math.ceil(ms / 86_400_000));
+}
+
+/**
+ * True for somebody whose free trial has run out and who never paid.
+ *
+ * Distinguishes the two kinds of free account: one that has seen what Premium
+ * does and one that never has. They are worth different conversations, so the
+ * paywall copy asks which it is.
+ */
+export function trialLapsed(user: Entitlement, now: Date = new Date()): boolean {
+  if (isPremium(user, now)) return false;
+  return Boolean(user.trialEndsAt && user.trialEndsAt <= now);
+}
+
 /** True when premium is backed by a payment, trial aside. */
 export function isPaid(user: Entitlement, now: Date = new Date()): boolean {
   if (user.plan !== "PREMIUM") return false;

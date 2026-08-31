@@ -34,6 +34,7 @@ export function AppShell({
   groups,
   user,
   badge,
+  banner,
   mobileAction,
   children,
 }: {
@@ -46,6 +47,8 @@ export function AppShell({
   };
   /** A word beside the logo, for the coach's side of the app. */
   badge?: string;
+  /** Sits above every page — the trial countdown, and nothing else. */
+  banner?: React.ReactNode;
   /** The one big logging button on mobile. */
   mobileAction?: React.ReactNode;
   children: React.ReactNode;
@@ -106,6 +109,8 @@ export function AppShell({
 
         <main className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 md:px-10 md:pb-12 md:pt-9">
           <div className="mx-auto flex max-w-[1100px] flex-col gap-6">
+            {banner}
+
             {children}
 
             {/*

@@ -12,7 +12,9 @@ import {
   isTrialing,
   planUpdateFor,
   termForAmount,
+  trialDaysLeft,
   trialEndsFrom,
+  trialLapsed,
 } from "../src/lib/entitlements";
 import { RELIABLE_REPS, estimated1RM } from "../src/services/strength";
 import {
@@ -122,6 +124,44 @@ describe("entitlement", () => {
       trialEndsAt: day("2026-09-05"),
     };
     assert.equal(isPremium(user, NOW), true);
+  });
+});
+
+describe("the trial countdown", () => {
+  const trialing = { plan: "FREE" as const, planExpiresAt: null, trialEndsAt: day("2026-09-03") };
+
+  it("counts whole days, rounding up", () => {
+    assert.equal(trialDaysLeft(trialing, NOW), 3);
+    assert.equal(trialDaysLeft(trialing, new Date("2026-09-02T13:00:00.000Z")), 1);
+  });
+
+  it("never reads zero while the trial still works", () => {
+    // A minute left is still a day of access, and "0 days left" beside a
+    // working feature reads as a bug.
+    const nearly = new Date("2026-09-03T11:59:00.000Z");
+    assert.equal(isPremium(trialing, nearly), true);
+    assert.equal(trialDaysLeft(trialing, nearly), 1);
+  });
+
+  it("is silent for accounts that are not trialing", () => {
+    assert.equal(trialDaysLeft({ plan: "FREE", planExpiresAt: null, trialEndsAt: null }, NOW), null);
+    assert.equal(
+      trialDaysLeft({ plan: "PREMIUM", planExpiresAt: day("2026-12-01"), trialEndsAt: day("2026-09-03") }, NOW),
+      null,
+    );
+  });
+
+  it("separates a lapsed trial from an account that never had one", () => {
+    assert.equal(trialLapsed({ plan: "FREE", planExpiresAt: null, trialEndsAt: day("2026-08-01") }, NOW), true);
+    assert.equal(trialLapsed(trialing, NOW), false);
+    assert.equal(trialLapsed({ plan: "FREE", planExpiresAt: null, trialEndsAt: null }, NOW), false);
+  });
+
+  it("never calls a paid account lapsed", () => {
+    // Everybody is given a trial at sign-up, so a subscriber's trialEndsAt is
+    // in the past too — the plan has to win.
+    const paid = { plan: "PREMIUM" as const, planExpiresAt: null, trialEndsAt: day("2026-08-01") };
+    assert.equal(trialLapsed(paid, NOW), false);
   });
 });
 

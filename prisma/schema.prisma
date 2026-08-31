@@ -27,6 +27,12 @@ model User {
   role     Role   @default(ATHLETE)
   heightCm Float?
 
+  /// Opens the admin console. Deliberately not a value of `role`: the athlete
+  /// switches their own role in Settings, so an ADMIN member of that enum
+  /// would put the console one dropdown away from every account. Granted by
+  /// another admin, or by the ADMIN_EMAILS allowlist, which needs no database.
+  isAdmin Boolean @default(false)
+
   /// Collected during onboarding. Drives which athlete portrait the app
   /// shows, and nothing else — it is never used to gate a feature.
   gender      Gender?
@@ -59,6 +65,7 @@ model User {
   athleteLinks CoachAthlete[] @relation("CoachToAthlete")
 
   payments       Payment[]
+  adminActions   AdminAudit[]    @relation("AdminAuditActor")
   meals          Meal[]
   workouts       Workout[]
   weightEntries  WeightEntry[]
@@ -66,6 +73,9 @@ model User {
   comments       Comment[]
 
   @@index([role])
+  @@index([isAdmin])
+  @@index([plan])
+  @@index([createdAt])
 }
 
 model Account {
@@ -188,6 +198,14 @@ model Meal {
   /// Raw per-ingredient breakdown returned by the vision model.
   items Json?
 
+  /// False when the numbers came from the offline estimator rather than the
+  /// vision model — a free plan, or a deployment with no API key. Shown to the
+  /// athlete, so an estimate is never mistaken for an analysis.
+  ///
+  /// Nullable on purpose: rows logged before this column existed are genuinely
+  /// unknown, and labelling them either way would be a guess printed as fact.
+  aiGenerated Boolean?
+
   status ProcessingStatus @default(PENDING)
   error  String?
 
@@ -211,6 +229,10 @@ model Workout {
   title       String?
   durationMin Int?
   notes       String?
+
+  /// As on Meal: whether the sets were read by the model or by the offline
+  /// parser, or null for rows that predate the column.
+  aiGenerated Boolean?
 
   status ProcessingStatus @default(PENDING)
   error  String?
@@ -557,4 +579,45 @@ model RateLimit {
   expiresAt DateTime
 
   @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Administration
+// ---------------------------------------------------------------------------
+
+/// An append-only record of everything done from the admin console.
+///
+/// Every write an admin makes there happens to somebody else's account —
+/// granting a plan, moving a payment, deleting a user — so each one is
+/// recorded before it is applied. Nothing in the console can edit or remove
+/// these rows; the only way to lose one is to drop the table.
+model AdminAudit {
+  id String @id @default(cuid())
+
+  actorId String?
+  /// Copied rather than joined. Deleting an account is itself an auditable
+  /// action, and the line describing it must outlive the row it points at.
+  actorEmail String?
+
+  /// A stable verb, for filtering: "user.plan.grant", "payment.claim", …
+  action String
+
+  targetType String?
+  targetId   String?
+
+  /// One sentence, already written for a human. These rows are read far more
+  /// often than they are queried.
+  summary String
+  /// Whatever the action needs to be reconstructed later — the previous plan,
+  /// the amount, the reason given.
+  meta Json?
+
+  createdAt DateTime @default(now())
+
+  actor User? @relation("AdminAuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([action])
+  @@index([targetType, targetId])
 }
