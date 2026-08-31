@@ -19,11 +19,29 @@ export type PickedExercise = {
   id: string;
   name: string;
   equipment: string;
-  groups: string[];
 };
 
-type SearchResponse = { results: PickedExercise[] };
+type CatalogGroup = {
+  groupId: string;
+  name: string;
+  exercises: (PickedExercise & { type: string; pattern: string })[];
+};
 
+type BrowseResponse = { groups: CatalogGroup[] };
+
+function equipmentLabel(value: string): string {
+  return (
+    EQUIPMENT_LABELS[value as keyof typeof EQUIPMENT_LABELS] ??
+    value.replace(/_/g, " ").toLowerCase()
+  );
+}
+
+/**
+ * Browse the catalog by muscle group rather than as one long list of names.
+ * Athletes pick an exercise by what they are training, so the groups run A-Z
+ * with their exercises beneath — and a movement appears under every group it
+ * trains directly.
+ */
 export function ExercisePicker({
   open,
   onOpenChange,
@@ -36,26 +54,26 @@ export function ExercisePicker({
   const [query, setQuery] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
 
-  // Debounce so typing does not fire a request per keystroke.
   React.useEffect(() => {
     const t = setTimeout(() => setDebounced(query), 200);
     return () => clearTimeout(t);
   }, [query]);
 
   const { data, isFetching } = useQuery({
-    queryKey: ["exercise-search", debounced],
+    queryKey: ["exercise-browse", debounced],
     queryFn: async () => {
       const res = await fetch(
         `/api/exercises?q=${encodeURIComponent(debounced)}`,
       );
       if (!res.ok) throw new Error("Search failed");
-      return (await res.json()) as SearchResponse;
+      return (await res.json()) as BrowseResponse;
     },
     enabled: open,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 
-  const results = data?.results ?? [];
+  const groups = data?.groups ?? [];
+  const total = groups.reduce((a, g) => a + g.exercises.length, 0);
 
   function pick(exercise: PickedExercise) {
     onPick(exercise);
@@ -69,7 +87,8 @@ export function ExercisePicker({
         <DialogHeader>
           <DialogTitle>Choose an exercise</DialogTitle>
           <DialogDescription>
-            Picking from the catalog credits your sets to the right muscles.
+            Grouped by what each movement trains. Picking from the catalog
+            credits your sets to the right muscles.
           </DialogDescription>
         </DialogHeader>
 
@@ -79,7 +98,7 @@ export function ExercisePicker({
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Bench press, squat, lat pulldown…"
+            placeholder="Search, or browse the groups below"
             className="pl-9"
           />
           {isFetching && (
@@ -87,41 +106,56 @@ export function ExercisePicker({
           )}
         </div>
 
-        <div className="-mx-1 max-h-[46vh] overflow-y-auto px-1">
-          {results.length === 0 && !isFetching && (
+        <div className="-mx-1 max-h-[52vh] overflow-y-auto px-1">
+          {groups.length === 0 && !isFetching && (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              {debounced
-                ? "No match — you can still type the name by hand."
-                : "Start typing to search."}
+              No match — you can still type the name by hand.
             </p>
           )}
 
-          <ul className="space-y-1">
-            {results.map((ex) => (
-              <li key={ex.id}>
-                <button
-                  type="button"
-                  onClick={() => pick(ex)}
-                  className="w-full rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
-                >
-                  <span className="block text-sm font-medium">{ex.name}</span>
-                  <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                    <Badge variant="secondary" className="text-[10px]">
-                      {EQUIPMENT_LABELS[
-                        ex.equipment as keyof typeof EQUIPMENT_LABELS
-                      ] ?? ex.equipment}
-                    </Badge>
-                    {ex.groups.map((g) => (
-                      <Badge key={g} variant="outline" className="text-[10px]">
-                        {g}
+          {groups.map((group) => (
+            <section key={group.groupId}>
+              <h3 className="sticky top-0 z-10 flex items-baseline gap-2 bg-card/95 py-1.5 backdrop-blur">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-primary/10 text-[11px] font-bold text-primary">
+                  {group.name.charAt(0)}
+                </span>
+                <span className="text-sm font-semibold">{group.name}</span>
+                <span className="tabular text-xs text-muted-foreground">
+                  {group.exercises.length}
+                </span>
+              </h3>
+
+              <ul className="mb-2 space-y-0.5">
+                {group.exercises.map((ex) => (
+                  <li key={`${group.groupId}-${ex.id}`}>
+                    <button
+                      type="button"
+                      onClick={() => pick(ex)}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
+                    >
+                      <span className="min-w-0 flex-1 truncate text-sm">
+                        {ex.name}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 text-[10px] font-normal"
+                      >
+                        {equipmentLabel(ex.equipment)}
                       </Badge>
-                    ))}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
+
+        {total > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {total} exercise{total === 1 ? "" : "s"} across {groups.length}{" "}
+            group{groups.length === 1 ? "" : "s"}
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );

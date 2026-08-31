@@ -128,53 +128,90 @@ export async function resolveExerciseIds(
   return Promise.all(names.map((n) => resolveExerciseId(n)));
 }
 
-export type CatalogSearchResult = {
+export type CatalogEntry = {
   id: string;
   name: string;
-  pattern: string;
-  type: string;
   equipment: string;
-  groups: string[];
+  type: string;
+  pattern: string;
 };
 
-/** Search used by the manual exercise picker. */
-export async function searchCatalog(
-  query: string,
-  limit = 25,
-): Promise<CatalogSearchResult[]> {
+export type CatalogGroup = {
+  groupId: string;
+  name: string;
+  exercises: CatalogEntry[];
+};
+
+/**
+ * The catalog arranged for browsing: muscle groups A-Z, and the exercises that
+ * train each one alphabetically beneath it.
+ *
+ * An exercise appears under every group it trains directly, so a hip thrust is
+ * found under Glutes and a deadlift under both Legs and Glutes — searching for
+ * what you want to train is more natural than recalling an exercise's name.
+ */
+export async function browseCatalog(query = ""): Promise<CatalogGroup[]> {
   const key = normalise(query);
+  const singular = singularise(key);
 
   const rows = await db.catalogExercise.findMany({
-    where: key
-      ? {
-          OR: [
-            { name: { contains: key, mode: "insensitive" } },
-            { aliases: { hasSome: [key] } },
-            { slug: { contains: key.replace(/ /g, "-") } },
-          ],
-        }
-      : undefined,
     orderBy: { name: "asc" },
-    take: limit,
     select: {
       id: true,
       name: true,
-      pattern: true,
-      type: true,
+      slug: true,
+      aliases: true,
       equipment: true,
+      type: true,
+      pattern: true,
       muscles: {
         where: { role: "PRIMARY" },
-        select: { muscle: { select: { group: { select: { name: true } } } } },
+        select: {
+          muscle: {
+            select: { group: { select: { id: true, name: true } } },
+          },
+        },
       },
     },
   });
 
-  return rows.map((r) => ({
-    id: r.id,
-    name: r.name,
-    pattern: r.pattern,
-    type: r.type,
-    equipment: r.equipment,
-    groups: [...new Set(r.muscles.map((m) => m.muscle.group.name))],
-  }));
+  const matches = (row: (typeof rows)[number]) => {
+    if (!key) return true;
+    const haystack = [row.name, row.slug.replace(/-/g, " "), ...row.aliases]
+      .map(normalise)
+      .join(" | ");
+    return haystack.includes(key) || haystack.includes(singular);
+  };
+
+  const groups = new Map<string, CatalogGroup>();
+
+  for (const row of rows) {
+    if (!matches(row)) continue;
+
+    const entry: CatalogEntry = {
+      id: row.id,
+      name: row.name,
+      equipment: row.equipment,
+      type: row.type,
+      pattern: row.pattern,
+    };
+
+    // Distinct primary groups — a movement can train more than one.
+    const seen = new Set<string>();
+    for (const link of row.muscles) {
+      const g = link.muscle.group;
+      if (seen.has(g.id)) continue;
+      seen.add(g.id);
+
+      const bucket = groups.get(g.id) ?? {
+        groupId: g.id,
+        name: g.name,
+        exercises: [],
+      };
+      bucket.exercises.push(entry);
+      groups.set(g.id, bucket);
+    }
+  }
+
+  return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

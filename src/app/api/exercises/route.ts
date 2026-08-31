@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { currentUser } from "@/lib/session";
-import { searchCatalog } from "@/services/exercises/resolve";
+import { browseCatalog } from "@/services/exercises/resolve";
 
 /** Backs the exercise picker. Catalog data is reference data, not user data. */
 export async function GET(req: Request) {
@@ -11,10 +11,10 @@ export async function GET(req: Request) {
   }
 
   const q = new URL(req.url).searchParams.get("q") ?? "";
-  const results = await searchCatalog(q.slice(0, 60), 30);
+  const groups = await browseCatalog(q.slice(0, 60));
 
   return NextResponse.json(
-    { results },
+    { groups },
     { headers: { "Cache-Control": "private, max-age=60" } },
   );
 }
