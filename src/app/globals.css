@@ -262,6 +262,28 @@
 }
 
 @layer utilities {
+  /*
+    The installed app paints into the notch and the home-indicator strip
+    (viewport-fit=cover with a translucent status bar), so anything pinned to
+    an edge has to reserve the system's own space or the clock, the camera and
+    the home indicator land on top of it.
+
+    `--gutter` is the padding the layout wanted; the inset only ever adds to
+    it, so a phone without a notch reads exactly as it did before.
+  */
+  .gutter-x {
+    padding-left: max(var(--gutter, 1rem), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--gutter, 1rem), env(safe-area-inset-right, 0px));
+  }
+
+  .safe-t {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-b {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   .tabular {
     font-variant-numeric: tabular-nums;
   }

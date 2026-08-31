@@ -172,12 +172,13 @@ export function BottomNav({
   return (
     <>
       {action && (
-        <div className="fixed bottom-[calc(66px+env(safe-area-inset-bottom))] right-4 z-40 md:hidden">
+        <div className="fixed bottom-[calc(66px+env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-40 md:hidden">
           {action}
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg-sunken/92 backdrop-blur-xl md:hidden">
+      {/* `safe-b` keeps the bar clear of the iOS home indicator. */}
+      <nav className="safe-b gutter-x fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg-sunken/92 backdrop-blur-xl [--gutter:0px] md:hidden">
         <div
           className="mx-auto grid max-w-lg"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -191,14 +192,14 @@ export function BottomNav({
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 py-3 transition-colors",
+                  "flex min-w-0 flex-col items-center gap-1.5 px-0.5 py-3 transition-colors",
                   active ? "text-accent-text" : "text-fg-faint",
                 )}
               >
-                <Icon className="h-[19px] w-[19px]" />
+                <Icon className="h-[19px] w-[19px] shrink-0" />
                 <span
                   className={cn(
-                    "text-[10px] tracking-[0.01em]",
+                    "max-w-full truncate text-[10px] tracking-[0.01em]",
                     active ? "font-bold" : "font-medium",
                   )}
                 >
@@ -208,8 +209,6 @@ export function BottomNav({
             );
           })}
         </div>
-        {/* Keeps the bar clear of the iOS home indicator. */}
-        <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
     </>
   );
