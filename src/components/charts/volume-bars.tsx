@@ -9,10 +9,13 @@ export type VolumeBar = { label: string; value: number };
 export function VolumeBars({
   bars,
   caption,
+  format = (v) => `${v.toFixed(1)} t`,
   className,
 }: {
   bars: VolumeBar[];
   caption?: React.ReactNode;
+  /** How a bar's value reads on hover — tonnes, or pounds by the thousand. */
+  format?: (value: number) => string;
   className?: string;
 }) {
   const max = Math.max(...bars.map((b) => b.value), 0.1);
@@ -30,7 +33,7 @@ export function VolumeBars({
             <div
               key={bar.label}
               className="flex h-full max-w-[84px] flex-1 flex-col justify-end gap-2.5"
-              title={`${bar.label}: ${bar.value.toFixed(1)} t`}
+              title={`${bar.label}: ${format(bar.value)}`}
             >
               <div
                 className={cn(

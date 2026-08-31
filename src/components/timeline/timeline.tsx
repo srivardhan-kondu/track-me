@@ -11,6 +11,11 @@ import {
 } from "@/components/timeline/record-actions";
 import { Badge } from "@/components/ui/badge";
 import { formatTimeInZone } from "@/lib/tz";
+import {
+  displayWeight,
+  weightLabel,
+  type WeightUnit,
+} from "@/lib/units";
 import { cn, round } from "@/lib/utils";
 import { mediaUrl } from "@/services/storage";
 import type { TimelineEntry } from "@/services/reporting";
@@ -66,6 +71,7 @@ export async function Timeline({
   entries,
   viewerId,
   timeZone,
+  weightUnit = "KG",
   isOwner,
   canComment,
   emptyState,
@@ -75,6 +81,11 @@ export async function Timeline({
   viewerId: string;
   /** IANA zone the athlete logs in; times render in it, not the server's. */
   timeZone: string;
+  /**
+   * The unit the athlete reads weights in — theirs, not the viewer's, for the
+   * same reason the times above are theirs.
+   */
+  weightUnit?: WeightUnit;
   isOwner: boolean;
   canComment: boolean;
   emptyState?: React.ReactNode;
@@ -174,6 +185,7 @@ export async function Timeline({
                     audioUrl={audioUrl}
                     isOwner={isOwner}
                     upsell={upsell}
+                    unit={weightUnit}
                   />
                 )}
 
@@ -182,6 +194,7 @@ export async function Timeline({
                     entry={entry.data}
                     imageUrl={imageUrl}
                     isOwner={isOwner}
+                    unit={weightUnit}
                   />
                 )}
 
@@ -376,11 +389,13 @@ function WorkoutBody({
   audioUrl,
   isOwner,
   upsell,
+  unit,
 }: {
   workout: Extract<TimelineEntry, { kind: "workout" }>["data"];
   audioUrl: string | null;
   isOwner: boolean;
   upsell: boolean;
+  unit: WeightUnit;
 }) {
   return (
     <div className="flex flex-col gap-3.5">
@@ -411,7 +426,9 @@ function WorkoutBody({
             >
               <span className="min-w-0 flex-1 truncate">{ex.name}</span>
               <span className="tabular shrink-0 font-mono text-[11.5px] text-fg-dim">
-                {ex.weightKg !== null ? `${ex.weightKg} kg` : "BW"}
+                {ex.weightKg !== null
+                  ? `${displayWeight(ex.weightKg, unit)} ${weightLabel(unit)}`
+                  : "BW"}
                 {ex.sets !== null && ex.reps !== null
                   ? ` · ${ex.sets} × ${ex.reps}`
                   : ex.sets !== null
@@ -457,10 +474,12 @@ function WeightBody({
   entry,
   imageUrl,
   isOwner,
+  unit,
 }: {
   entry: Extract<TimelineEntry, { kind: "weight" }>["data"];
   imageUrl: string | null;
   isOwner: boolean;
+  unit: WeightUnit;
 }) {
   return (
     <div className="flex items-start gap-3.5">
@@ -481,7 +500,7 @@ function WeightBody({
 
           <div className="flex shrink-0 items-center gap-1">
             <span className="tabular font-mono text-[12.5px] text-sage-text">
-              {entry.weightKg} kg
+              {displayWeight(entry.weightKg, unit)} {weightLabel(unit)}
             </span>
             {isOwner && <WeightActions entryId={entry.id} />}
           </div>

@@ -6,8 +6,9 @@ import { Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { addWater } from "@/app/actions/water";
-import { formatWater, QUICK_ADDS } from "@/lib/hydration";
+import { formatWater, quickAdds } from "@/lib/hydration";
 import { runAction } from "@/lib/run-action";
+import { displayVolume, type VolumeUnit } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,9 +22,11 @@ import { cn } from "@/lib/utils";
 export function WaterQuickAdd({
   /** Which day the taps land on. Omitted means today, in the athlete's zone. */
   day,
+  unit = "ML",
   className,
 }: {
   day?: string;
+  unit?: VolumeUnit;
   className?: string;
 }) {
   const router = useRouter();
@@ -43,13 +46,13 @@ export function WaterQuickAdd({
     }
 
     setLastAdded(ml > 0 ? ml : null);
-    if (ml > 0) toast.success(`${formatWater(ml)} logged.`);
+    if (ml > 0) toast.success(`${formatWater(ml, unit)} logged.`);
     router.refresh();
   }
 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
-      {QUICK_ADDS.map((preset) => (
+      {quickAdds(unit).map((preset) => (
         <button
           key={preset.ml}
           type="button"
@@ -64,7 +67,7 @@ export function WaterQuickAdd({
         >
           <span>{preset.label}</span>
           <span className="tabular font-mono text-[10.5px] text-fg-dim">
-            +{preset.ml}
+            +{displayVolume(preset.ml, unit)}
           </span>
         </button>
       ))}

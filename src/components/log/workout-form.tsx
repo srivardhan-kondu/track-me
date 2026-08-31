@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { runAction } from "@/lib/run-action";
+import { toKg, weightLabel, type WeightUnit } from "@/lib/units";
 
 function localInputValue(d = new Date()) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -36,7 +37,8 @@ type Row = {
   key: string;
   catalogId: string | null;
   name: string;
-  weightKg: string;
+  /** As typed, in the unit on screen; converted to kilograms on submit. */
+  weight: string;
   sets: string;
   reps: string;
 };
@@ -46,13 +48,20 @@ function emptyRow(): Row {
     key: Math.random().toString(36).slice(2),
     catalogId: null,
     name: "",
-    weightKg: "",
+    weight: "",
     sets: "",
     reps: "",
   };
 }
 
-export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
+export function WorkoutForm({
+  trigger,
+  unit = "KG",
+}: {
+  trigger?: React.ReactNode;
+  unit?: WeightUnit;
+}) {
+  const label = weightLabel(unit);
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
@@ -132,7 +141,8 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
       .map((r) => ({
         catalogId: r.catalogId,
         name: r.name.trim(),
-        weightKg: r.weightKg ? Number(r.weightKg) : null,
+        // Typed in the athlete's unit, stored in the column's.
+        weightKg: r.weight ? toKg(Number(r.weight), unit) : null,
         sets: r.sets ? Number(r.sets) : null,
         reps: r.reps ? Number(r.reps) : null,
       }));
@@ -214,7 +224,11 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
                 </Label>
                 <Textarea
                   id="workout-description"
-                  placeholder={"Bench press 80kg 3 sets of 8\nIncline dumbbell press 30kg 3x10"}
+                  placeholder={
+                    unit === "LB"
+                      ? "Bench press 175lb 3 sets of 8\nIncline dumbbell press 65lb 3x10"
+                      : "Bench press 80kg 3 sets of 8\nIncline dumbbell press 30kg 3x10"
+                  }
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
@@ -305,11 +319,13 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
                           inputMode="decimal"
                           step="0.5"
                           min={0}
-                          placeholder="kg"
-                          aria-label="Weight in kilograms"
-                          value={row.weightKg}
+                          placeholder={label}
+                          aria-label={
+                            unit === "LB" ? "Weight in pounds" : "Weight in kilograms"
+                          }
+                          value={row.weight}
                           onChange={(e) =>
-                            updateRow(row.key, { weightKg: e.target.value })
+                            updateRow(row.key, { weight: e.target.value })
                           }
                         />
                         <Input

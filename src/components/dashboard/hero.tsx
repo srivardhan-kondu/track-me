@@ -1,4 +1,5 @@
 import { AthletePortrait } from "@/components/dashboard/athlete-portrait";
+import { kgToLb, weightLabel, type WeightUnit } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 /**
@@ -109,6 +110,7 @@ export function DashboardHero({
   gender,
   consistencyPct,
   week,
+  weightUnit = "KG",
   action,
 }: {
   greeting: string;
@@ -116,6 +118,8 @@ export function DashboardHero({
   gender: "FEMALE" | "MALE" | null | undefined;
   consistencyPct: number;
   week: WeekFigures;
+  /** Tonnage is a lifted weight, so it reads in the athlete's own unit. */
+  weightUnit?: WeightUnit;
   /** The primary call to action, rendered under the ring. */
   action?: React.ReactNode;
 }) {
@@ -164,7 +168,15 @@ export function DashboardHero({
             <WeekStat value={`${week.workouts}`} label="Workouts" />
           </div>
           <div className="bg-surface">
-            <WeekStat value={compact(week.volumeKg)} unit="kg" label="Volume" />
+            <WeekStat
+              value={compact(
+                weightUnit === "LB"
+                  ? Math.round(kgToLb(week.volumeKg))
+                  : week.volumeKg,
+              )}
+              unit={weightLabel(weightUnit)}
+              label="Volume"
+            />
           </div>
           <div className="bg-surface">
             <WeekStat value={compact(week.calories)} label="Calories" />

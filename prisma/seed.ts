@@ -264,11 +264,26 @@ async function main() {
   });
 
   const athlete = await db.user.create({
-    data: { email: ATHLETE_EMAIL, name: "Alex Kumar", role: "ATHLETE" },
+    // Pounds, feet and fluid ounces on one of the two, so the demo exercises
+    // both readings of the same metric columns.
+    data: {
+      email: ATHLETE_EMAIL,
+      name: "Alex Kumar",
+      role: "ATHLETE",
+      heightCm: 178,
+      weightUnit: "LB",
+      heightUnit: "FT",
+      volumeUnit: "FL_OZ",
+    },
   });
 
   const athleteTwo = await db.user.create({
-    data: { email: ATHLETE_TWO_EMAIL, name: "Priya Nair", role: "ATHLETE" },
+    data: {
+      email: ATHLETE_TWO_EMAIL,
+      name: "Priya Nair",
+      role: "ATHLETE",
+      heightCm: 163,
+    },
   });
 
   await db.coachAthlete.createMany({

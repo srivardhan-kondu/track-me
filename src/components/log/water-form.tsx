@@ -20,6 +20,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MAX_WATER_DAY_ML } from "@/lib/hydration";
 import { runAction } from "@/lib/run-action";
+import {
+  displayVolume,
+  volumeLabel,
+  type VolumeUnit,
+} from "@/lib/units";
 
 function todayInput(d = new Date()) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -37,31 +42,40 @@ export function WaterForm({
   trigger,
   defaultMl,
   defaultDay,
+  unit = "ML",
 }: {
   trigger?: React.ReactNode;
+  /** The day's running total, in millilitres as stored. */
   defaultMl?: number | null;
   defaultDay?: string;
+  unit?: VolumeUnit;
 }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
 
-  const [ml, setMl] = React.useState(defaultMl ? String(defaultMl) : "");
+  const label = volumeLabel(unit);
+  const max = displayVolume(MAX_WATER_DAY_ML, unit);
+
+  const [amount, setAmount] = React.useState(
+    defaultMl ? String(displayVolume(defaultMl, unit)) : "",
+  );
   const [day, setDay] = React.useState(defaultDay ?? todayInput());
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (pending) return;
 
-    const parsed = Number(ml);
-    if (!Number.isFinite(parsed) || parsed < 0 || parsed > MAX_WATER_DAY_ML) {
-      toast.error(`Enter an amount between 0 and ${MAX_WATER_DAY_ML} ml.`);
+    const parsed = Number(amount);
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > max) {
+      toast.error(`Enter an amount between 0 and ${max} ${label}.`);
       return;
     }
 
     setPending(true);
     const fd = new FormData();
-    fd.set("ml", String(Math.round(parsed)));
+    fd.set("amount", String(parsed));
+    fd.set("unit", unit);
     fd.set("day", day);
 
     const res = await runAction(() => setWater(fd));
@@ -105,17 +119,17 @@ export function WaterForm({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="water-ml">Amount (ml)</Label>
+              <Label htmlFor="water-amount">Amount ({label})</Label>
               <Input
-                id="water-ml"
+                id="water-amount"
                 type="number"
-                step="50"
+                step={unit === "FL_OZ" ? 1 : 50}
                 min={0}
-                max={MAX_WATER_DAY_ML}
+                max={max}
                 inputMode="numeric"
-                placeholder="2500"
-                value={ml}
-                onChange={(e) => setMl(e.target.value)}
+                placeholder={unit === "FL_OZ" ? "85" : "2500"}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
                 required
                 autoFocus
               />

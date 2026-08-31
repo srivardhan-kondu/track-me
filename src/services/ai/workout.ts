@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { WeightUnit } from "@/lib/units";
+
 import { aiEnabled, openai, VISION_MODEL } from "./client";
 import { chatCostUnits } from "./pricing";
 import { withRetry } from "./retry";
@@ -76,6 +78,17 @@ Rules:
 - "3 by 10" and "3 sets of 10" both mean sets=3, reps=10.
 - Use null for anything not stated; never invent numbers.
 - Give the session a short title based on the movements (e.g. "Push day", "Legs", "Full body").`;
+
+/**
+ * What a bare number means.
+ *
+ * "Bench two twenty five" is 225 lb from somebody who trains in pounds and
+ * 225 kg from nobody at all, so the athlete's own unit decides how an
+ * unqualified figure is read. A number that *does* carry a unit is taken at
+ * its word either way.
+ */
+const ASSUME_POUNDS = `
+- The athlete logs in pounds. A weight given with no unit is pounds; convert it to kilograms (1 lb = 0.4536 kg). A weight given in kilos stays as dictated.`;
 
 const KNOWN_MOVEMENTS = [
   "bench press", "incline bench", "incline press", "decline press", "overhead press",
@@ -178,6 +191,8 @@ function fallbackParse(transcript: string): WorkoutResult {
 export async function parseWorkout(
   transcript: string | null | undefined,
   useAi: boolean = aiEnabled(),
+  /** The unit the athlete thinks in, for numbers they dictate without one. */
+  assume: WeightUnit = "KG",
 ): Promise<WorkoutResult> {
   const text = transcript?.trim() ?? "";
 
@@ -196,7 +211,11 @@ export async function parseWorkout(
     openai().chat.completions.create({
       model: VISION_MODEL,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "system",
+          content:
+            assume === "LB" ? SYSTEM_PROMPT + ASSUME_POUNDS : SYSTEM_PROMPT,
+        },
         { role: "user", content: text },
       ],
       response_format: {

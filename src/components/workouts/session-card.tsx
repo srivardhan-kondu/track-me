@@ -3,6 +3,12 @@ import { ChevronDown } from "lucide-react";
 import { AudioNote } from "@/components/timeline/audio-note";
 import { CommentThread } from "@/components/timeline/comment-thread";
 import { WorkoutActions } from "@/components/timeline/record-actions";
+import {
+  displayWeight,
+  formatTonnage,
+  weightLabel,
+  type WeightUnit,
+} from "@/lib/units";
 import { cn, tonnesLifted } from "@/lib/utils";
 import type { TimelineWorkout } from "@/services/reporting";
 
@@ -34,8 +40,10 @@ export function SessionCard({
   viewerId,
   isOwner,
   canComment,
+  unit = "KG",
   open = false,
 }: {
+  unit?: WeightUnit;
   workout: TimelineWorkout;
   /** Mono meta line: when it happened. */
   when: string;
@@ -84,7 +92,7 @@ export function SessionCard({
 
         {tonnes > 0 && (
           <span className="tabular shrink-0 font-mono text-[13.5px] text-fg">
-            {tonnes.toFixed(1)} t
+            {formatTonnage(tonnes * 1000, unit)}
           </span>
         )}
 
@@ -101,7 +109,9 @@ export function SessionCard({
               >
                 <span className="min-w-0 flex-1 truncate">{ex.name}</span>
                 <span className="tabular shrink-0 font-mono text-[11.5px] text-fg-dim">
-                  {ex.weightKg !== null ? `${ex.weightKg} kg` : "BW"}
+                  {ex.weightKg !== null
+                    ? `${displayWeight(ex.weightKg, unit)} ${weightLabel(unit)}`
+                    : "BW"}
                   {ex.sets !== null && ex.reps !== null
                     ? ` · ${ex.sets} × ${ex.reps}`
                     : ex.sets !== null

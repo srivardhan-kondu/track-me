@@ -10,6 +10,7 @@ import {
   MIN_WATER_GOAL_ML,
 } from "@/lib/hydration";
 import { requireUser } from "@/lib/session";
+import { mlToFlOz, toMl, type VolumeUnit } from "@/lib/units";
 import { dayKeyInZone, safeZone } from "@/lib/tz";
 
 import type { ActionResult } from "./meals";
@@ -85,8 +86,14 @@ export async function addWater(
   return { ok: true };
 }
 
+/*
+  As on a weigh-in: the amount arrives in whatever the athlete reads and is
+  converted here, because the column is millilitres and a browser that posts
+  its own conversion is a browser that can post ounces into it.
+*/
 const SetSchema = z.object({
-  ml: z.coerce.number().int().min(0).max(MAX_WATER_DAY_ML),
+  amount: z.coerce.number().min(0),
+  unit: z.enum(["ML", "FL_OZ"]).default("ML"),
   day: z.string().optional(),
 });
 
@@ -98,28 +105,34 @@ export async function setWater(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
 
   const parsed = SetSchema.safeParse({
-    ml: formData.get("ml"),
+    amount: formData.get("amount"),
+    unit: formData.get("unit")?.toString() || undefined,
     day: formData.get("day")?.toString() || undefined,
   });
   if (!parsed.success) {
+    return { ok: false, error: "That does not look like an amount." };
+  }
+
+  const ml = toMl(parsed.data.amount, parsed.data.unit as VolumeUnit);
+  if (ml < 0 || ml > MAX_WATER_DAY_ML) {
     return {
       ok: false,
-      error: `Enter an amount between 0 and ${MAX_WATER_DAY_ML} ml.`,
+      error: `That is more than anyone drinks in a day. Keep it under ${MAX_WATER_DAY_ML} ml.`,
     };
   }
 
   const bucket = bucketFor(parsed.data.day, user.timeZone);
   if (!bucket) return { ok: false, error: "Invalid date." };
 
-  if (parsed.data.ml === 0) {
+  if (ml === 0) {
     // Setting a day to nothing is deleting it; an empty row would otherwise
     // read as "logged, drank none" on every strip that counts logged days.
     await db.waterEntry.deleteMany({ where: { userId: user.id, day: bucket } });
   } else {
     await db.waterEntry.upsert({
       where: { userId_day: { userId: user.id, day: bucket } },
-      create: { userId: user.id, day: bucket, ml: parsed.data.ml },
-      update: { ml: parsed.data.ml },
+      create: { userId: user.id, day: bucket, ml },
+      update: { ml },
     });
   }
 
@@ -145,12 +158,8 @@ export async function deleteWaterEntry(id: string): Promise<ActionResult> {
 }
 
 const GoalSchema = z.object({
-  waterGoalMl: z.coerce
-    .number()
-    .int()
-    .min(MIN_WATER_GOAL_ML)
-    .max(MAX_WATER_GOAL_ML)
-    .nullable(),
+  goal: z.coerce.number().positive().nullable(),
+  unit: z.enum(["ML", "FL_OZ"]).default("ML"),
 });
 
 /**
@@ -162,18 +171,38 @@ export async function updateWaterGoal(
 ): Promise<ActionResult> {
   const user = await requireUser();
 
-  const raw = formData.get("waterGoalMl")?.toString().trim() ?? "";
-  const parsed = GoalSchema.safeParse({ waterGoalMl: raw === "" ? null : raw });
-  if (!parsed.success) {
+  const raw = formData.get("goal")?.toString().trim() ?? "";
+  const unit: VolumeUnit =
+    formData.get("unit")?.toString() === "FL_OZ" ? "FL_OZ" : "ML";
+  const parsed = GoalSchema.safeParse({ goal: raw === "" ? null : raw, unit });
+
+  const goalMl =
+    parsed.success && parsed.data.goal !== null
+      ? toMl(parsed.data.goal, unit)
+      : null;
+
+  if (
+    !parsed.success ||
+    (goalMl !== null &&
+      (goalMl < MIN_WATER_GOAL_ML || goalMl > MAX_WATER_GOAL_ML))
+  ) {
+    // Bounds spoken in the unit the athlete just typed in, not in the one the
+    // column happens to hold.
+    const low =
+      unit === "FL_OZ" ? Math.ceil(mlToFlOz(MIN_WATER_GOAL_ML)) : MIN_WATER_GOAL_ML;
+    const high =
+      unit === "FL_OZ" ? Math.floor(mlToFlOz(MAX_WATER_GOAL_ML)) : MAX_WATER_GOAL_ML;
     return {
       ok: false,
-      error: `Enter a goal between ${MIN_WATER_GOAL_ML} and ${MAX_WATER_GOAL_ML} ml, or leave it blank.`,
+      error: `Enter a goal between ${low} and ${high} ${
+        unit === "FL_OZ" ? "fl oz" : "ml"
+      }, or leave it blank.`,
     };
   }
 
   await db.user.update({
     where: { id: user.id },
-    data: { waterGoalMl: parsed.data.waterGoalMl },
+    data: { waterGoalMl: goalMl },
   });
 
   revalidate();

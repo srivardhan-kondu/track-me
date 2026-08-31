@@ -1,7 +1,12 @@
+import { formatVolume, type VolumeUnit } from "@/lib/units";
+
 /**
  * Hydration arithmetic, kept free of database and network imports so the
  * rules — the goal, the caps, the way a figure is spoken — can be tested on
  * their own and reused on both sides of the client boundary.
+ *
+ * Millilitres throughout, as the column is. Reading them as fluid ounces is
+ * `lib/units`' job, and happens at the edge.
  */
 
 /**
@@ -22,12 +27,27 @@ export const MAX_WATER_GOAL_ML = 8000;
  */
 export const MAX_WATER_DAY_ML = 15000;
 
-/** The three taps that cover almost every log. */
-export const QUICK_ADDS = [
-  { label: "Glass", ml: 250 },
-  { label: "Bottle", ml: 500 },
-  { label: "Litre", ml: 1000 },
-] as const;
+/**
+ * The three taps that cover almost every log, in the sizes each unit's
+ * drinkware actually comes in: a metric bottle is half a litre, and a US one
+ * is sixteen ounces. Both are stored as the millilitres they are.
+ */
+const PRESETS: Record<VolumeUnit, { label: string; ml: number }[]> = {
+  ML: [
+    { label: "Glass", ml: 250 },
+    { label: "Bottle", ml: 500 },
+    { label: "Litre", ml: 1000 },
+  ],
+  FL_OZ: [
+    { label: "Glass", ml: 237 },
+    { label: "Bottle", ml: 473 },
+    { label: "Large", ml: 946 },
+  ],
+};
+
+export function quickAdds(unit: VolumeUnit = "ML") {
+  return PRESETS[unit];
+}
 
 /** The target in force for an athlete, given whatever they have stored. */
 export function waterGoal(stored: number | null | undefined): number {
@@ -40,13 +60,9 @@ export function litres(ml: number): number {
   return Math.round(ml / 100) / 10;
 }
 
-/**
- * How a figure is spoken. Under a litre it stays in millilitres, which is how
- * anybody would say it — "750 ml", not "0.8 L".
- */
-export function formatWater(ml: number): string {
-  if (ml <= 0) return "0 ml";
-  return ml < 1000 ? `${Math.round(ml)} ml` : `${litres(ml)} L`;
+/** How a figure is spoken, in the athlete's own unit. */
+export function formatWater(ml: number, unit: VolumeUnit = "ML"): string {
+  return formatVolume(ml, unit);
 }
 
 /** Share of the goal, capped at 100 for anything that fills a track. */

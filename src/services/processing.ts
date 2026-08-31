@@ -123,6 +123,7 @@ async function runWorkoutParse(
       audioKey: true,
       transcript: true,
       durationMin: true,
+      user: { select: { weightUnit: true } },
     },
   });
   if (!workout) return;
@@ -150,7 +151,11 @@ async function runWorkoutParse(
     }
   }
 
-  const result = await parseWorkout(transcript, premium);
+  const result = await parseWorkout(
+    transcript,
+    premium,
+    workout.user.weightUnit,
+  );
   await charge(result.costUnits);
 
   // Attach each movement to the catalog so its sets count toward muscle

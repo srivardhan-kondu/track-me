@@ -1,4 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  displayWeight,
+  formatWeightDelta,
+  weightLabel,
+  type WeightUnit,
+} from "@/lib/units";
 import { cn, initials, round } from "@/lib/utils";
 import type { ComplianceDay, WeightPoint } from "@/services/reporting";
 
@@ -6,9 +12,11 @@ import type { ComplianceDay, WeightPoint } from "@/services/reporting";
 export function WeightRailCard({
   points,
   days,
+  unit = "KG",
 }: {
   points: WeightPoint[];
   days: number;
+  unit?: WeightUnit;
 }) {
   const latest = points[points.length - 1]?.weightKg ?? null;
   const first = points[0]?.weightKg ?? null;
@@ -45,9 +53,9 @@ export function WeightRailCard({
         <>
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="tabular font-serif text-[30px] leading-none text-fg">
-              {latest}
+              {displayWeight(latest, unit)}
             </span>
-            <span className="text-[12px] text-fg-dim">kg</span>
+            <span className="text-[12px] text-fg-dim">{weightLabel(unit)}</span>
             {change !== null && (
               <span
                 className={cn(
@@ -55,8 +63,7 @@ export function WeightRailCard({
                   change <= 0 ? "text-sage-text" : "text-fg-muted",
                 )}
               >
-                {change > 0 ? "+" : ""}
-                {change}
+                {formatWeightDelta(change, unit)}
               </span>
             )}
           </div>

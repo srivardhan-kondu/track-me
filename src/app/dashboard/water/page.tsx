@@ -10,6 +10,8 @@ import { BigStat } from "@/components/ui/metric";
 import { db } from "@/lib/db";
 import { FREE_HISTORY_DAYS } from "@/lib/entitlements";
 import { formatWater, hydrationPct, litres, waterGoal } from "@/lib/hydration";
+import { displayVolume } from "@/lib/units";
+import { getUnits } from "@/services/units";
 import { premiumStatus, requireUser } from "@/lib/session";
 import { addDaysInZone, dayKeyInZone, safeZone } from "@/lib/tz";
 import { cn } from "@/lib/utils";
@@ -54,7 +56,7 @@ export default async function WaterPage({
     zone,
   );
 
-  const [profile, entries] = await Promise.all([
+  const [profile, entries, units] = await Promise.all([
     db.user.findUnique({
       where: { id: user.id },
       select: { waterGoalMl: true },
@@ -66,9 +68,16 @@ export default async function WaterPage({
       orderBy: { day: "asc" },
       select: { id: true, day: true, ml: true },
     }),
+    getUnits(user.id),
   ]);
 
+  const unit = units.volume;
   const goalMl = waterGoal(profile?.waterGoalMl);
+
+  /** Litres read better than four digits; ounces are already short. */
+  const headline = (ml: number) =>
+    unit === "FL_OZ" ? displayVolume(ml, unit) : litres(ml);
+  const headlineUnit = unit === "FL_OZ" ? "fl oz" : "L";
 
   // Every day in the window gets a bar, logged or not — the gaps are the point.
   const days = Array.from({ length: range.days }, (_, i) =>
@@ -121,7 +130,7 @@ export default async function WaterPage({
               }))}
             />
           )}
-          <WaterForm defaultMl={todayMl || null} />
+          <WaterForm defaultMl={todayMl || null} unit={unit} />
         </div>
       </div>
 
@@ -136,8 +145,8 @@ export default async function WaterPage({
         <div className="flex flex-wrap items-start gap-x-11 gap-y-6">
           <BigStat
             label="Today"
-            value={todayMl === 0 ? "0" : litres(todayMl)}
-            unit="L"
+            value={todayMl === 0 ? "0" : headline(todayMl)}
+            unit={headlineUnit}
           />
           <BigStat
             label="Of goal"
@@ -146,8 +155,8 @@ export default async function WaterPage({
           />
           <BigStat
             label="Average logged day"
-            value={avgMl === 0 ? "—" : litres(avgMl)}
-            unit={avgMl === 0 ? undefined : "L"}
+            value={avgMl === 0 ? "—" : headline(avgMl)}
+            unit={avgMl === 0 ? undefined : headlineUnit}
           />
           <BigStat
             label="Days on target"
@@ -158,23 +167,28 @@ export default async function WaterPage({
             <p className="mono-label">Where this stands</p>
             <p className="mt-2.5 text-[12.5px] leading-relaxed text-fg-muted">
               {streak >= 2
-                ? `${streak} days running at ${formatWater(goalMl)} or more. That is the habit, not the day.`
+                ? `${streak} days running at ${formatWater(goalMl, unit)} or more. That is the habit, not the day.`
                 : todayMl >= goalMl
                   ? "Today is done. Do it again tomorrow and it starts counting as a streak."
                   : avgMl === 0
                     ? "Log a glass and the bars below start filling in."
-                    : `You average ${formatWater(avgMl)} on the days you log — ${
+                    : `You average ${formatWater(avgMl, unit)} on the days you log — ${
                         avgMl >= goalMl ? "at or above" : "short of"
-                      } your ${formatWater(goalMl)} goal.`}
+                      } your ${formatWater(goalMl, unit)} goal.`}
             </p>
           </div>
         </div>
 
         <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-3">
-          <WaterQuickAdd />
+          <WaterQuickAdd unit={unit} />
         </div>
 
-        <WaterBars points={bars} goalMl={goalMl} className="mt-6" />
+        <WaterBars
+          points={bars}
+          goalMl={goalMl}
+          unit={unit}
+          className="mt-6"
+        />
       </section>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
@@ -187,7 +201,7 @@ export default async function WaterPage({
             <EmptyState
               title="No water logged yet"
               body="A glass is one tap, and the day's total is the only number this keeps. Nobody needs a form for a drink of water."
-              action={<WaterQuickAdd />}
+              action={<WaterQuickAdd unit={unit} />}
             />
           ) : (
             <ul className="flex flex-col gap-2.5">
@@ -244,7 +258,7 @@ export default async function WaterPage({
                     </span>
 
                     <span className="tabular shrink-0 font-mono text-[13px] text-fg">
-                      {formatWater(entry.ml)}
+                      {formatWater(entry.ml, unit)}
                     </span>
 
                     {id && <WaterActions entryId={id} />}
@@ -262,7 +276,10 @@ export default async function WaterPage({
               What every bar and percentage on this page is measured against.
             </p>
             <div className="mt-3.5">
-              <WaterGoalForm goalMl={profile?.waterGoalMl ?? null} />
+              <WaterGoalForm
+                goalMl={profile?.waterGoalMl ?? null}
+                unit={unit}
+              />
             </div>
           </div>
 

@@ -3,6 +3,12 @@ import { StrengthLine } from "@/components/charts/strength-line";
 import { EmptyState, SectionHeading } from "@/components/layout/page";
 import { premiumStatus, requireUser } from "@/lib/session";
 import {
+  displayWeight,
+  formatWeightDelta,
+  weightLabel,
+} from "@/lib/units";
+import { getUnits } from "@/services/units";
+import {
   getPersonalRecords,
   getProgression,
   RELIABLE_REPS,
@@ -42,10 +48,14 @@ export default async function StrengthPage() {
     );
   }
 
-  const [records, progression] = await Promise.all([
+  const [records, progression, units] = await Promise.all([
     getPersonalRecords(user.id),
     getProgression(user.id, WINDOW_DAYS),
+    getUnits(user.id),
   ]);
+
+  const unit = units.weight;
+  const label = weightLabel(unit);
 
   return (
     <>
@@ -90,15 +100,14 @@ export default async function StrengthPage() {
                               : "tabular font-mono text-[11.5px] text-fg-dim"
                           }
                         >
-                          {rising ? "+" : ""}
-                          {p.changeKg} kg
+                          {formatWeightDelta(p.changeKg, unit)} {label}
                         </span>
                       </div>
 
                       <p className="tabular mt-1 font-serif text-[26px] leading-none text-fg">
-                        {latest.e1rm}
+                        {displayWeight(latest.e1rm, unit)}
                         <span className="ml-1 font-sans text-[12px] text-fg-dim">
-                          kg
+                          {label}
                         </span>
                       </p>
 
@@ -156,13 +165,15 @@ export default async function StrengthPage() {
                         </span>
                       </td>
                       <td className="tabular px-5 py-3.5 text-right font-mono text-[12px] text-fg-muted">
-                        {r.heaviestKg} kg × {r.heaviestReps}
+                        {displayWeight(r.heaviestKg, unit)} {label} ×{" "}
+                        {r.heaviestReps}
                       </td>
                       <td className="tabular px-5 py-3.5 text-right font-mono text-[12px] text-fg-muted">
-                        {r.bestSetKg} kg × {r.bestSetReps}
+                        {displayWeight(r.bestSetKg, unit)} {label} ×{" "}
+                        {r.bestSetReps}
                       </td>
                       <td className="tabular px-5 py-3.5 text-right font-mono text-[12px] font-semibold text-fg">
-                        {r.bestE1RM} kg
+                        {displayWeight(r.bestE1RM, unit)} {label}
                         {r.estimateIsSoft && (
                           <span
                             className="ml-1 text-fg-faint"

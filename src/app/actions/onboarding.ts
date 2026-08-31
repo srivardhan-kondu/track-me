@@ -5,6 +5,13 @@ import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
+import {
+  fromFeetInches,
+  HEIGHT_MAX_CM,
+  HEIGHT_MIN_CM,
+  WEIGHT_MAX_KG,
+  WEIGHT_MIN_KG,
+} from "@/lib/units";
 import { dayKeyInZone, safeZone } from "@/lib/tz";
 
 import type { ActionResult } from "./meals";
@@ -14,11 +21,33 @@ import type { ActionResult } from "./meals";
  * first screen still finishes onboarded — the flow exists to personalise the
  * app, never to stand between the athlete and it.
  */
-const OnboardingSchema = z.object({
+const UnitSchema = z.object({
+  weightUnit: z.enum(["KG", "LB"]).optional(),
+  heightUnit: z.enum(["CM", "FT"]).optional(),
+  volumeUnit: z.enum(["ML", "FL_OZ"]).optional(),
+});
+
+/*
+  The figures are metric because onboarding converts before it submits — the
+  sliders move in whichever unit is on screen, but what leaves the browser is
+  what the column holds. The units come along so the choice made here is the
+  one every later screen reads in.
+*/
+const OnboardingSchema = UnitSchema.extend({
   gender: z.enum(["FEMALE", "MALE"]).nullable().optional(),
   age: z.coerce.number().int().min(13).max(100).nullable().optional(),
-  heightCm: z.coerce.number().min(90).max(250).nullable().optional(),
-  weightKg: z.coerce.number().min(20).max(400).nullable().optional(),
+  heightCm: z.coerce
+    .number()
+    .min(HEIGHT_MIN_CM)
+    .max(HEIGHT_MAX_CM)
+    .nullable()
+    .optional(),
+  weightKg: z.coerce
+    .number()
+    .min(WEIGHT_MIN_KG)
+    .max(WEIGHT_MAX_KG)
+    .nullable()
+    .optional(),
 });
 
 export type OnboardingInput = z.input<typeof OnboardingSchema>;
@@ -33,7 +62,8 @@ export async function completeOnboarding(
     return { ok: false, error: "Those numbers look out of range." };
   }
 
-  const { gender, age, heightCm, weightKg } = parsed.data;
+  const { gender, age, heightCm, weightKg, weightUnit, heightUnit, volumeUnit } =
+    parsed.data;
 
   await db.user.update({
     where: { id: user.id },
@@ -43,6 +73,9 @@ export async function completeOnboarding(
       gender: gender ?? undefined,
       age: age ?? undefined,
       heightCm: heightCm ?? undefined,
+      weightUnit: weightUnit ?? undefined,
+      heightUnit: heightUnit ?? undefined,
+      volumeUnit: volumeUnit ?? undefined,
       onboardedAt: new Date(),
     },
   });
@@ -73,10 +106,13 @@ export async function skipOnboarding(): Promise<ActionResult> {
   return { ok: true };
 }
 
-const ProfileSchema = z.object({
+const ProfileSchema = UnitSchema.extend({
   gender: z.enum(["FEMALE", "MALE", ""]).optional(),
   age: z.string().optional(),
+  /** Centimetres, or the two halves of a height in feet — never both. */
   heightCm: z.string().optional(),
+  heightFeet: z.string().optional(),
+  heightInches: z.string().optional(),
 });
 
 /**
@@ -91,22 +127,46 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
     gender: formData.get("gender")?.toString() ?? "",
     age: formData.get("age")?.toString() ?? "",
     heightCm: formData.get("heightCm")?.toString() ?? "",
+    heightFeet: formData.get("heightFeet")?.toString() ?? "",
+    heightInches: formData.get("heightInches")?.toString() ?? "",
+    weightUnit: formData.get("weightUnit")?.toString() || undefined,
+    heightUnit: formData.get("heightUnit")?.toString() || undefined,
+    volumeUnit: formData.get("volumeUnit")?.toString() || undefined,
   });
   if (!parsed.success) return { ok: false, error: "Those details look wrong." };
 
   const age = parsed.data.age?.trim() ? Number(parsed.data.age) : null;
-  const heightCm = parsed.data.heightCm?.trim()
-    ? Number(parsed.data.heightCm)
-    : null;
+
+  // A height given in feet arrives as its two halves and is assembled here, so
+  // the browser never decides what goes in a centimetre column. Blank feet
+  // with blank inches clears the height, exactly as a blank cm field does.
+  const feet = parsed.data.heightFeet?.trim();
+  const inches = parsed.data.heightInches?.trim();
+  const heightCm =
+    parsed.data.heightUnit === "FT"
+      ? feet || inches
+        ? fromFeetInches(Number(feet || 0), Number(inches || 0))
+        : null
+      : parsed.data.heightCm?.trim()
+        ? Number(parsed.data.heightCm)
+        : null;
 
   if (age !== null && (!Number.isFinite(age) || age < 13 || age > 100)) {
     return { ok: false, error: "Enter an age between 13 and 100." };
   }
   if (
     heightCm !== null &&
-    (!Number.isFinite(heightCm) || heightCm < 90 || heightCm > 250)
+    (!Number.isFinite(heightCm) ||
+      heightCm < HEIGHT_MIN_CM ||
+      heightCm > HEIGHT_MAX_CM)
   ) {
-    return { ok: false, error: "Enter a height between 90 and 250 cm." };
+    return {
+      ok: false,
+      error:
+        parsed.data.heightUnit === "FT"
+          ? "Enter a height between 3′ 0″ and 8′ 2″."
+          : `Enter a height between ${HEIGHT_MIN_CM} and ${HEIGHT_MAX_CM} cm.`,
+    };
   }
 
   await db.user.update({
@@ -115,10 +175,16 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
       gender: parsed.data.gender === "" ? null : parsed.data.gender,
       age,
       heightCm,
+      weightUnit: parsed.data.weightUnit,
+      heightUnit: parsed.data.heightUnit,
+      volumeUnit: parsed.data.volumeUnit,
     },
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/settings");
+  // Changing a unit re-reads every figure on these screens, not just this one.
+  revalidatePath("/dashboard/weight");
+  revalidatePath("/dashboard/water");
   return { ok: true };
 }

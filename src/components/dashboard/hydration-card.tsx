@@ -6,6 +6,7 @@ import {
   metGoal,
   remainingMl,
 } from "@/lib/hydration";
+import { displayVolume, type VolumeUnit } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 /**
@@ -20,16 +21,22 @@ export function HydrationCard({
   goalMl,
   /** Omitted on today; a YYYY-MM-DD when the page is showing an earlier day. */
   day,
+  unit = "ML",
   className,
 }: {
   ml: number;
   goalMl: number;
   day?: string;
+  unit?: VolumeUnit;
   className?: string;
 }) {
   const pct = hydrationPct(ml, goalMl);
   const met = metGoal(ml, goalMl);
   const left = remainingMl(ml, goalMl);
+
+  // Litres for the headline figure, since a day's intake in millilitres is a
+  // four-digit number nobody reads at a glance. Ounces stay ounces.
+  const headline = unit === "FL_OZ" ? displayVolume(ml, unit) : litres(ml);
 
   return (
     <div
@@ -40,14 +47,16 @@ export function HydrationCard({
     >
       <div className="flex items-baseline justify-between">
         <p className="text-[12.5px] font-semibold text-fg">Hydration</p>
-        <p className="mono-label">goal {formatWater(goalMl)}</p>
+        <p className="mono-label">goal {formatWater(goalMl, unit)}</p>
       </div>
 
       <div className="mt-2.5 flex items-baseline gap-2">
         <span className="tabular font-serif text-[30px] leading-none text-fg">
-          {ml === 0 ? "0" : litres(ml)}
+          {ml === 0 ? "0" : headline}
         </span>
-        <span className="text-[12px] text-fg-dim">L</span>
+        <span className="text-[12px] text-fg-dim">
+          {unit === "FL_OZ" ? "fl oz" : "L"}
+        </span>
         <span
           className={cn(
             "tabular ml-auto font-mono text-[11.5px] font-medium",
@@ -73,10 +82,10 @@ export function HydrationCard({
           ? "Goal met. Anything more is a bonus."
           : ml === 0
             ? "Nothing yet. One glass is one tap."
-            : `${formatWater(left)} to go.`}
+            : `${formatWater(left, unit)} to go.`}
       </p>
 
-      <WaterQuickAdd day={day} className="mt-3.5" />
+      <WaterQuickAdd day={day} unit={unit} className="mt-3.5" />
     </div>
   );
 }

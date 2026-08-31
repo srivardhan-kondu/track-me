@@ -10,6 +10,7 @@ import { checkoutEnabled, liveMode } from "@/lib/razorpay";
 import { premiumStatus, requireUser } from "@/lib/session";
 import { cn, initials } from "@/lib/utils";
 import { safeZone } from "@/lib/tz";
+import { formatHeight, unitPrefs } from "@/lib/units";
 import { aiEnabled } from "@/services/ai/client";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { WaterGoalForm } from "@/components/settings/water-goal-form";
@@ -103,8 +104,18 @@ export default async function SettingsPage() {
 
   const profile = await db.user.findUnique({
     where: { id: user.id },
-    select: { gender: true, age: true, heightCm: true, waterGoalMl: true },
+    select: {
+      gender: true,
+      age: true,
+      heightCm: true,
+      waterGoalMl: true,
+      weightUnit: true,
+      heightUnit: true,
+      volumeUnit: true,
+    },
   });
+
+  const units = unitPrefs(profile);
 
   return (
     <>
@@ -147,12 +158,17 @@ export default async function SettingsPage() {
 
           <Panel
             title="About you"
-            description="What onboarding asked for. Change or clear any of it."
+            description={
+              profile?.heightCm
+                ? `What onboarding asked for, plus how you read a number. You are ${formatHeight(profile.heightCm, units.height)}.`
+                : "What onboarding asked for, plus how you read a number. Change or clear any of it."
+            }
           >
             <ProfileForm
               gender={profile?.gender ?? null}
               age={profile?.age ?? null}
               heightCm={profile?.heightCm ?? null}
+              units={units}
             />
           </Panel>
 
@@ -160,7 +176,10 @@ export default async function SettingsPage() {
             title="Hydration"
             description="The daily water target every bar and percentage is measured against."
           >
-            <WaterGoalForm goalMl={profile?.waterGoalMl ?? null} />
+            <WaterGoalForm
+              goalMl={profile?.waterGoalMl ?? null}
+              unit={units.volume}
+            />
           </Panel>
 
           {status.premium && (

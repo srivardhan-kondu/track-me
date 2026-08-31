@@ -16,8 +16,10 @@ import {
   safeZone,
   startOfDayInZone,
 } from "@/lib/tz";
+import { formatTonnage } from "@/lib/units";
 import { tonnesLifted } from "@/lib/utils";
 import { getMuscleVolume } from "@/services/exercises/volume";
+import { getUnits } from "@/services/units";
 import type { TimelineWorkout } from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
 
@@ -40,7 +42,7 @@ export default async function WorkoutsPage() {
   const days = historyDays(premium, DAYS);
   const from = startOfDayInZone(addDaysInZone(new Date(), -(days - 1), zone), zone);
 
-  const [workouts, pending, volume] = await Promise.all([
+  const [workouts, pending, volume, units] = await Promise.all([
     db.workout.findMany({
       where: { userId: user.id, performedAt: { gte: from } },
       orderBy: { performedAt: "desc" },
@@ -58,6 +60,7 @@ export default async function WorkoutsPage() {
       where: { userId: user.id, status: { in: ["PENDING", "PROCESSING"] } },
     }),
     getMuscleVolume(user.id, 7, zone),
+    getUnits(user.id),
   ]);
 
   const weeks = Math.max(1, Math.round(days / 7));
@@ -109,7 +112,7 @@ export default async function WorkoutsPage() {
           </p>
         </div>
 
-        <WorkoutForm />
+        <WorkoutForm unit={units.weight} />
       </div>
 
       {!premium && (
@@ -123,18 +126,23 @@ export default async function WorkoutsPage() {
         <div className="rounded-2xl border border-line-strong bg-surface px-6 py-5">
           <div className="flex items-baseline justify-between gap-4">
             <p className="text-[12.5px] font-semibold text-fg">Weekly volume</p>
-            <p className="mono-label">Tonnes lifted</p>
+            <p className="mono-label">
+              {units.weight === "LB" ? "Pounds lifted" : "Tonnes lifted"}
+            </p>
           </div>
 
           <VolumeBars
             className="mt-5"
             bars={bars}
+            // The bars are scaled in tonnes either way; only the figures
+            // spoken alongside them change unit.
+            format={(t) => formatTonnage(t * 1000, units.weight)}
             caption={
               sessions === 0
                 ? "Say what you lifted after your next session — sets, reps and weight get parsed automatically, and this chart starts filling in."
                 : thisWeek >= best && thisWeek > 0
-                  ? `Best week yet — ${thisWeek.toFixed(1)} t moved.`
-                  : `${thisWeek.toFixed(1)} t this week, against a best of ${best.toFixed(1)} t.`
+                  ? `Best week yet — ${formatTonnage(thisWeek * 1000, units.weight)} moved.`
+                  : `${formatTonnage(thisWeek * 1000, units.weight)} this week, against a best of ${formatTonnage(best * 1000, units.weight)}.`
             }
           />
         </div>
@@ -171,7 +179,7 @@ export default async function WorkoutsPage() {
           <EmptyState
             title="Nothing logged yet"
             body="After your next session, say what you lifted. Track Me works out the sets, the reps and the volume."
-            action={<WorkoutForm />}
+            action={<WorkoutForm unit={units.weight} />}
           />
         ) : (
           <div className="flex flex-col gap-2.5">
@@ -180,6 +188,7 @@ export default async function WorkoutsPage() {
                 key={workout.id}
                 workout={workout}
                 audioUrl={audioUrl}
+                unit={units.weight}
                 open={i === 0}
                 when={
                   isSameDayInZone(workout.performedAt, new Date(), zone)
