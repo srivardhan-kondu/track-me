@@ -8,7 +8,13 @@
  * when the network is gone.
  */
 
-const VERSION = "v2";
+/*
+ * Bumping this drops every cache the previous version wrote. It has to move
+ * whenever a non-hashed asset changes — the icons and the favicon are cached
+ * by path, not by content hash, so a device that saw an older build would
+ * otherwise keep serving the old ones for ever.
+ */
+const VERSION = "v3";
 const ASSETS = `trackme-assets-${VERSION}`;
 const SHELL = `trackme-shell-${VERSION}`;
 const OFFLINE_URL = "/offline";
