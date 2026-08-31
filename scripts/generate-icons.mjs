@@ -2,8 +2,13 @@
  * Renders the Track Me app icons to public/ as PNGs.
  *
  * Written by hand rather than pulled from a design tool so the icon stays in
- * the repo and regenerates deterministically. Shapes are rasterised with 4x
+ * the repo and regenerates deterministically. Shapes are rasterised with 6x
  * supersampling for clean edges at every size.
+ *
+ * The glyph — a ring caught mid-lap with its leading dot broken free — is the
+ * same one src/components/layout/mark.tsx draws as an SVG. The numbers below
+ * are that file's path data in arithmetic form; change one and change the
+ * other.
  *
  *   node scripts/generate-icons.mjs
  */
@@ -14,39 +19,65 @@ import { fileURLToPath } from "node:url";
 const OUT = fileURLToPath(new URL("../public/", import.meta.url));
 mkdirSync(OUT, { recursive: true });
 
-const BRAND = [61, 111, 229]; // the primary blue, matching --primary
-const WHITE = [255, 255, 255];
-const SS = 4; // supersampling factor
+// An app icon cannot follow the theme, so it takes the dark-mode pairing:
+// --accent over --accent-ink, the same tile the signed-in nav shows.
+const TILE = [230, 175, 104];
+const INK = [35, 21, 2];
+const SS = 6; // supersampling factor
 
-/** The lucide "activity" pulse, in a 24x24 viewBox. */
-const PULSE = [
-  [22, 12], [18, 12], [15, 21], [9, 3], [6, 12], [2, 12],
+// Glyph geometry, in the 32-unit box the mark is drawn in.
+const CX = 16;
+const CY = 16;
+const RING_R = 6.9;
+const RING_W = 2.6;
+// The ring runs anticlockwise from 118° round to 34°, leaving a gap at the top
+// right; the dot sits in the middle of that gap, on the ring's own radius.
+const ARC_FROM = 118;
+const ARC_TO = 34;
+const DOT_AT = 76;
+const DOT_R = 1.85;
+
+const onRing = (deg) => [
+  CX + RING_R * Math.cos((deg * Math.PI) / 180),
+  CY - RING_R * Math.sin((deg * Math.PI) / 180),
 ];
 
-function distanceToSegment(px, py, [ax, ay], [bx, by]) {
-  const dx = bx - ax;
-  const dy = by - ay;
-  const lenSq = dx * dx + dy * dy;
-  let t = lenSq === 0 ? 0 : ((px - ax) * dx + (py - ay) * dy) / lenSq;
-  t = Math.max(0, Math.min(1, t));
-  const cx = ax + t * dx;
-  const cy = ay + t * dy;
-  return Math.hypot(px - cx, py - cy);
+const CAP_A = onRing(ARC_FROM);
+const CAP_B = onRing(ARC_TO);
+const DOT = onRing(DOT_AT);
+
+/** Signed-ish distance from a glyph-space point to the nearest inked shape. */
+function distanceToGlyph(x, y) {
+  const dot = Math.hypot(x - DOT[0], y - DOT[1]) - DOT_R;
+  if (dot <= 0) return dot;
+
+  // Angle measured anticlockwise from due east, with the y axis pointing down.
+  let deg = (Math.atan2(CY - y, x - CX) * 180) / Math.PI;
+  if (deg < 0) deg += 360;
+
+  const stroke =
+    deg >= ARC_FROM || deg <= ARC_TO
+      ? Math.abs(Math.hypot(x - CX, y - CY) - RING_R) - RING_W / 2
+      : // Past either end, the round cap is the closest part of the ring.
+        Math.min(
+          Math.hypot(x - CAP_A[0], y - CAP_A[1]),
+          Math.hypot(x - CAP_B[0], y - CAP_B[1]),
+        ) -
+        RING_W / 2;
+
+  return Math.min(dot, stroke);
 }
 
 /**
  * @param size    output edge length in pixels
- * @param radius  corner radius as a fraction of size (0 = square)
- * @param inset   glyph inset as a fraction of size, for maskable safe area
+ * @param radius  corner radius as a fraction of size (0 = full-bleed square)
  */
-function render(size, radius, inset) {
+function render(size, radius) {
   const n = size * SS;
   const px = new Uint8Array(n * n * 4);
 
   const r = radius * n;
-  const strokeW = 0.075 * n; // pulse line thickness
-  const scale = (1 - 2 * inset) * n / 24;
-  const offset = inset * n;
+  const scale = n / 32;
 
   const inRoundedRect = (x, y) => {
     if (r <= 0) return true;
@@ -64,27 +95,12 @@ function render(size, radius, inset) {
         continue;
       }
 
-      // Background.
-      px[i] = BRAND[0];
-      px[i + 1] = BRAND[1];
-      px[i + 2] = BRAND[2];
+      const ink = distanceToGlyph((x + 0.5) / scale, (y + 0.5) / scale) <= 0;
+      const [r0, g0, b0] = ink ? INK : TILE;
+      px[i] = r0;
+      px[i + 1] = g0;
+      px[i + 2] = b0;
       px[i + 3] = 255;
-
-      // Pulse glyph, in glyph-space coordinates.
-      const gx = (x + 0.5 - offset) / scale;
-      const gy = (y + 0.5 - offset) / scale;
-
-      let best = Infinity;
-      for (let s = 0; s < PULSE.length - 1; s++) {
-        best = Math.min(best, distanceToSegment(gx, gy, PULSE[s], PULSE[s + 1]));
-        if (best * scale <= strokeW / 2) break;
-      }
-
-      if (best * scale <= strokeW / 2) {
-        px[i] = WHITE[0];
-        px[i + 1] = WHITE[1];
-        px[i + 2] = WHITE[2];
-      }
     }
   }
 
@@ -160,17 +176,18 @@ function crc32(buf) {
 }
 
 const ICONS = [
-  // [file, size, cornerRadius, glyphInset]
-  ["icon-192.png", 192, 0.22, 0.22],
-  ["icon-512.png", 512, 0.22, 0.22],
-  // Maskable icons are cropped to a circle by the launcher, so the glyph sits
-  // inside the 80% safe area and the tile bleeds to the edges.
-  ["icon-maskable-512.png", 512, 0, 0.29],
-  ["apple-touch-icon.png", 180, 0, 0.22],
+  // [file, size, cornerRadius]
+  ["icon-32.png", 32, 0.28],
+  ["icon-192.png", 192, 0.28],
+  ["icon-512.png", 512, 0.28],
+  // Maskable and Apple icons are re-masked by the platform, so the tile bleeds
+  // to the edges. The glyph spans 51% of the tile, well inside either crop.
+  ["icon-maskable-512.png", 512, 0],
+  ["apple-touch-icon.png", 180, 0],
 ];
 
-for (const [file, size, radius, inset] of ICONS) {
-  const buf = png(render(size, radius, inset), size);
+for (const [file, size, radius] of ICONS) {
+  const buf = png(render(size, radius), size);
   writeFileSync(OUT + file, buf);
   console.log(`  ${file.padEnd(26)} ${size}x${size}  ${(buf.length / 1024).toFixed(1)} KB`);
 }

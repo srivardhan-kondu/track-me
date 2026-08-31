@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Mark } from "@/components/layout/mark";
 import { BottomNav, SidebarNav, type NavGroup } from "@/components/layout/nav";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserCard, UserMenu } from "@/components/layout/user-menu";
@@ -17,9 +18,7 @@ export function Logo({
       href={href}
       className={cn("flex items-center gap-2.5 text-fg", className)}
     >
-      <span className="grid h-[26px] w-[26px] place-items-center rounded-[9px] bg-accent">
-        <span className="h-[11px] w-[11px] rounded-[3px] bg-accent-ink" />
-      </span>
+      <Mark size={26} />
       <span className="text-[14.5px] font-semibold tracking-[-0.01em]">
         Track Me
       </span>

@@ -1,4 +1,4 @@
-import { WifiOff } from "lucide-react";
+import { Mark } from "@/components/layout/mark";
 
 export const metadata = { title: "Offline" };
 
@@ -6,7 +6,7 @@ export default function OfflinePage() {
   return (
     <main className="grid min-h-dvh place-items-center px-6 text-center">
       <div className="max-w-sm">
-        <WifiOff className="mx-auto h-7 w-7 text-fg-faint" />
+        <Mark size={44} className="mx-auto" label="Track Me" />
         <h1 className="mt-5 font-serif text-[26px] leading-none text-fg">
           You&apos;re offline
         </h1>

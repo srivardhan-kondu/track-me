@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Download, Share, SquarePlus, X } from "lucide-react";
 
+import { Mark } from "@/components/layout/mark";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -135,6 +136,7 @@ export function InstallButton({
       <Dialog open={showIosHelp} onOpenChange={setShowIosHelp}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
+            <Mark size={46} className="mb-1" label="Track Me" />
             <DialogTitle>Add to your home screen</DialogTitle>
             <DialogDescription>
               {browser.label} installs web apps from its Share menu.
@@ -226,9 +228,7 @@ export function InstallBanner() {
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-[14px] border border-line bg-surface p-3">
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-accent-soft">
-        <Download className="h-4 w-4 text-accent-text" />
-      </div>
+      <Mark size={36} label="Track Me" />
 
       <div className="min-w-0 flex-1">
         <p className="text-[12.5px] font-semibold text-fg">

@@ -8,7 +8,7 @@
  * when the network is gone.
  */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const ASSETS = `trackme-assets-${VERSION}`;
 const SHELL = `trackme-shell-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -17,7 +17,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(SHELL)
-      .then((cache) => cache.addAll([OFFLINE_URL, "/icon-192.png"]))
+      .then((cache) => cache.addAll([OFFLINE_URL, "/icon-192.png", "/favicon.svg"]))
       .then(() => self.skipWaiting()),
   );
 });
