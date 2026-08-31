@@ -1,10 +1,10 @@
 /**
  * Runs the AI job queue once, locally.
  *
- * In production a Vercel Cron calls /api/jobs/run every minute. In development
- * there is no cron, so anything the upload path could not finish itself — a
- * rate-limited OpenAI call, a job deferred by the concurrency cap — sits in
- * the queue until this drains it.
+ * In production a Vercel Cron calls /api/jobs/run once a day, which is all a
+ * Hobby plan allows. In development there is no cron at all, so anything the
+ * upload path could not finish itself — a rate-limited OpenAI call, a job
+ * deferred by the concurrency cap — sits in the queue until this drains it.
  *
  *   npm run jobs:drain
  */

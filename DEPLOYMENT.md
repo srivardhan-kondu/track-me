@@ -217,7 +217,7 @@ CRON_SECRET       openssl rand -hex 32
 AI_MAX_IN_FLIGHT  20 by default; size it to your OpenAI tier
 ```
 
-`vercel.json` registers the every-minute cron. Vercel sends the secret as a
+`vercel.json` registers the daily cron. Vercel sends the secret as a
 bearer token automatically; nothing else may call the endpoint.
 
 Without `CRON_SECRET` the worker refuses every request, and any job the inline
