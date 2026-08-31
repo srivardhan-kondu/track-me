@@ -147,6 +147,8 @@ export type DayTotals = {
   fat: number;
   mealCount: number;
   workoutCount: number;
+  /** Millilitres of water logged on the day. */
+  waterMl: number;
 };
 
 export async function getDayTotals(
@@ -158,7 +160,7 @@ export async function getDayTotals(
   const from = startOfDayInZone(date, zone);
   const to = endOfDayInZone(date, zone);
 
-  const [agg, workoutCount] = await Promise.all([
+  const [agg, workoutCount, water] = await Promise.all([
     db.meal.aggregate({
       where: { userId, eatenAt: { gte: from, lte: to } },
       _sum: { calories: true, protein: true, carbs: true, fat: true },
@@ -166,6 +168,12 @@ export async function getDayTotals(
     }),
     db.workout.count({
       where: { userId, performedAt: { gte: from, lte: to } },
+    }),
+    // Water is bucketed by calendar date, not by instant, so it is looked up
+    // by the same day key the entry was written under.
+    db.waterEntry.findUnique({
+      where: { userId_day: { userId, day: dayKeyInZone(date, zone) } },
+      select: { ml: true },
     }),
   ]);
 
@@ -176,6 +184,7 @@ export async function getDayTotals(
     fat: round(agg._sum.fat ?? 0) ?? 0,
     mealCount: agg._count,
     workoutCount,
+    waterMl: water?.ml ?? 0,
   };
 }
 
@@ -191,6 +200,9 @@ export type WeeklySummary = {
   /** Days with at least one meal logged, out of the days elapsed. */
   mealComplianceDays: number;
   weighInDays: number;
+  /** Days with any water logged, and the mean over those days alone. */
+  waterDays: number;
+  avgWaterMl: number;
   daysElapsed: number;
   weightChangeKg: number | null;
   startWeightKg: number | null;
@@ -208,7 +220,7 @@ export async function getSummary(
   const to = endOfDayInZone(now, zone);
   const from = startOfDayInZone(addDaysInZone(now, -(days - 1), zone), zone);
 
-  const [meals, workoutCount, weights] = await Promise.all([
+  const [meals, workoutCount, weights, water] = await Promise.all([
     db.meal.findMany({
       where: { userId, eatenAt: { gte: from, lte: to } },
       select: {
@@ -229,6 +241,13 @@ export async function getSummary(
       },
       orderBy: { day: "asc" },
       select: { weightKg: true, day: true },
+    }),
+    db.waterEntry.findMany({
+      where: {
+        userId,
+        day: { gte: dayKeyInZone(from, zone), lte: dayKeyInZone(to, zone) },
+      },
+      select: { ml: true },
     }),
   ]);
 
@@ -255,6 +274,12 @@ export async function getSummary(
     totalWorkouts: workoutCount,
     mealComplianceDays: loggedDays.size,
     weighInDays: weights.length,
+    waterDays: water.length,
+    // Averaged over the days water was actually logged, for the same reason
+    // the macros are: a day nobody logged is not a day nobody drank.
+    avgWaterMl: water.length
+      ? Math.round(water.reduce((a, w) => a + w.ml, 0) / water.length)
+      : 0,
     daysElapsed: days,
     weightChangeKg:
       startWeight !== null && endWeight !== null && weights.length > 1
@@ -280,6 +305,23 @@ export async function getWeightSeries(
     select: { day: true, weightKg: true },
   });
   return rows;
+}
+
+export type WaterPoint = { day: Date; ml: number };
+
+/** Daily hydration totals for the chart, oldest first. */
+export async function getWaterSeries(
+  userId: string,
+  days = 30,
+  timeZone = "UTC",
+): Promise<WaterPoint[]> {
+  const zone = safeZone(timeZone);
+  const from = dayKeyInZone(addDaysInZone(new Date(), -days, zone), zone);
+  return db.waterEntry.findMany({
+    where: { userId, day: { gte: from } },
+    orderBy: { day: "asc" },
+    select: { day: true, ml: true },
+  });
 }
 
 export type CoachNote = {
@@ -432,7 +474,7 @@ export async function getCoachRoster(coachId: string) {
   const spanFrom = new Date(Math.min(...windows.map((w) => w.weekFrom.getTime())));
   const spanTo = new Date(Math.max(...windows.map((w) => w.weekTo.getTime())));
 
-  const [meals, workouts, weights, lastMeals] = await Promise.all([
+  const [meals, workouts, weights, water, lastMeals] = await Promise.all([
     db.meal.findMany({
       where: { userId: { in: userIds }, eatenAt: { gte: spanFrom, lte: spanTo } },
       select: {
@@ -462,6 +504,17 @@ export async function getCoachRoster(coachId: string) {
       orderBy: { day: "asc" },
       select: { userId: true, weightKg: true, day: true },
     }),
+    db.waterEntry.findMany({
+      where: {
+        userId: { in: userIds },
+        day: {
+          gte: dayKeyInZone(spanFrom, "UTC"),
+          lte: dayKeyInZone(spanTo, "UTC"),
+        },
+      },
+      orderBy: { day: "asc" },
+      select: { userId: true, ml: true, day: true },
+    }),
     // The most recent meal per athlete, for "logged 3h ago". One grouped
     // aggregate rather than a findFirst each.
     db.meal.groupBy({
@@ -484,6 +537,7 @@ export async function getCoachRoster(coachId: string) {
   const mealsBy = by(meals);
   const workoutsBy = by(workouts);
   const weightsBy = by(weights);
+  const waterBy = by(water);
   const lastLoggedBy = new Map(
     lastMeals.map((row) => [row.userId, row._max.eatenAt ?? null]),
   );
@@ -509,6 +563,15 @@ export async function getCoachRoster(coachId: string) {
         x.day <= dayKeyInZone(w.weekTo, w.zone),
     );
 
+    const weekWater = (waterBy.get(w.athlete.id) ?? []).filter(
+      (x) =>
+        x.day >= dayKeyInZone(w.weekFrom, w.zone) &&
+        x.day <= dayKeyInZone(w.weekTo, w.zone),
+    );
+    const todayWater = weekWater.find(
+      (x) => x.day.getTime() === dayKeyInZone(w.dayFrom, w.zone).getTime(),
+    );
+
     const loggedDays = new Set(inWeek.map((m) => toDateParam(m.eatenAt, w.zone)));
     const sum = (pick: (m: (typeof inWeek)[number]) => number | null) =>
       inWeek.reduce((acc, m) => acc + (pick(m) ?? 0), 0);
@@ -530,6 +593,10 @@ export async function getCoachRoster(coachId: string) {
       totalWorkouts: weekWorkouts.length,
       mealComplianceDays: loggedDays.size,
       weighInDays: weekWeights.length,
+      waterDays: weekWater.length,
+      avgWaterMl: weekWater.length
+        ? Math.round(weekWater.reduce((a, x) => a + x.ml, 0) / weekWater.length)
+        : 0,
       daysElapsed: ROSTER_DAYS,
       weightChangeKg:
         startWeight !== null && endWeight !== null && weekWeights.length > 1
@@ -546,6 +613,7 @@ export async function getCoachRoster(coachId: string) {
       fat: round(dayMeals.reduce((a, m) => a + (m.fat ?? 0), 0)) ?? 0,
       mealCount: dayMeals.length,
       workoutCount: dayWorkouts.length,
+      waterMl: todayWater?.ml ?? 0,
     };
 
     return {

@@ -6,8 +6,14 @@ import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   Camera,
+  CreditCard,
+  Droplets,
   Dumbbell,
+  Gauge,
+  ListChecks,
   Scale,
+  ScrollText,
+  ServerCog,
   TrendingUp,
   UtensilsCrossed,
   Users,
@@ -55,6 +61,12 @@ export const ATHLETE_NAV: NavGroup[] = [
         label: "Workouts",
         short: "Training",
         icon: Dumbbell,
+      },
+      {
+        href: "/dashboard/water",
+        label: "Water",
+        short: "Water",
+        icon: Droplets,
       },
     ],
   },
@@ -108,6 +120,34 @@ export const COACH_NAV: NavGroup[] = [
         short: "Training",
         icon: Dumbbell,
       },
+    ],
+  },
+];
+
+/**
+ * The admin rail, grouped by the question each section answers: is the
+ * business working, is the system healthy, and what has been done to it.
+ */
+export const ADMIN_NAV: NavGroup[] = [
+  {
+    label: "Console",
+    items: [
+      { href: "/admin", label: "Overview", short: "Overview", icon: Gauge, exact: true },
+      { href: "/admin/users", label: "Users", short: "Users", icon: Users },
+      {
+        href: "/admin/payments",
+        label: "Payments",
+        short: "Money",
+        icon: CreditCard,
+      },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/admin/jobs", label: "Queue", short: "Queue", icon: ListChecks },
+      { href: "/admin/system", label: "System", short: "System", icon: ServerCog },
+      { href: "/admin/audit", label: "Audit log", short: "Audit", icon: ScrollText },
     ],
   },
 ];
@@ -172,12 +212,13 @@ export function BottomNav({
   return (
     <>
       {action && (
-        <div className="fixed bottom-[calc(66px+env(safe-area-inset-bottom))] right-4 z-40 md:hidden">
+        <div className="fixed bottom-[calc(66px+env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-40 md:hidden">
           {action}
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg-sunken/92 backdrop-blur-xl md:hidden">
+      {/* `safe-b` keeps the bar clear of the iOS home indicator. */}
+      <nav className="safe-b gutter-x fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg-sunken/92 backdrop-blur-xl [--gutter:0px] md:hidden">
         <div
           className="mx-auto grid max-w-lg"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -191,14 +232,14 @@ export function BottomNav({
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 py-3 transition-colors",
+                  "flex min-w-0 flex-col items-center gap-1.5 px-0.5 py-3 transition-colors",
                   active ? "text-accent-text" : "text-fg-faint",
                 )}
               >
-                <Icon className="h-[19px] w-[19px]" />
+                <Icon className="h-[19px] w-[19px] shrink-0" />
                 <span
                   className={cn(
-                    "text-[10px] tracking-[0.01em]",
+                    "max-w-full truncate text-[10px] tracking-[0.01em]",
                     active ? "font-bold" : "font-medium",
                   )}
                 >
@@ -208,8 +249,6 @@ export function BottomNav({
             );
           })}
         </div>
-        {/* Keeps the bar clear of the iOS home indicator. */}
-        <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
     </>
   );

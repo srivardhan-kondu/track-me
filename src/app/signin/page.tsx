@@ -19,7 +19,7 @@ export default async function SignInPage({
   const { role, error } = await searchParams;
 
   return (
-    <main className="grid min-h-dvh place-items-center px-6 py-12">
+    <main className="gutter-x grid min-h-dvh place-items-center pb-12 pt-[calc(3rem+env(safe-area-inset-top,0px))] [--gutter:1.5rem]">
       <div className="w-full max-w-[380px]">
         <div className="mb-9 flex justify-center">
           <Logo href="/" />

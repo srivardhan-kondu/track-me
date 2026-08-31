@@ -4,7 +4,7 @@ export const metadata = { title: "Offline" };
 
 export default function OfflinePage() {
   return (
-    <main className="grid min-h-dvh place-items-center px-6 text-center">
+    <main className="gutter-x grid min-h-dvh place-items-center text-center [--gutter:1.5rem]">
       <div className="max-w-sm">
         <Mark size={44} className="mx-auto" label="Track Me" />
         <h1 className="mt-5 font-serif text-[26px] leading-none text-fg">

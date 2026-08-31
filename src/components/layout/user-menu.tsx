@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LogOut, Settings, Users } from "lucide-react";
+import { LogOut, Settings, ShieldCheck, Users } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,11 +20,26 @@ type Props = {
   email: string | null;
   image: string | null;
   role: "ATHLETE" | "COACH";
+  /**
+   * Whether to offer the admin console. Read from the session token, so it is
+   * a link that appears — never access that is granted; the console re-checks
+   * the account on every request of its own.
+   */
+  isAdmin?: boolean;
 };
 
-function Items({ role }: { role: Props["role"] }) {
+function Items({ role, isAdmin }: Pick<Props, "role" | "isAdmin">) {
   return (
     <>
+      {isAdmin && (
+        <DropdownMenuItem asChild>
+          <Link href="/admin">
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            Admin console
+          </Link>
+        </DropdownMenuItem>
+      )}
+
       {role === "COACH" && (
         <DropdownMenuItem asChild>
           <Link href="/trainer">
@@ -52,7 +67,7 @@ function Items({ role }: { role: Props["role"] }) {
 }
 
 /** The card that closes the sidebar: who you are, and which mode you're in. */
-export function UserCard({ name, email, image, role }: Props) {
+export function UserCard({ name, email, image, role, isAdmin }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-xl border border-line px-3 py-2.5 text-left transition-colors hover:bg-hover">
@@ -81,14 +96,14 @@ export function UserCard({ name, email, image, role }: Props) {
           <span className="block truncate text-[11px] text-fg-dim">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Items role={role} />
+        <Items role={role} isAdmin={isAdmin} />
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
 /** Avatar-only trigger, for the mobile top bar. */
-export function UserMenu({ name, email, image, role }: Props) {
+export function UserMenu({ name, email, image, role, isAdmin }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -109,7 +124,7 @@ export function UserMenu({ name, email, image, role }: Props) {
           <span className="block truncate text-[11px] text-fg-dim">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Items role={role} />
+        <Items role={role} isAdmin={isAdmin} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

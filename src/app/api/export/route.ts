@@ -18,7 +18,7 @@ import { currentUser, premiumStatus } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const TYPES = ["workouts", "meals", "weights"] as const;
+const TYPES = ["workouts", "meals", "weights", "water"] as const;
 type Entity = (typeof TYPES)[number];
 
 /**
@@ -63,7 +63,7 @@ export async function GET(req: Request) {
   const format = url.searchParams.get("format") === "csv" ? "csv" : "json";
   const type = url.searchParams.get("type") as Entity | null;
 
-  const [meals, workouts, weights, photos, profile] = await Promise.all([
+  const [meals, workouts, weights, water, photos, profile] = await Promise.all([
     db.meal.findMany({
       where: { userId: user.id },
       orderBy: { eatenAt: "asc" },
@@ -100,6 +100,12 @@ export async function GET(req: Request) {
       take: MAX_ROWS + 1,
       select: { day: true, weightKg: true, notes: true, photoKey: true },
     }),
+    db.waterEntry.findMany({
+      where: { userId: user.id },
+      orderBy: { day: "asc" },
+      take: MAX_ROWS + 1,
+      select: { day: true, ml: true },
+    }),
     db.progressPhoto.findMany({
       where: { userId: user.id },
       orderBy: { takenAt: "asc" },
@@ -112,6 +118,7 @@ export async function GET(req: Request) {
         name: true,
         email: true,
         heightCm: true,
+        waterGoalMl: true,
         timeZone: true,
         createdAt: true,
       },
@@ -123,6 +130,7 @@ export async function GET(req: Request) {
     meals.length > MAX_ROWS ||
     workouts.length > MAX_ROWS ||
     weights.length > MAX_ROWS ||
+    water.length > MAX_ROWS ||
     photos.length > MAX_ROWS;
 
   if (truncated) {
@@ -149,6 +157,8 @@ export async function GET(req: Request) {
       rows = meals;
     } else if (type === "weights") {
       rows = weights;
+    } else if (type === "water") {
+      rows = water;
     } else {
       // One row per exercise, so the file is usable in a spreadsheet: a
       // session with four movements becomes four rows sharing a date.
@@ -193,11 +203,13 @@ export async function GET(req: Request) {
       meals: meals.length,
       workouts: workouts.length,
       weighIns: weights.length,
+      waterDays: water.length,
       progressPhotos: photos.length,
     },
     meals,
     workouts,
     weights,
+    water,
     progressPhotos: photos,
   };
 

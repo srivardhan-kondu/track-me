@@ -36,7 +36,7 @@ export default async function LandingPage() {
   if (user) redirect(user.role === "COACH" ? "/trainer" : "/dashboard");
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[1000px] flex-col px-6 py-8">
+    <main className="gutter-x mx-auto flex min-h-dvh max-w-[1000px] flex-col pb-8 pt-[calc(2rem+env(safe-area-inset-top,0px))] [--gutter:1.5rem]">
       <header className="flex items-center justify-between">
         <Logo href="/" />
         <Button asChild variant="ghost">

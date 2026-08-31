@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { ComplianceStrip } from "@/components/charts/compliance-strip";
+import { fillDays, WaterBars } from "@/components/charts/water-bars";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { DaySwitcher } from "@/components/dashboard/day-switcher";
 import { VolumeBreakdown } from "@/components/exercises/volume-breakdown";
@@ -14,12 +15,14 @@ import { db } from "@/lib/db";
 import { assertCanViewAthlete, requireCoach } from "@/lib/session";
 import {
   addDaysInZone,
+  dayKeyInZone,
   formatDateInZone,
   fromDateParam,
   isSameDayInZone,
   safeZone,
   toDateParam,
 } from "@/lib/tz";
+import { formatWater, waterGoal } from "@/lib/hydration";
 import { initials } from "@/lib/utils";
 import { getMuscleVolume } from "@/services/exercises/volume";
 import {
@@ -27,8 +30,12 @@ import {
   getDayTimeline,
   getDayTotals,
   getSummary,
+  getWaterSeries,
   getWeightSeries,
 } from "@/services/reporting";
+
+/** The hydration window on this page — a fortnight, as the strip beside it. */
+const HYDRATION_DAYS = 14;
 
 export default async function AthleteReviewPage({
   params,
@@ -49,7 +56,14 @@ export default async function AthleteReviewPage({
 
   const athlete = await db.user.findUnique({
     where: { id: athleteId },
-    select: { id: true, name: true, email: true, image: true, timeZone: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      timeZone: true,
+      waterGoalMl: true,
+    },
   });
   if (!athlete) notFound();
 
@@ -58,7 +72,7 @@ export default async function AthleteReviewPage({
   const date = fromDateParam(dateParam, zone);
   const isToday = isSameDayInZone(date, new Date(), zone);
 
-  const [entries, totals, summary, series, compliance, volume] =
+  const [entries, totals, summary, series, compliance, volume, water] =
     await Promise.all([
       getDayTimeline(athleteId, date, zone),
       getDayTotals(athleteId, date, zone),
@@ -66,7 +80,17 @@ export default async function AthleteReviewPage({
       getWeightSeries(athleteId, 90, zone),
       getCompliance(athleteId, 14, zone),
       getMuscleVolume(athleteId, 7, zone),
+      getWaterSeries(athleteId, HYDRATION_DAYS, zone),
     ]);
+
+  const goalMl = waterGoal(athlete.waterGoalMl);
+  const hydrationDays = Array.from({ length: HYDRATION_DAYS }, (_, i) =>
+    dayKeyInZone(
+      addDaysInZone(new Date(), -(HYDRATION_DAYS - 1 - i), zone),
+      zone,
+    ),
+  );
+  const hydration = fillDays(water, hydrationDays);
 
   const prev = addDaysInZone(date, -1, zone);
   const next = addDaysInZone(date, 1, zone);
@@ -137,6 +161,16 @@ export default async function AthleteReviewPage({
             value={`${summary.weighInDays}/${summary.daysElapsed}`}
             note="days"
           />
+          <Metric
+            label="Avg water"
+            value={summary.avgWaterMl === 0 ? "—" : formatWater(summary.avgWaterMl)}
+            note={
+              summary.waterDays > 0
+                ? `${summary.waterDays}/${summary.daysElapsed} days`
+                : undefined
+            }
+            tone={summary.avgWaterMl >= goalMl ? "blue" : "default"}
+          />
         </MetricStrip>
       </section>
 
@@ -163,6 +197,15 @@ export default async function AthleteReviewPage({
       </div>
 
       <section className="flex flex-col gap-3">
+        <SectionHeading meta={`Goal ${formatWater(goalMl)}`}>
+          Hydration
+        </SectionHeading>
+        <div className="rounded-2xl border border-line-strong bg-surface p-5">
+          <WaterBars points={hydration} goalMl={goalMl} />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-3">
         <SectionHeading meta="Last 7 days">
           Volume by muscle group
         </SectionHeading>
@@ -182,7 +225,8 @@ export default async function AthleteReviewPage({
             </h2>
             <p className="tabular mt-1.5 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
               {totals.calories.toLocaleString()} kcal · {totals.protein} p ·{" "}
-              {totals.mealCount} meals · {totals.workoutCount} workouts
+              {totals.mealCount} meals · {totals.workoutCount} workouts ·{" "}
+              {formatWater(totals.waterMl)} water
             </p>
           </div>
 

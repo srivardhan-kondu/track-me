@@ -1,5 +1,6 @@
 import { DaySwitcher } from "@/components/dashboard/day-switcher";
 import { FuelPanel } from "@/components/dashboard/fuel-panel";
+import { HydrationCard } from "@/components/dashboard/hydration-card";
 import { DashboardHero } from "@/components/dashboard/hero";
 import {
   CoachNoteCard,
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { PremiumNotice } from "@/components/billing/premium-notice";
 import { FREE_HISTORY_DAYS, historyDays, trialLapsed } from "@/lib/entitlements";
+import { waterGoal } from "@/lib/hydration";
 import { premiumStatus, requireUser } from "@/lib/session";
 import {
   addDaysInZone,
@@ -107,7 +109,7 @@ export default async function TodayPage({
       getWeekFigures(user.id, 7, zone),
       db.user.findUnique({
         where: { id: user.id },
-        select: { gender: true },
+        select: { gender: true, waterGoalMl: true },
       }),
     ]);
 
@@ -266,6 +268,13 @@ export default async function TodayPage({
         </section>
 
         <aside className="flex flex-col gap-3.5">
+          <HydrationCard
+            ml={totals.waterMl}
+            goalMl={waterGoal(profile?.waterGoalMl)}
+            // Quick adds follow the day being viewed, so catching up on
+            // yesterday from its own timeline logs it to yesterday.
+            day={isToday ? undefined : toDateParam(date, zone)}
+          />
           <WeightRailCard points={series} days={railDays} />
           <ConsistencyCard days={compliance} />
           {note && <CoachNoteCard note={note} />}
