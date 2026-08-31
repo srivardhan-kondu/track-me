@@ -31,7 +31,11 @@ export type IncomingPayment = {
    * was created for. Skips email matching entirely.
    */
   userId?: string | null;
-  /** Tried in order when there is no userId. */
+  /**
+   * Addresses the payer gave. No longer used to grant anything — see the note
+   * in apply() — but kept on the record so an UNMATCHED payment can be traced
+   * to a person by hand.
+   */
   candidateEmails?: string[];
 };
 
@@ -56,23 +60,9 @@ const PAYER_FIELDS = {
 } as const;
 
 async function findPayer(
-  userId: string | null | undefined,
-  emails: string[],
+  userId: string,
 ): Promise<Payer | null> {
-  if (userId) {
-    return db.user.findUnique({ where: { id: userId }, select: PAYER_FIELDS });
-  }
-
-  // Tried in order — an address the buyer typed into the form beats the one
-  // Razorpay billed — so a single `in` query will not do. The list is short.
-  for (const email of emails) {
-    const user = await db.user.findFirst({
-      where: { email: { equals: email, mode: "insensitive" } },
-      select: PAYER_FIELDS,
-    });
-    if (user) return user;
-  }
-  return null;
+  return db.user.findUnique({ where: { id: userId }, select: PAYER_FIELDS });
 }
 
 /**
@@ -129,7 +119,19 @@ async function apply(p: IncomingPayment): Promise<Outcome> {
     return { outcome: "ignored", amount: p.amount };
   }
 
-  const payer = await findPayer(p.userId, p.candidateEmails ?? []);
+  // Razorpay webhooks are account-wide, and this merchant account serves more
+  // than one product. A payment from a sibling app that happens to cost the
+  // same as one of our plans would otherwise be matched on the payer's email
+  // and silently grant Premium, so nothing is granted automatically unless the
+  // payment carries the account id we welded onto the order ourselves.
+  //
+  // Payments taken through the razorpay.me page carry no such id. They are
+  // recorded as UNMATCHED and settled with `npm run payments claim`, which is
+  // a deliberate trade: a manual step on a path we no longer sell through,
+  // against never crediting the wrong person.
+  const payer = p.userId
+    ? await findPayer(p.userId)
+    : null;
 
   if (!payer) {
     await db.payment.create({ data: { ...common, term, status: "UNMATCHED" } });
