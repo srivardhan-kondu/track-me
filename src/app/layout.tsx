@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import { Providers } from "@/components/providers";
+import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 
 import "./globals.css";
 
@@ -11,6 +12,22 @@ export const metadata: Metadata = {
   },
   description:
     "AI-powered fitness reporting. Log meals, workouts and weight by voice — your coach sees everything in one timeline.",
+  applicationName: "Track Me",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Track Me",
+    // Content runs under the status bar, so the app fills the screen.
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
@@ -21,6 +38,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  // Let the installed app paint into the notch and home-indicator areas.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -39,7 +58,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-dvh bg-background font-sans text-foreground">
-        <Providers>{children}</Providers>
+        <Providers>
+          <RegisterServiceWorker />
+          {children}
+        </Providers>
       </body>
     </html>
   );

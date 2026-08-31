@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MealForm } from "@/components/log/meal-form";
 import { WeightForm } from "@/components/log/weight-form";
 import { WorkoutForm } from "@/components/log/workout-form";
+import { InstallBanner } from "@/components/pwa/install-button";
 import { StatTile } from "@/components/timeline/macros";
 import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { Timeline } from "@/components/timeline/timeline";
@@ -120,6 +121,8 @@ export default async function TodayPage({
           accent="var(--chart-fat)"
         />
       </section>
+
+      <InstallBanner />
 
       <section className="flex flex-wrap gap-2">
         <MealForm />

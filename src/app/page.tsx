@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Activity, Camera, LineChart, Mic, Users } from "lucide-react";
 
+import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { currentUser } from "@/lib/session";
 
@@ -67,6 +68,7 @@ export default async function LandingPage() {
           <Button asChild size="lg" variant="outline">
             <Link href="/signin?role=COACH">I&apos;m a coach</Link>
           </Button>
+          <InstallButton variant="ghost" className="h-11 px-6 text-base" />
         </div>
       </section>
 
