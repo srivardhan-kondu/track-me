@@ -1,3 +1,4 @@
+import { ExportData } from "@/components/billing/export-data";
 import { Upgrade } from "@/components/billing/upgrade";
 import { RoleSwitcher } from "@/components/settings/role-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -189,6 +190,15 @@ export default async function SettingsPage() {
               </p>
             )}
           </Panel>
+
+          {status.premium && (
+            <Panel
+              title="Your data"
+              description="Take a copy whenever you like. Photographs are referenced by key rather than by link, since the links the app serves expire within the hour."
+            >
+              <ExportData />
+            </Panel>
+          )}
 
           <Panel
             title="Mode"

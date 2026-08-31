@@ -14,6 +14,7 @@ import {
   termForAmount,
   trialEndsFrom,
 } from "../src/lib/entitlements";
+import { RELIABLE_REPS, estimated1RM } from "../src/services/strength";
 import {
   extractPayment,
   verifyCheckoutSignature,
@@ -391,5 +392,34 @@ describe("the free history window", () => {
 
   it("is seven days", () => {
     assert.equal(FREE_HISTORY_DAYS, 7);
+  });
+});
+
+describe("one-rep max estimates", () => {
+  it("returns the weight itself for a single rep", () => {
+    assert.equal(estimated1RM(100, 1), 103.3);
+  });
+
+  it("scales with reps by Epley", () => {
+    // 60kg x 8 -> 60 * (1 + 8/30) = 76
+    assert.equal(estimated1RM(60, 8), 76);
+    // 100kg x 5 -> 100 * (1 + 5/30) = 116.7
+    assert.equal(estimated1RM(100, 5), 116.7);
+  });
+
+  it("orders heavier work above lighter work", () => {
+    assert.ok(estimated1RM(100, 5) > estimated1RM(90, 5));
+    assert.ok(estimated1RM(100, 8) > estimated1RM(100, 5));
+  });
+
+  it("refuses to invent a number from nothing", () => {
+    // Bodyweight movements carry no load, and a zero-rep row is a bad parse.
+    assert.equal(estimated1RM(0, 10), 0);
+    assert.equal(estimated1RM(60, 0), 0);
+    assert.equal(estimated1RM(-5, 5), 0);
+  });
+
+  it("marks twelve as the edge of a trustworthy estimate", () => {
+    assert.equal(RELIABLE_REPS, 12);
   });
 });

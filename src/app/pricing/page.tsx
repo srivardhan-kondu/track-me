@@ -23,15 +23,18 @@ const FREE_FEATURES = [
   `The last ${FREE_HISTORY_DAYS} days of history`,
 ];
 
+/**
+ * Only what is actually built. Anything on this list is something a reviewer —
+ * or a paying customer — can go and find, which is the whole point of a
+ * pricing page.
+ */
 const PREMIUM_FEATURES = [
   "Unlimited history",
-  "Progress photos",
-  "AI physique analysis",
-  "AI workout and nutrition analysis",
-  "Recovery tracking",
+  "Progress photos, with side-by-side comparison",
+  "AI analysis of meals and workouts",
   "Strength progression charts",
   "Personal record tracking",
-  "Data export",
+  "Data export, as JSON or CSV",
 ];
 
 const PLANS = [
@@ -53,7 +56,7 @@ const PLANS = [
     name: "Founder's",
     price: rupees(PRICES.LIFETIME),
     cadence: "once",
-    note: "Paid once, yours permanently. Limited to the first 100 members.",
+    note: "Paid once, yours permanently. No renewal, ever.",
     featured: false,
   },
 ];
@@ -160,6 +163,17 @@ export default function PricingPage() {
             ))}
           </ul>
         </div>
+      </section>
+
+      <section className="mt-4 rounded-2xl border border-dashed border-line-strong p-5">
+        <h2 className="text-[12.5px] font-semibold text-fg">Not built yet</h2>
+        <p className="mt-2 text-[12px] leading-relaxed text-fg-dim">
+          Recovery tracking needs a wearable to sync from, and physique analysis
+          is not something we are willing to ship until it is better than a
+          guess. Neither is included in any plan today, and you are not paying
+          for them. When they arrive they will be part of Premium at no extra
+          cost.
+        </p>
       </section>
 
       <section className="mt-12 rounded-2xl border border-line bg-surface-muted p-6">

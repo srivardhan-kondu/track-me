@@ -151,7 +151,7 @@ export default async function ProgressPage() {
       {!premium && (
         <PremiumNotice
           title="Progress photos are part of Premium"
-          body="Anything you have already uploaded stays here and stays yours. Premium adds new photos, the side-by-side comparison and AI physique analysis."
+          body="Anything you have already uploaded stays here and stays yours. Premium adds new photos and the side-by-side comparison against your baseline."
         />
       )}
 

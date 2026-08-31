@@ -8,6 +8,7 @@ import {
   Camera,
   Dumbbell,
   Scale,
+  TrendingUp,
   UtensilsCrossed,
   Users,
 } from "lucide-react";
@@ -60,6 +61,12 @@ export const ATHLETE_NAV: NavGroup[] = [
   {
     label: "Body",
     items: [
+      {
+        href: "/dashboard/strength",
+        label: "Strength",
+        short: "Strength",
+        icon: TrendingUp,
+      },
       { href: "/dashboard/weight", label: "Weight", short: "Weight", icon: Scale },
       {
         href: "/dashboard/progress",
