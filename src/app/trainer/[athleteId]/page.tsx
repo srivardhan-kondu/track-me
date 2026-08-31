@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { ComplianceStrip } from "@/components/charts/compliance-strip";
+import { EnergyBalance } from "@/components/charts/energy-balance";
+import { MuscleMap } from "@/components/charts/muscle-map";
 import { fillDays, WaterBars } from "@/components/charts/water-bars";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { DaySwitcher } from "@/components/dashboard/day-switcher";
@@ -35,6 +37,7 @@ import {
   getCompliance,
   getDayTimeline,
   getDayTotals,
+  getEnergyBalance,
   getSummary,
   getWaterSeries,
   getWeightSeries,
@@ -42,6 +45,9 @@ import {
 
 /** The hydration window on this page — a fortnight, as the strip beside it. */
 const HYDRATION_DAYS = 14;
+
+/** Long enough for a seven-day trend to mean something, short enough to read. */
+const ENERGY_DAYS = 28;
 
 export default async function AthleteReviewPage({
   params,
@@ -81,7 +87,7 @@ export default async function AthleteReviewPage({
   const date = fromDateParam(dateParam, zone);
   const isToday = isSameDayInZone(date, new Date(), zone);
 
-  const [entries, totals, summary, series, compliance, volume, water] =
+  const [entries, totals, summary, series, compliance, volume, water, energy] =
     await Promise.all([
       getDayTimeline(athleteId, date, zone),
       getDayTotals(athleteId, date, zone),
@@ -90,6 +96,7 @@ export default async function AthleteReviewPage({
       getCompliance(athleteId, 14, zone),
       getMuscleVolume(athleteId, 7, zone),
       getWaterSeries(athleteId, HYDRATION_DAYS, zone),
+      getEnergyBalance(athleteId, ENERGY_DAYS, zone),
     ]);
 
   // The athlete's own units, as their own timezone is used above.
@@ -193,6 +200,16 @@ export default async function AthleteReviewPage({
         </MetricStrip>
       </section>
 
+      <section className="rounded-2xl border border-line-strong bg-surface px-6 py-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1.5">
+          <p className="text-[12.5px] font-semibold text-fg">
+            Intake against the scale
+          </p>
+          <p className="mono-label">{ENERGY_DAYS} days</p>
+        </div>
+        <EnergyBalance days={energy} unit={units.weight} className="mt-5" />
+      </section>
+
       <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         <section className="rounded-2xl border border-line-strong bg-surface px-6 py-5">
           <div className="flex items-baseline justify-between gap-4">
@@ -230,9 +247,20 @@ export default async function AthleteReviewPage({
         </SectionHeading>
         <div className="rounded-2xl border border-line-strong bg-surface p-5">
           <p className="mb-4 text-[12px] leading-relaxed text-fg-dim">
-            Weighted by how directly each exercise trains the group.
+            Weighted by how directly each exercise trains the group. The dark
+            patches are the week's gaps.
           </p>
-          <VolumeBreakdown report={volume} days={7} />
+
+          <div className="grid gap-7 lg:grid-cols-[280px_1fr] lg:items-start">
+            <MuscleMap
+              groups={volume.groups.map((g) => ({
+                key: g.key,
+                name: g.name,
+                sets: g.sets,
+              }))}
+            />
+            <VolumeBreakdown report={volume} days={7} />
+          </div>
         </div>
       </section>
 

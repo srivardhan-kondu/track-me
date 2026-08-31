@@ -1,4 +1,5 @@
 import { VolumeBars, type VolumeBar } from "@/components/charts/volume-bars";
+import { MuscleMap } from "@/components/charts/muscle-map";
 import { VolumeBreakdown } from "@/components/exercises/volume-breakdown";
 import { EmptyState, SectionHeading } from "@/components/layout/page";
 import { WorkoutForm } from "@/components/log/workout-form";
@@ -166,9 +167,20 @@ export default async function WorkoutsPage() {
         <div className="rounded-2xl border border-line-strong bg-surface p-5">
           <p className="mb-4 text-[12px] leading-relaxed text-fg-dim">
             A set counts fully toward the muscles an exercise trains directly,
-            and half toward those assisting.
+            and half toward those assisting. The figure reads the same numbers —
+            what it shows better than the list is what got nothing.
           </p>
-          <VolumeBreakdown report={volume} days={7} />
+
+          <div className="grid gap-7 lg:grid-cols-[280px_1fr] lg:items-start">
+            <MuscleMap
+              groups={volume.groups.map((g) => ({
+                key: g.key,
+                name: g.name,
+                sets: g.sets,
+              }))}
+            />
+            <VolumeBreakdown report={volume} days={7} />
+          </div>
         </div>
       </section>
 
