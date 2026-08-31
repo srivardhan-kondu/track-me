@@ -165,7 +165,7 @@ model Meal {
   comments Comment[]
 
   @@index([userId, eatenAt])
-  @@index([status])
+  @@index([userId, status])
 }
 
 model Workout {
@@ -190,6 +190,7 @@ model Workout {
   comments  Comment[]
 
   @@index([userId, performedAt])
+  @@index([userId, status])
 }
 
 model Exercise {
@@ -449,4 +450,77 @@ model Payment {
 
   @@index([status])
   @@index([email])
+}
+
+// ---------------------------------------------------------------------------
+// Infrastructure
+// ---------------------------------------------------------------------------
+
+enum JobKind {
+  MEAL_ANALYSIS
+  WORKOUT_PARSE
+}
+
+enum JobState {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+/// A unit of expensive work — currently the two OpenAI round trips — moved out
+/// of the request that created it.
+///
+/// The upload enqueues and returns; the model calls happen against this row.
+/// That buys three things the previous `after()` call could not: a retry with
+/// backoff when OpenAI rate-limits us, a lease so a killed invocation is
+/// picked up again instead of stranding the record on PROCESSING, and a
+/// terminal FAILED state a human can go and look at.
+model Job {
+  id     String  @id @default(cuid())
+  kind   JobKind
+  /// The Meal or Workout this job finishes. Unique per kind, so enqueueing
+  /// twice for the same record collides rather than doubling the AI spend.
+  targetId String
+  userId   String
+
+  /// Anything the job needs that is not on the target row — the typed
+  /// description, which is not persisted until the transcript is resolved.
+  payload Json?
+
+  state       JobState @default(QUEUED)
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(4)
+
+  /// Earliest a worker may claim this. Pushed forward on each backoff.
+  runAfter DateTime @default(now())
+  /// Set when claimed. A RUNNING row past this was killed mid-flight and is
+  /// free for another worker to take.
+  leaseUntil DateTime?
+
+  lastError String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([kind, targetId])
+  @@index([state, runAfter])
+  @@index([userId])
+}
+
+/// One fixed rate-limit window.
+///
+/// Postgres rather than Redis because the database is already here and already
+/// pooled: one upsert per check costs less than an extra service to operate.
+/// `lib/rate-limit.ts` swaps to Upstash by changing its backend, not its
+/// callers, if the write volume ever justifies it.
+model RateLimit {
+  /// "<bucket>:<identifier>:<window start>" — the window is baked into the key
+  /// so a new window is a new row rather than a read-modify-write race.
+  key   String @id
+  count Int    @default(0)
+  /// When this row stops counting. Swept by the job worker.
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }

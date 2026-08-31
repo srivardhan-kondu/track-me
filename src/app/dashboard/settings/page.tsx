@@ -281,9 +281,9 @@ export default async function SettingsPage() {
               />
               <ServiceRow
                 name="Voice & vision"
-                live={aiEnabled}
+                live={aiEnabled()}
                 detail={
-                  aiEnabled
+                  aiEnabled()
                     ? "Transcription and nutrition analysis are live."
                     : "No API key — meals fall back to the offline estimator and voice notes are stored but not transcribed."
                 }

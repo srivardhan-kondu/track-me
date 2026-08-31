@@ -2,7 +2,19 @@ import OpenAI from "openai";
 
 let cached: OpenAI | null = null;
 
-export const aiEnabled = Boolean(process.env.OPENAI_API_KEY);
+/**
+ * Whether a real model is configured.
+ *
+ * A function, not a const, on purpose. As a module-load-time constant this
+ * froze whatever `process.env` happened to hold at first import — and since
+ * importing the Prisma client causes `.env` to be read, merely changing the
+ * import order of an unrelated module could flip it. That is exactly how the
+ * offline-fallback tests started making real, billed API calls. Reading the
+ * environment at call time cannot be reordered into a different answer.
+ */
+export function aiEnabled(): boolean {
+  return Boolean(process.env.OPENAI_API_KEY);
+}
 
 export function openai(): OpenAI {
   if (!process.env.OPENAI_API_KEY) {
