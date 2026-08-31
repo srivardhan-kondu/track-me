@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { deleteWeightEntry } from "@/app/actions/weight";
 import { deleteWorkout, reprocessWorkout } from "@/app/actions/workouts";
 import { Button } from "@/components/ui/button";
+import { runAction } from "@/lib/run-action";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,14 +19,14 @@ export function WorkoutActions({ workoutId }: { workoutId: string }) {
   const router = useRouter();
 
   async function reprocess() {
-    const res = await reprocessWorkout(workoutId);
+    const res = await runAction(() => reprocessWorkout(workoutId));
     if (!res.ok) return toast.error(res.error);
     toast.success("Re-parsing your sets…");
     router.refresh();
   }
 
   async function remove() {
-    const res = await deleteWorkout(workoutId);
+    const res = await runAction(() => deleteWorkout(workoutId));
     if (!res.ok) return toast.error(res.error);
     toast.success("Workout deleted.");
     router.refresh();
@@ -64,7 +65,7 @@ export function WeightActions({ entryId }: { entryId: string }) {
   const router = useRouter();
 
   async function remove() {
-    const res = await deleteWeightEntry(entryId);
+    const res = await runAction(() => deleteWeightEntry(entryId));
     if (!res.ok) return toast.error(res.error);
     toast.success("Check-in deleted.");
     router.refresh();

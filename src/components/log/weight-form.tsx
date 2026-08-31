@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { runAction } from "@/lib/run-action";
 
 function todayInput(d = new Date()) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -60,7 +61,7 @@ export function WeightForm({
     if (notes.trim()) fd.set("notes", notes.trim());
     if (photo) fd.set("photo", photo);
 
-    const res = await logWeight(fd);
+    const res = await runAction(() => logWeight(fd));
     setPending(false);
 
     if (!res.ok) {

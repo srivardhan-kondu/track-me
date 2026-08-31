@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { runAction } from "@/lib/run-action";
 
 export function AddAthlete() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export function AddAthlete() {
     setPending(true);
     const fd = new FormData();
     fd.set("email", email);
-    const res = await linkAthlete(fd);
+    const res = await runAction(() => linkAthlete(fd));
     setPending(false);
 
     if (!res.ok) {

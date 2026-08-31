@@ -8,42 +8,49 @@ import { useQuery } from "@tanstack/react-query";
  * Meal and workout analysis runs after the upload response is sent, so the
  * timeline has to learn when it lands.
  *
- * `initialPending` comes from the server render and changes when a new upload
- * is made, so polling is driven by a state that re-arms on that change —
- * relying on the query's own cached data would leave a page that was loaded
- * with nothing pending stuck on "Analysing" forever.
+ * Each watching session gets its own query key. Without that, the result of a
+ * previous session ({ pending: 0 }) is still in the cache when the next upload
+ * arrives, and the completion check fires against that stale value before the
+ * first request goes out — the watcher disarms immediately and the card sits
+ * on "Analysing" forever. That is why the first upload on a page worked and
+ * every one after it did not.
  */
 export function ProcessingWatcher({ initialPending }: { initialPending: number }) {
   const router = useRouter();
-  const [watching, setWatching] = React.useState(initialPending > 0);
+  const [session, setSession] = React.useState<number | null>(() =>
+    initialPending > 0 ? Date.now() : null,
+  );
 
   React.useEffect(() => {
-    if (initialPending > 0) setWatching(true);
+    // Start a session when the server reports new work and none is running.
+    if (initialPending > 0) setSession((current) => current ?? Date.now());
   }, [initialPending]);
 
   const { data } = useQuery({
-    queryKey: ["processing"],
+    queryKey: ["processing", session],
     queryFn: async () => {
       const res = await fetch("/api/processing", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to check processing status");
       return (await res.json()) as { pending: number };
     },
-    enabled: watching,
-    refetchInterval: watching ? 2000 : false,
+    enabled: session !== null,
+    refetchInterval: 2000,
     refetchOnWindowFocus: true,
     staleTime: 0,
     gcTime: 0,
+    // A suspended database can make one poll fail; keep watching.
+    retry: 3,
   });
 
   React.useEffect(() => {
-    if (!watching || data === undefined) return;
+    if (session === null || data === undefined) return;
 
     if (data.pending === 0) {
-      setWatching(false);
+      setSession(null);
       // Pull the finished macros into the timeline.
       router.refresh();
     }
-  }, [data, watching, router]);
+  }, [data, session, router]);
 
   return null;
 }

@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { runAction } from "@/lib/run-action";
 
 const POSES = [
   { value: "FRONT", label: "Front" },
@@ -55,7 +56,7 @@ export function ProgressUploader() {
     fd.set("photo", photo);
     fd.set("takenAt", new Date(`${takenAt}T12:00:00`).toISOString());
 
-    const res = await uploadProgressPhoto(fd);
+    const res = await runAction(() => uploadProgressPhoto(fd));
     setPending(false);
 
     if (!res.ok) {

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { updateRole } from "@/app/actions/coach";
 import { cn } from "@/lib/utils";
+import { runAction } from "@/lib/run-action";
 
 const OPTIONS = [
   {
@@ -31,7 +32,7 @@ export function RoleSwitcher({ role }: { role: "ATHLETE" | "COACH" }) {
     setPending(next);
     const fd = new FormData();
     fd.set("role", next);
-    const res = await updateRole(fd);
+    const res = await runAction(() => updateRole(fd));
     setPending(null);
 
     if (!res.ok) {

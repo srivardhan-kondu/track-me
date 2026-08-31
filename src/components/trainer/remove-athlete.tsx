@@ -6,12 +6,13 @@ import { toast } from "sonner";
 
 import { unlinkAthlete } from "@/app/actions/coach";
 import { Button } from "@/components/ui/button";
+import { runAction } from "@/lib/run-action";
 
 export function RemoveAthlete({ athleteId }: { athleteId: string }) {
   const router = useRouter();
 
   async function remove() {
-    const res = await unlinkAthlete(athleteId);
+    const res = await runAction(() => unlinkAthlete(athleteId));
     if (!res.ok) {
       toast.error(res.error);
       return;

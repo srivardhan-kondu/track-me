@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { runAction } from "@/lib/run-action";
 
 function localInputValue(d = new Date()) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -57,7 +58,7 @@ export function WorkoutForm({ trigger }: { trigger?: React.ReactNode }) {
     if (notes.trim()) fd.set("notes", notes.trim());
     fd.set("performedAt", new Date(performedAt).toISOString());
 
-    const res = await createWorkout(fd);
+    const res = await runAction(() => createWorkout(fd));
     setPending(false);
 
     if (!res.ok) {

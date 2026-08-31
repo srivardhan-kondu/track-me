@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { runAction } from "@/lib/run-action";
 
 export function MealActions({
   meal,
@@ -60,7 +61,7 @@ export function MealActions({
     fd.set("carbs", form.carbs || "0");
     fd.set("fat", form.fat || "0");
 
-    const res = await updateMealMacros(fd);
+    const res = await runAction(() => updateMealMacros(fd));
     setPending(false);
 
     if (!res.ok) {
@@ -73,7 +74,7 @@ export function MealActions({
   }
 
   async function handleReprocess() {
-    const res = await reprocessMeal(meal.id);
+    const res = await runAction(() => reprocessMeal(meal.id));
     if (!res.ok) {
       toast.error(res.error);
       return;
@@ -83,7 +84,7 @@ export function MealActions({
   }
 
   async function handleDelete() {
-    const res = await deleteMeal(meal.id);
+    const res = await runAction(() => deleteMeal(meal.id));
     if (!res.ok) {
       toast.error(res.error);
       return;

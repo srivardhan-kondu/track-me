@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { runAction } from "@/lib/run-action";
 
 /** Local datetime string for a datetime-local input. */
 function localInputValue(d = new Date()) {
@@ -68,7 +69,7 @@ export function MealForm({
     if (description.trim()) fd.set("description", description.trim());
     fd.set("eatenAt", new Date(eatenAt).toISOString());
 
-    const res = await createMeal(fd);
+    const res = await runAction(() => createMeal(fd));
     setPending(false);
 
     if (!res.ok) {

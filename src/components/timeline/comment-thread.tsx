@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { initials } from "@/lib/utils";
+import { runAction } from "@/lib/run-action";
 
 export type CommentView = {
   id: string;
@@ -45,7 +46,7 @@ export function CommentThread({
     if (target.workoutId) fd.set("workoutId", target.workoutId);
     if (target.weightEntryId) fd.set("weightEntryId", target.weightEntryId);
 
-    const res = await addComment(fd);
+    const res = await runAction(() => addComment(fd));
     setPending(false);
 
     if (!res.ok) {
@@ -59,7 +60,7 @@ export function CommentThread({
   }
 
   async function remove(id: string) {
-    const res = await deleteComment(id);
+    const res = await runAction(() => deleteComment(id));
     if (!res.ok) {
       toast.error(res.error);
       return;

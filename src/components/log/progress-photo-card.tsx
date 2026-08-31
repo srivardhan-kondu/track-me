@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { deleteProgressPhoto } from "@/app/actions/weight";
 import { Button } from "@/components/ui/button";
+import { runAction } from "@/lib/run-action";
 
 export function ProgressPhotoCard({
   id,
@@ -23,7 +24,7 @@ export function ProgressPhotoCard({
   const router = useRouter();
 
   async function remove() {
-    const res = await deleteProgressPhoto(id);
+    const res = await runAction(() => deleteProgressPhoto(id));
     if (!res.ok) {
       toast.error(res.error);
       return;
