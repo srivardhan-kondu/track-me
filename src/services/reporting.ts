@@ -447,7 +447,17 @@ export async function getCoachRoster(coachId: string) {
     orderBy: { createdAt: "asc" },
     include: {
       athlete: {
-        select: { id: true, name: true, email: true, image: true, timeZone: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          timeZone: true,
+          // The roster prints the athlete's figures, so it prints them in the
+          // athlete's own unit — as it already does with their own timezone.
+          weightUnit: true,
+          volumeUnit: true,
+        },
       },
     },
   });

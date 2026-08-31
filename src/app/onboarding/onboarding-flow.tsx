@@ -7,6 +7,17 @@ import { ArrowRight, Check, ChevronLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { completeOnboarding, skipOnboarding } from "@/app/actions/onboarding";
+import {
+  cmToInches,
+  displayWeight,
+  feetInches,
+  formatHeight,
+  formatWeight,
+  inchesToCm,
+  toKg,
+  type HeightUnit,
+  type WeightUnit,
+} from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 type Gender = "FEMALE" | "MALE";
@@ -34,6 +45,7 @@ function Slider({
   ticks,
   onChange,
   label,
+  formatTick,
 }: {
   value: number;
   min: number;
@@ -42,6 +54,8 @@ function Slider({
   ticks: number[];
   onChange: (n: number) => void;
   label: string;
+  /** How a tick reads — inches want "5′ 0″", not "60". */
+  formatTick?: (n: number) => string;
 }) {
   const pct = ((value - min) / (max - min)) * 100;
 
@@ -91,9 +105,52 @@ function Slider({
             className="tabular absolute -translate-x-1/2 text-[11px] text-fg-dim"
             style={{ left: `${((t - min) / (max - min)) * 100}%` }}
           >
-            {t}
+            {formatTick ? formatTick(t) : t}
           </span>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The unit this step is being answered in.
+ *
+ * Offered on the step itself rather than buried in Settings afterwards: an
+ * athlete who thinks in pounds should never have to enter a number in
+ * kilograms first and correct it later.
+ */
+function UnitSwitch<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="mt-6 flex justify-center">
+      <div className="flex gap-1 rounded-full border border-line p-1">
+        {options.map((option) => {
+          const selected = value === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              aria-pressed={selected}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-[12.5px] transition-colors",
+                selected
+                  ? "bg-accent font-semibold text-accent-ink"
+                  : "font-medium text-fg-muted hover:text-fg",
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -180,15 +237,27 @@ export function OnboardingFlow({
   const [index, setIndex] = React.useState(0);
   const [gender, setGender] = React.useState<Gender | null>(null);
   const [age, setAge] = React.useState(28);
+  // Held in the units the columns use, whatever is on screen. The sliders
+  // convert at the edge, so switching kg to lb re-reads the same figure rather
+  // than resetting it.
   const [heightCm, setHeightCm] = React.useState(165);
   const [weightKg, setWeightKg] = React.useState(68);
+  const [heightUnit, setHeightUnit] = React.useState<HeightUnit>("CM");
+  const [weightUnit, setWeightUnit] = React.useState<WeightUnit>("KG");
   const [pending, startTransition] = React.useTransition();
 
   const step: Step = STEPS[index];
 
   function finish() {
     startTransition(async () => {
-      const res = await completeOnboarding({ gender, age, heightCm, weightKg });
+      const res = await completeOnboarding({
+        gender,
+        age,
+        heightCm,
+        weightKg,
+        heightUnit,
+        weightUnit,
+      });
       if (!res.ok) {
         toast.error(res.error);
         return;
@@ -285,17 +354,49 @@ export function OnboardingFlow({
           title="What's your height?"
           blurb="This helps us calculate your performance better."
         >
-          <BigValue value={heightCm} unit="cm" />
-          <div className="mt-10 px-1">
-            <Slider
-              label="Height in centimetres"
-              value={heightCm}
-              min={140}
-              max={190}
-              ticks={[140, 150, 160, 170, 180, 190]}
-              onChange={setHeightCm}
-            />
-          </div>
+          {heightUnit === "CM" ? (
+            <>
+              <BigValue value={heightCm} unit="cm" />
+              <div className="mt-10 px-1">
+                <Slider
+                  label="Height in centimetres"
+                  value={heightCm}
+                  min={140}
+                  max={190}
+                  ticks={[140, 150, 160, 170, 180, 190]}
+                  onChange={setHeightCm}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <BigValue
+                value={`${feetInches(heightCm).feet}′ ${feetInches(heightCm).inches}″`}
+                unit="feet & inches"
+              />
+              <div className="mt-10 px-1">
+                {/* The same 140–190 cm span, measured in whole inches. */}
+                <Slider
+                  label="Height in feet and inches"
+                  value={Math.round(cmToInches(heightCm))}
+                  min={55}
+                  max={75}
+                  ticks={[56, 60, 64, 68, 72]}
+                  formatTick={(n) => `${Math.floor(n / 12)}′${n % 12}″`}
+                  onChange={(inches) => setHeightCm(inchesToCm(inches))}
+                />
+              </div>
+            </>
+          )}
+
+          <UnitSwitch<HeightUnit>
+            value={heightUnit}
+            onChange={setHeightUnit}
+            options={[
+              { value: "CM", label: "cm" },
+              { value: "FT", label: "ft & in" },
+            ]}
+          />
         </StepBody>
       )}
 
@@ -304,17 +405,43 @@ export function OnboardingFlow({
           title="What's your weight?"
           blurb="This helps us track your progress accurately."
         >
-          <BigValue value={weightKg} unit="kg" />
+          <BigValue
+            value={displayWeight(weightKg, weightUnit)}
+            unit={weightUnit === "LB" ? "lb" : "kg"}
+          />
           <div className="mt-10 px-1">
-            <Slider
-              label="Weight in kilograms"
-              value={weightKg}
-              min={40}
-              max={100}
-              ticks={[40, 50, 60, 70, 80, 90, 100]}
-              onChange={setWeightKg}
-            />
+            {weightUnit === "KG" ? (
+              // Half-kilo steps: a bathroom scale reads 68.5, and rounding it
+              // to 68 on the way in loses a real number.
+              <Slider
+                label="Weight in kilograms"
+                value={weightKg}
+                min={40}
+                max={100}
+                step={0.5}
+                ticks={[40, 50, 60, 70, 80, 90, 100]}
+                onChange={setWeightKg}
+              />
+            ) : (
+              <Slider
+                label="Weight in pounds"
+                value={Math.round(displayWeight(weightKg, "LB"))}
+                min={88}
+                max={220}
+                ticks={[88, 110, 132, 154, 176, 198, 220]}
+                onChange={(lb) => setWeightKg(toKg(lb, "LB"))}
+              />
+            )}
           </div>
+
+          <UnitSwitch<WeightUnit>
+            value={weightUnit}
+            onChange={setWeightUnit}
+            options={[
+              { value: "KG", label: "kg" },
+              { value: "LB", label: "lb" },
+            ]}
+          />
         </StepBody>
       )}
 
@@ -335,8 +462,8 @@ export function OnboardingFlow({
               }
             />
             <Row label="Age" value={`${age} years`} />
-            <Row label="Height" value={`${heightCm} cm`} />
-            <Row label="Weight" value={`${weightKg} kg`} />
+            <Row label="Height" value={formatHeight(heightCm, heightUnit)} />
+            <Row label="Weight" value={formatWeight(weightKg, weightUnit)} />
           </dl>
         </StepBody>
       )}

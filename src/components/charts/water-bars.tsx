@@ -1,4 +1,5 @@
 import { formatWater, hydrationPct } from "@/lib/hydration";
+import type { VolumeUnit } from "@/lib/units";
 import { cn } from "@/lib/utils";
 import type { WaterPoint } from "@/services/reporting";
 
@@ -13,11 +14,13 @@ import type { WaterPoint } from "@/services/reporting";
 export function WaterBars({
   points,
   goalMl,
+  unit = "ML",
   className,
 }: {
   /** One entry per logged day; days with nothing logged may be absent. */
   points: { day: Date; ml: number }[];
   goalMl: number;
+  unit?: VolumeUnit;
   className?: string;
 }) {
   const empty = points.every((p) => p.ml === 0);
@@ -44,7 +47,7 @@ export function WaterBars({
                 month: "short",
                 day: "numeric",
                 timeZone: "UTC",
-              })} — ${formatWater(p.ml)}`}
+              })} — ${formatWater(p.ml, unit)}`}
             >
               <div
                 className={cn(
@@ -67,7 +70,7 @@ export function WaterBars({
           })}
         </span>
         <span className="tabular font-mono text-[10.5px] text-fg-dim">
-          {empty ? "nothing logged yet" : `goal ${formatWater(goalMl)}`}
+          {empty ? "nothing logged yet" : `goal ${formatWater(goalMl, unit)}`}
         </span>
         <span className="mono-label">Today</span>
       </div>

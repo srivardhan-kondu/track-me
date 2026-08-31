@@ -7,6 +7,12 @@ import { RemoveAthlete } from "@/components/trainer/remove-athlete";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { requireCoach } from "@/lib/session";
+import {
+  displayWeight,
+  formatWeightDelta,
+  unitPrefs,
+  weightLabel,
+} from "@/lib/units";
 import { cn, initials } from "@/lib/utils";
 import { getCoachRoster, getPendingRequests } from "@/services/reporting";
 
@@ -136,6 +142,9 @@ export default async function TrainerPage() {
               summary.mealComplianceDays,
               summary.daysElapsed,
             );
+            // Read in the athlete's unit, not the coach's: these are their
+            // figures, and a coach who converts in their head misreads them.
+            const unit = unitPrefs(athlete).weight;
 
             return (
               <div
@@ -176,11 +185,17 @@ export default async function TrainerPage() {
                   />
                   <Figure
                     label="Weight"
-                    value={summary.endWeightKg ?? "—"}
-                    unit={summary.endWeightKg !== null ? "kg" : undefined}
+                    value={
+                      summary.endWeightKg !== null
+                        ? displayWeight(summary.endWeightKg, unit)
+                        : "—"
+                    }
+                    unit={
+                      summary.endWeightKg !== null ? weightLabel(unit) : undefined
+                    }
                     delta={
                       summary.weightChangeKg !== null
-                        ? `${summary.weightChangeKg > 0 ? "+" : ""}${summary.weightChangeKg}`
+                        ? formatWeightDelta(summary.weightChangeKg, unit)
                         : undefined
                     }
                     deltaTone={

@@ -4,7 +4,9 @@ import { ProgressUploader } from "@/components/log/progress-uploader";
 import { db } from "@/lib/db";
 import { PremiumNotice } from "@/components/billing/premium-notice";
 import { premiumStatus, requireUser } from "@/lib/session";
+import { formatWeight, type WeightUnit } from "@/lib/units";
 import { mediaUrl } from "@/services/storage";
+import { getUnits } from "@/services/units";
 
 export const metadata = { title: "Progress photos" };
 
@@ -42,11 +44,13 @@ function weightNear(
 function CompareTile({
   photo,
   weightKg,
+  unit,
   caption,
   highlight,
 }: {
   photo: Resolved;
   weightKg: number | null;
+  unit: WeightUnit;
   caption: string;
   highlight?: boolean;
 }) {
@@ -60,7 +64,7 @@ function CompareTile({
         }
       >
         {shortDate(photo.takenAt)}
-        {weightKg !== null && ` · ${weightKg} kg`}
+        {weightKg !== null && ` · ${formatWeight(weightKg, unit)}`}
       </p>
 
       <div className="relative h-[260px] overflow-hidden rounded-xl border border-line bg-surface-inset">
@@ -83,7 +87,7 @@ export default async function ProgressPage() {
   const user = await requireUser();
   const { premium } = await premiumStatus(user.id);
 
-  const [photos, weights] = await Promise.all([
+  const [photos, weights, units] = await Promise.all([
     db.progressPhoto.findMany({
       where: { userId: user.id },
       orderBy: { takenAt: "desc" },
@@ -93,6 +97,7 @@ export default async function ProgressPage() {
       orderBy: { day: "asc" },
       select: { day: true, weightKg: true },
     }),
+    getUnits(user.id),
   ]);
 
   const resolved: Resolved[] = await Promise.all(
@@ -160,11 +165,13 @@ export default async function ProgressPage() {
           <CompareTile
             photo={baseline}
             weightKg={weightNear(weights, baseline.takenAt)}
+            unit={units.weight}
             caption={`${baseline.pose.toLowerCase()} · baseline`}
           />
           <CompareTile
             photo={latest}
             weightKg={weightNear(weights, latest.takenAt)}
+            unit={units.weight}
             caption={`${latest.pose.toLowerCase()} · latest`}
             highlight
           />

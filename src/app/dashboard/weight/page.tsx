@@ -9,8 +9,15 @@ import { db } from "@/lib/db";
 import { PremiumNotice } from "@/components/billing/premium-notice";
 import { FREE_HISTORY_DAYS } from "@/lib/entitlements";
 import { premiumStatus, requireUser } from "@/lib/session";
+import {
+  displayWeight,
+  formatWeight,
+  formatWeightDelta,
+  weightLabel,
+} from "@/lib/units";
+import { getUnits } from "@/services/units";
 import { addDaysInZone, dayKeyInZone, safeZone } from "@/lib/tz";
-import { cn, round } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { getCompliance, getWeightSeries } from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
 
@@ -54,7 +61,7 @@ export default async function WeightPage({
         zone,
       );
 
-  const [series, compliance, entries] = await Promise.all([
+  const [series, compliance, entries, units] = await Promise.all([
     getWeightSeries(user.id, range.days, zone),
     getCompliance(user.id, premium ? 14 : FREE_HISTORY_DAYS, zone),
     db.weightEntry.findMany({
@@ -62,7 +69,11 @@ export default async function WeightPage({
       orderBy: { day: "desc" },
       take: 30,
     }),
+    getUnits(user.id),
   ]);
+
+  const unit = units.weight;
+  const label = weightLabel(unit);
 
   const withPhotos = await Promise.all(
     entries.map(async (e) => ({ ...e, photoUrl: await mediaUrl(e.photoKey) })),
@@ -70,9 +81,11 @@ export default async function WeightPage({
 
   const latest = series[series.length - 1]?.weightKg ?? null;
   const first = series[0]?.weightKg ?? null;
+  // Left unrounded: the formatter below decides how many places the athlete's
+  // own unit deserves, and rounding twice loses a tenth of a pound to nothing.
   const change =
     latest !== null && first !== null && series.length > 1
-      ? round(latest - first, 1)
+      ? latest - first
       : null;
 
   // Compare the last 7 days against the 7 before to smooth daily noise.
@@ -81,13 +94,11 @@ export default async function WeightPage({
   const recentAvg = avg(series.slice(-7));
   const priorAvg = avg(series.slice(-14, -7));
   const weeklyTrend =
-    recentAvg !== null && priorAvg !== null
-      ? round(recentAvg - priorAvg, 2)
-      : null;
+    recentAvg !== null && priorAvg !== null ? recentAvg - priorAvg : null;
 
   const projection =
     weeklyTrend !== null && latest !== null && Math.abs(weeklyTrend) >= 0.05
-      ? `Hold this and you're around ${round(latest + weeklyTrend * 4, 1)} kg in a month.`
+      ? `Hold this and you're around ${formatWeight(latest + weeklyTrend * 4, unit)} in a month.`
       : weeklyTrend !== null
         ? "Holding steady — no drift either way this fortnight."
         : "A couple more check-ins and a weekly rate appears here.";
@@ -119,7 +130,7 @@ export default async function WeightPage({
               }))}
             />
           )}
-          <WeightForm defaultWeight={latest} />
+          <WeightForm defaultWeight={latest} unit={unit} />
         </div>
       </div>
 
@@ -132,23 +143,23 @@ export default async function WeightPage({
 
       <section className="rounded-2xl border border-line-strong bg-surface px-7 py-6">
         <div className="flex flex-wrap items-start gap-x-11 gap-y-6">
-          <BigStat label="Current" value={latest ?? "—"} unit={latest !== null ? "kg" : undefined} />
+          <BigStat
+            label="Current"
+            value={latest !== null ? displayWeight(latest, unit) : "—"}
+            unit={latest !== null ? label : undefined}
+          />
           <BigStat
             label={`${range.window} change`}
-            value={
-              change !== null ? `${change > 0 ? "+" : ""}${change}` : "—"
-            }
-            unit={change !== null ? "kg" : undefined}
+            value={change !== null ? formatWeightDelta(change, unit) : "—"}
+            unit={change !== null ? label : undefined}
             tone={change !== null && change <= 0 ? "sage" : "default"}
           />
           <BigStat
             label="Weekly rate"
             value={
-              weeklyTrend !== null
-                ? `${weeklyTrend > 0 ? "+" : ""}${weeklyTrend}`
-                : "—"
+              weeklyTrend !== null ? formatWeightDelta(weeklyTrend, unit) : "—"
             }
-            unit={weeklyTrend !== null ? "kg / wk" : undefined}
+            unit={weeklyTrend !== null ? `${label} / wk` : undefined}
           />
 
           <div className="ml-auto max-w-[240px]">
@@ -159,7 +170,7 @@ export default async function WeightPage({
           </div>
         </div>
 
-        <WeightChart points={series} className="mt-7" />
+        <WeightChart points={series} unit={unit} className="mt-7" />
       </section>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
@@ -172,16 +183,18 @@ export default async function WeightPage({
             <EmptyState
               title="No check-ins yet"
               body="Weigh yourself after waking and before eating. One number today becomes the baseline everything else is measured against."
-              action={<WeightForm />}
+              action={<WeightForm unit={unit} />}
             />
           ) : (
             <ul className="flex flex-col gap-2.5">
               {withPhotos.map((entry, i) => {
                 const previous = withPhotos[i + 1];
-                // Two places, to match what a check-in stores: at one place a
-                // 77.05 → 77.00 morning reads as no change at all.
+                // Kept at full precision and rounded on the way out — in
+                // kilograms that is two places, to match what a check-in
+                // stores: at one place a 77.05 → 77.00 morning reads as no
+                // change at all.
                 const delta = previous
-                  ? round(entry.weightKg - previous.weightKg, 2)
+                  ? entry.weightKg - previous.weightKg
                   : null;
 
                 return (
@@ -234,13 +247,11 @@ export default async function WeightPage({
                             : "text-fg-dim",
                       )}
                     >
-                      {delta === null
-                        ? "—"
-                        : `${delta > 0 ? "+" : ""}${delta}`}
+                      {delta === null ? "—" : formatWeightDelta(delta, unit)}
                     </span>
 
                     <span className="tabular shrink-0 font-mono text-[13px] text-fg">
-                      {entry.weightKg} kg
+                      {formatWeight(entry.weightKg, unit)}
                     </span>
 
                     <WeightActions entryId={entry.id} />

@@ -20,6 +20,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { runAction } from "@/lib/run-action";
+import {
+  displayWeight,
+  weightBounds,
+  weightLabel,
+  type WeightUnit,
+} from "@/lib/units";
 
 function todayInput(d = new Date()) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -29,16 +35,23 @@ function todayInput(d = new Date()) {
 export function WeightForm({
   trigger,
   defaultWeight,
+  unit = "KG",
 }: {
   trigger?: React.ReactNode;
+  /** The last check-in, in kilograms as stored. */
   defaultWeight?: number | null;
+  unit?: WeightUnit;
 }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
 
-  const [weightKg, setWeightKg] = React.useState(
-    defaultWeight ? String(defaultWeight) : "",
+  const bounds = weightBounds(unit);
+  const label = weightLabel(unit);
+
+  // Prefilled in the unit on screen; what the athlete sees is what they edit.
+  const [weight, setWeight] = React.useState(
+    defaultWeight ? String(displayWeight(defaultWeight, unit)) : "",
   );
   const [notes, setNotes] = React.useState("");
   const [day, setDay] = React.useState(todayInput());
@@ -48,15 +61,16 @@ export function WeightForm({
     e.preventDefault();
     if (pending) return;
 
-    const parsed = Number(weightKg);
-    if (!Number.isFinite(parsed) || parsed < 20 || parsed > 400) {
-      toast.error("Enter a weight between 20 and 400 kg.");
+    const parsed = Number(weight);
+    if (!Number.isFinite(parsed) || parsed < bounds.min || parsed > bounds.max) {
+      toast.error(`Enter a weight between ${bounds.min} and ${bounds.max} ${label}.`);
       return;
     }
 
     setPending(true);
     const fd = new FormData();
-    fd.set("weightKg", weightKg);
+    fd.set("weight", weight);
+    fd.set("unit", unit);
     fd.set("day", day);
     if (notes.trim()) fd.set("notes", notes.trim());
     if (photo) fd.set("photo", photo);
@@ -104,17 +118,17 @@ export function WeightForm({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="weight-kg">Weight (kg)</Label>
+              <Label htmlFor="weight-value">Weight ({label})</Label>
               <Input
-                id="weight-kg"
+                id="weight-value"
                 type="number"
-                step="0.01"
-                min={20}
-                max={400}
+                step={bounds.step}
+                min={bounds.min}
+                max={bounds.max}
                 inputMode="decimal"
-                placeholder="77.05"
-                value={weightKg}
-                onChange={(e) => setWeightKg(e.target.value)}
+                placeholder={unit === "LB" ? "169.9" : "77.05"}
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
                 required
                 autoFocus
               />

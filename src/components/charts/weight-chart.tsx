@@ -1,4 +1,9 @@
-import { cn, round } from "@/lib/utils";
+import {
+  displayWeight,
+  weightLabel,
+  type WeightUnit,
+} from "@/lib/units";
+import { cn } from "@/lib/utils";
 
 export type Point = { day: Date; weightKg: number };
 
@@ -11,12 +16,17 @@ const H = 210;
  *
  * The shaded band is where the last week has actually been sitting — the line
  * to notice, since Track Me stores no goal weight to draw one against.
+ *
+ * The geometry is done in the stored kilograms, which a change of unit cannot
+ * move; only the figures printed along the way are converted.
  */
 export function WeightChart({
   points,
+  unit = "KG",
   className,
 }: {
   points: Point[];
+  unit?: WeightUnit;
   className?: string;
 }) {
   if (points.length === 0) {
@@ -44,8 +54,10 @@ export function WeightChart({
       >
         <div>
           <p className="tabular font-serif text-[42px] leading-none text-fg">
-            {points[0].weightKg}
-            <span className="ml-1.5 text-[13px] text-fg-dim">kg</span>
+            {displayWeight(points[0].weightKg, unit)}
+            <span className="ml-1.5 text-[13px] text-fg-dim">
+              {weightLabel(unit)}
+            </span>
           </p>
           <p className="mt-3 text-[12.5px] text-fg-dim">
             One more check-in and the trend line appears.
@@ -110,7 +122,12 @@ export function WeightChart({
           preserveAspectRatio="none"
           className="h-[210px] w-full"
           role="img"
-          aria-label={`Weight trend from ${round(first.weightKg, 1)} to ${round(last.weightKg, 1)} kilograms`}
+          aria-label={`Weight trend from ${displayWeight(
+            first.weightKg,
+            unit,
+          )} to ${displayWeight(last.weightKg, unit)} ${
+            unit === "LB" ? "pounds" : "kilograms"
+          }`}
         >
           {[0.2, 0.45, 0.7].map((f) => (
             <line
@@ -187,11 +204,12 @@ export function WeightChart({
           className="absolute right-0 -translate-y-1/2 rounded-md bg-accent px-2 py-[3px] font-mono text-[10.5px] font-semibold text-accent-ink"
           style={{ top: `${(last.cy / H) * 100}%` }}
         >
-          {last.weightKg}
+          {displayWeight(last.weightKg, unit)}
         </span>
 
         <span className="mono-label absolute bottom-2.5 left-0">
-          Last week {round(recentLow, 1)}–{round(recentHigh, 1)}
+          Last week {displayWeight(recentLow, unit)}–
+          {displayWeight(recentHigh, unit)}
         </span>
       </div>
 

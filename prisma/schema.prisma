@@ -48,6 +48,14 @@ model User {
   /// so "never chose" stays distinguishable from "chose the default".
   waterGoalMl Int?
 
+  /// How this athlete reads a measurement. Presentation only: every column
+  /// stays metric whatever these say, so switching to pounds re-reads the
+  /// history rather than rewriting it, and a coach sees the athlete's own
+  /// units the way they already see the athlete's own timezone.
+  weightUnit WeightUnit @default(KG)
+  heightUnit HeightUnit @default(CM)
+  volumeUnit VolumeUnit @default(ML)
+
   /// Paid entitlement. A trial grants premium features without touching this,
   /// so `plan` only ever moves once money has actually arrived.
   plan          Plan      @default(FREE)
@@ -131,6 +139,25 @@ enum Role {
 enum Gender {
   FEMALE
   MALE
+}
+
+/// Kilograms or pounds, for weigh-ins and for the loads on a lifted set.
+enum WeightUnit {
+  KG
+  LB
+}
+
+/// Centimetres, or feet and inches together — nobody gives a height in feet
+/// alone, so FT means both halves.
+enum HeightUnit {
+  CM
+  FT
+}
+
+/// Millilitres (shown as litres past one) or US fluid ounces.
+enum VolumeUnit {
+  ML
+  FL_OZ
 }
 
 /// Lifecycle of an AI-processed record.

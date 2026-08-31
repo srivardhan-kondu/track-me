@@ -119,6 +119,11 @@ export async function GET(req: Request) {
         email: true,
         heightCm: true,
         waterGoalMl: true,
+        // Figures below are metric, as stored. These say how the account reads
+        // them, so a file of kilograms is not mistaken for what was typed.
+        weightUnit: true,
+        heightUnit: true,
+        volumeUnit: true,
         timeZone: true,
         createdAt: true,
       },

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
+import { toKg, WEIGHT_MAX_KG, WEIGHT_MIN_KG, type WeightUnit } from "@/lib/units";
 import { premiumStatus, requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
 import { dayKeyInZone, safeZone } from "@/lib/tz";
@@ -20,8 +21,14 @@ import type { ActionResult } from "./meals";
  */
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/**
+ * The figure arrives in whatever unit the athlete reads, and is converted here
+ * rather than in the browser: the column is kilograms, and a form that posts
+ * its own conversion is a form that can post pounds into it.
+ */
 const WeightSchema = z.object({
-  weightKg: z.coerce.number().min(20).max(400).transform(round2),
+  weight: z.coerce.number().finite(),
+  unit: z.enum(["KG", "LB"]).default("KG"),
   notes: z.string().max(500).optional(),
   day: z.string().optional(),
 });
@@ -34,12 +41,25 @@ export async function logWeight(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
 
   const parsed = WeightSchema.safeParse({
-    weightKg: formData.get("weightKg"),
+    weight: formData.get("weight"),
+    unit: formData.get("unit")?.toString() || undefined,
     notes: formData.get("notes")?.toString() || undefined,
     day: formData.get("day")?.toString() || undefined,
   });
   if (!parsed.success) {
-    return { ok: false, error: "Enter a weight between 20 and 400 kg." };
+    return { ok: false, error: "That weight does not look like a number." };
+  }
+
+  const unit = parsed.data.unit as WeightUnit;
+  const weightKg = round2(toKg(parsed.data.weight, unit));
+  if (weightKg < WEIGHT_MIN_KG || weightKg > WEIGHT_MAX_KG) {
+    return {
+      ok: false,
+      error:
+        unit === "LB"
+          ? "Enter a weight between 45 and 881 lb."
+          : "Enter a weight between 20 and 400 kg.",
+    };
   }
 
   let photo;
@@ -82,12 +102,12 @@ export async function logWeight(formData: FormData): Promise<ActionResult> {
     create: {
       userId: user.id,
       day,
-      weightKg: parsed.data.weightKg,
+      weightKg,
       notes: parsed.data.notes?.trim() || null,
       photoKey,
     },
     update: {
-      weightKg: parsed.data.weightKg,
+      weightKg,
       notes: parsed.data.notes?.trim() || null,
       // Keep the previous photo when this check-in did not include one.
       ...(photoKey ? { photoKey } : {}),

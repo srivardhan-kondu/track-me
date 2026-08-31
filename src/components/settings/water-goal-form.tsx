@@ -14,16 +14,32 @@ import {
   MIN_WATER_GOAL_ML,
 } from "@/lib/hydration";
 import { runAction } from "@/lib/run-action";
+import {
+  displayVolume,
+  formatVolume,
+  volumeLabel,
+  type VolumeUnit,
+} from "@/lib/units";
 
 /**
  * The daily target. Blank is a real answer — it puts the athlete back on the
  * app's default rather than leaving them with nothing to fill toward.
  */
-export function WaterGoalForm({ goalMl }: { goalMl: number | null }) {
+export function WaterGoalForm({
+  goalMl,
+  unit = "ML",
+}: {
+  /** What is stored, in millilitres. Null means the athlete never set one. */
+  goalMl: number | null;
+  unit?: VolumeUnit;
+}) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
 
+  const label = volumeLabel(unit);
+
   function submit(formData: FormData) {
+    formData.set("unit", unit);
     startTransition(async () => {
       const res = await runAction(() => updateWaterGoal(formData));
       if (!res.ok) {
@@ -38,19 +54,19 @@ export function WaterGoalForm({ goalMl }: { goalMl: number | null }) {
   return (
     <form action={submit} className="flex flex-wrap items-end gap-3">
       <div className="min-w-[140px] flex-1">
-        <Label htmlFor="waterGoalMl" className="mb-2 block">
-          Daily goal (ml)
+        <Label htmlFor="water-goal" className="mb-2 block">
+          Daily goal ({label})
         </Label>
         <Input
-          id="waterGoalMl"
-          name="waterGoalMl"
+          id="water-goal"
+          name="goal"
           type="number"
-          step="100"
+          step={unit === "FL_OZ" ? 1 : 100}
           inputMode="numeric"
-          min={MIN_WATER_GOAL_ML}
-          max={MAX_WATER_GOAL_ML}
-          defaultValue={goalMl ?? ""}
-          placeholder={String(DEFAULT_WATER_GOAL_ML)}
+          min={displayVolume(MIN_WATER_GOAL_ML, unit)}
+          max={displayVolume(MAX_WATER_GOAL_ML, unit)}
+          defaultValue={goalMl ? displayVolume(goalMl, unit) : ""}
+          placeholder={String(displayVolume(DEFAULT_WATER_GOAL_ML, unit))}
         />
       </div>
 
@@ -60,7 +76,7 @@ export function WaterGoalForm({ goalMl }: { goalMl: number | null }) {
 
       <p className="w-full text-[11.5px] leading-relaxed text-fg-dim">
         Leave it blank to use the default of{" "}
-        {DEFAULT_WATER_GOAL_ML.toLocaleString()} ml a day.
+        {formatVolume(DEFAULT_WATER_GOAL_ML, unit)} a day.
       </p>
     </form>
   );

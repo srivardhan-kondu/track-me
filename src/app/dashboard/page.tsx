@@ -19,6 +19,7 @@ import { db } from "@/lib/db";
 import { PremiumNotice } from "@/components/billing/premium-notice";
 import { FREE_HISTORY_DAYS, historyDays, trialLapsed } from "@/lib/entitlements";
 import { waterGoal } from "@/lib/hydration";
+import { unitPrefs } from "@/lib/units";
 import { premiumStatus, requireUser } from "@/lib/session";
 import {
   addDaysInZone,
@@ -109,9 +110,17 @@ export default async function TodayPage({
       getWeekFigures(user.id, 7, zone),
       db.user.findUnique({
         where: { id: user.id },
-        select: { gender: true, waterGoalMl: true },
+        select: {
+          gender: true,
+          waterGoalMl: true,
+          weightUnit: true,
+          heightUnit: true,
+          volumeUnit: true,
+        },
       }),
     ]);
+
+  const units = unitPrefs(profile);
 
   const prev = addDaysInZone(date, -1, zone);
   const next = addDaysInZone(date, 1, zone);
@@ -147,6 +156,7 @@ export default async function TodayPage({
           gender={profile?.gender ?? null}
           consistencyPct={consistencyPct}
           week={week}
+          weightUnit={units.weight}
         />
       ) : (
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
@@ -199,10 +209,12 @@ export default async function TodayPage({
       <div className="flex flex-wrap items-center gap-2.5">
         <MealForm />
         <WorkoutForm
+          unit={units.weight}
           trigger={<Button variant="outline">Log workout</Button>}
         />
         <WeightForm
           defaultWeight={lastWeight?.weightKg ?? null}
+          unit={units.weight}
           trigger={<Button variant="outline">Weigh in</Button>}
         />
       </div>
@@ -227,6 +239,7 @@ export default async function TodayPage({
             entries={entries}
             viewerId={user.id}
             timeZone={zone}
+            weightUnit={units.weight}
             isOwner
             canComment
             upsell={!premium}
@@ -271,11 +284,12 @@ export default async function TodayPage({
           <HydrationCard
             ml={totals.waterMl}
             goalMl={waterGoal(profile?.waterGoalMl)}
+            unit={units.volume}
             // Quick adds follow the day being viewed, so catching up on
             // yesterday from its own timeline logs it to yesterday.
             day={isToday ? undefined : toDateParam(date, zone)}
           />
-          <WeightRailCard points={series} days={railDays} />
+          <WeightRailCard points={series} days={railDays} unit={units.weight} />
           <ConsistencyCard days={compliance} />
           {note && <CoachNoteCard note={note} />}
         </aside>

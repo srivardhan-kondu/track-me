@@ -23,6 +23,12 @@ import {
   toDateParam,
 } from "@/lib/tz";
 import { formatWater, waterGoal } from "@/lib/hydration";
+import {
+  displayWeight,
+  formatWeightDelta,
+  unitPrefs,
+  weightLabel,
+} from "@/lib/units";
 import { initials } from "@/lib/utils";
 import { getMuscleVolume } from "@/services/exercises/volume";
 import {
@@ -63,6 +69,9 @@ export default async function AthleteReviewPage({
       image: true,
       timeZone: true,
       waterGoalMl: true,
+      weightUnit: true,
+      heightUnit: true,
+      volumeUnit: true,
     },
   });
   if (!athlete) notFound();
@@ -83,6 +92,8 @@ export default async function AthleteReviewPage({
       getWaterSeries(athleteId, HYDRATION_DAYS, zone),
     ]);
 
+  // The athlete's own units, as their own timezone is used above.
+  const units = unitPrefs(athlete);
   const goalMl = waterGoal(athlete.waterGoalMl);
   const hydrationDays = Array.from({ length: HYDRATION_DAYS }, (_, i) =>
     dayKeyInZone(
@@ -137,10 +148,14 @@ export default async function AthleteReviewPage({
             label="Weight change"
             value={
               summary.weightChangeKg !== null
-                ? `${summary.weightChangeKg > 0 ? "+" : ""}${summary.weightChangeKg}`
+                ? formatWeightDelta(summary.weightChangeKg, units.weight)
                 : "—"
             }
-            unit={summary.weightChangeKg !== null ? "kg" : undefined}
+            unit={
+              summary.weightChangeKg !== null
+                ? weightLabel(units.weight)
+                : undefined
+            }
             tone={
               summary.weightChangeKg !== null && summary.weightChangeKg <= 0
                 ? "sage"
@@ -163,7 +178,11 @@ export default async function AthleteReviewPage({
           />
           <Metric
             label="Avg water"
-            value={summary.avgWaterMl === 0 ? "—" : formatWater(summary.avgWaterMl)}
+            value={
+              summary.avgWaterMl === 0
+                ? "—"
+                : formatWater(summary.avgWaterMl, units.volume)
+            }
             note={
               summary.waterDays > 0
                 ? `${summary.waterDays}/${summary.daysElapsed} days`
@@ -180,7 +199,7 @@ export default async function AthleteReviewPage({
             <p className="text-[12.5px] font-semibold text-fg">Weight trend</p>
             <p className="mono-label">90 days</p>
           </div>
-          <WeightChart points={series} className="mt-5" />
+          <WeightChart points={series} unit={units.weight} className="mt-5" />
         </section>
 
         <section className="rounded-2xl border border-line p-[18px]">
@@ -197,11 +216,11 @@ export default async function AthleteReviewPage({
       </div>
 
       <section className="flex flex-col gap-3">
-        <SectionHeading meta={`Goal ${formatWater(goalMl)}`}>
+        <SectionHeading meta={`Goal ${formatWater(goalMl, units.volume)}`}>
           Hydration
         </SectionHeading>
         <div className="rounded-2xl border border-line-strong bg-surface p-5">
-          <WaterBars points={hydration} goalMl={goalMl} />
+          <WaterBars points={hydration} goalMl={goalMl} unit={units.volume} />
         </div>
       </section>
 
@@ -226,7 +245,7 @@ export default async function AthleteReviewPage({
             <p className="tabular mt-1.5 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
               {totals.calories.toLocaleString()} kcal · {totals.protein} p ·{" "}
               {totals.mealCount} meals · {totals.workoutCount} workouts ·{" "}
-              {formatWater(totals.waterMl)} water
+              {formatWater(totals.waterMl, units.volume)} water
             </p>
           </div>
 
@@ -242,6 +261,7 @@ export default async function AthleteReviewPage({
           entries={entries}
           viewerId={coach.id}
           timeZone={zone}
+          weightUnit={units.weight}
           isOwner={false}
           canComment
           emptyState={

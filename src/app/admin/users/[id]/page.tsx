@@ -26,6 +26,7 @@ import {
   STATE_TONE,
 } from "@/lib/admin";
 import { requireAdmin } from "@/lib/session";
+import { formatHeight, formatWeight, unitPrefs } from "@/lib/units";
 import { initials } from "@/lib/utils";
 import { getUserDetail } from "@/services/admin";
 
@@ -70,6 +71,9 @@ export default async function AdminUserPage({
     athleteLinks,
     audit,
   } = detail;
+
+  // The console reads an account's figures the way that account reads them.
+  const units = unitPrefs(user);
 
   const logged =
     user._count.meals + user._count.workouts + user._count.weightEntries;
@@ -224,7 +228,7 @@ export default async function AdminUserPage({
               <Field label="Last weigh-in">
                 {lastWeight ? (
                   <>
-                    {lastWeight.weightKg} kg
+                    {formatWeight(lastWeight.weightKg, units.weight)}
                     <span className="block text-fg-dim">
                       {shortDate(lastWeight.day)}
                     </span>
@@ -422,7 +426,7 @@ export default async function AdminUserPage({
               <Field label="Gender">{user.gender?.toLowerCase() ?? "—"}</Field>
               <Field label="Age">{user.age ?? "—"}</Field>
               <Field label="Height">
-                {user.heightCm ? `${user.heightCm} cm` : "—"}
+                {formatHeight(user.heightCm, units.height)}
               </Field>
               <Field label="Time zone">{user.timeZone ?? "—"}</Field>
               <Field label="Onboarded">
