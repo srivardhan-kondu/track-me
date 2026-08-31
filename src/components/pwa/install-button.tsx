@@ -39,6 +39,19 @@ function isIos(): boolean {
 }
 
 /**
+ * Where the Share control sits differs by browser: Safari puts it in the
+ * bottom toolbar, the others in the address bar. Every iOS browser can install
+ * a web app since iOS 16.4 — only the route there changes.
+ */
+function iosBrowser(): { label: string; where: string } {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  if (/CriOS/i.test(ua)) return { label: "Chrome", where: "in the address bar" };
+  if (/EdgiOS/i.test(ua)) return { label: "Edge", where: "in the address bar" };
+  if (/FxiOS/i.test(ua)) return { label: "Firefox", where: "in the menu" };
+  return { label: "Safari", where: "at the bottom of the screen" };
+}
+
+/**
  * Offers to install the app to the home screen.
  *
  * Chrome and Edge fire `beforeinstallprompt`, which can be deferred and
@@ -58,11 +71,16 @@ export function InstallButton({
   const [installed, setInstalled] = React.useState(true);
   const [showIosHelp, setShowIosHelp] = React.useState(false);
   const [ios, setIos] = React.useState(false);
+  const [browser, setBrowser] = React.useState(() => ({
+    label: "Safari",
+    where: "at the bottom of the screen",
+  }));
   const [dismissed, setDismissed] = React.useState(true);
 
   React.useEffect(() => {
     setInstalled(isStandalone());
     setIos(isIos());
+    setBrowser(iosBrowser());
     try {
       setDismissed(localStorage.getItem(DISMISSED_KEY) === "1");
     } catch {
@@ -119,7 +137,7 @@ export function InstallButton({
           <DialogHeader>
             <DialogTitle>Add Track Me to your home screen</DialogTitle>
             <DialogDescription>
-              Safari installs web apps from the Share menu.
+              {browser.label} installs web apps from its Share menu.
             </DialogDescription>
           </DialogHeader>
 
@@ -130,7 +148,7 @@ export function InstallButton({
               </span>
               <span className="flex flex-wrap items-center gap-1.5">
                 Tap <Share className="inline h-4 w-4 text-primary" />
-                <strong>Share</strong> at the bottom of Safari.
+                <strong>Share</strong> {browser.where}.
               </span>
             </li>
             <li className="flex items-start gap-3">
@@ -155,7 +173,7 @@ export function InstallButton({
           </ol>
 
           <p className="text-xs text-muted-foreground">
-            This works in Safari only — Chrome on iOS cannot install web apps.
+            Works in Safari, Chrome, Edge and Firefox on iOS 16.4 and later.
           </p>
         </DialogContent>
       </Dialog>
