@@ -10,12 +10,12 @@ export const googleEnabled = Boolean(
 );
 
 /**
- * A password-less sign-in used only for local development when Google OAuth
- * credentials are absent. Hard-gated so it can never be reachable in a
- * production deployment.
+ * A password-less sign-in for local development. Hard-gated on NODE_ENV so it
+ * can never be reachable in a production deployment; it stays available
+ * alongside Google in development so the seeded demo accounts keep working
+ * while real OAuth is being tested.
  */
-export const devLoginEnabled =
-  process.env.NODE_ENV !== "production" && !googleEnabled;
+export const devLoginEnabled = process.env.NODE_ENV !== "production";
 
 declare module "next-auth" {
   interface Session {
