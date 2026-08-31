@@ -70,6 +70,19 @@
   --clay-soft: #1d0f16;
   --clay-line: #3d2029;
 
+  /*
+    The heat ramp for volume maps: one hue, five steps, light→dark reversed for
+    a dark surface so more work reads brighter. Validated as an ordinal ramp —
+    monotone lightness, every adjacent gap ≥ 0.06 L, and the dimmest step still
+    clearing 2:1 against the panel it sits on. Nothing logged is `--track`
+    rather than step one: no work and the least work must not look alike.
+  */
+  --heat-1: #4a3c85;
+  --heat-2: #6250ae;
+  --heat-3: #7c68d1;
+  --heat-4: #9a86ec;
+  --heat-5: #c4b0f5;
+
   /* The second series on a chart — periwinkle, adjacent to the accent. */
   --blue: #8ea6f2;
   --blue-text: #8ea6f2;

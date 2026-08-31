@@ -324,6 +324,74 @@ export async function getWaterSeries(
   });
 }
 
+export type EnergyDay = {
+  day: Date;
+  /** Calories logged that day. Zero for a day with no meals on it. */
+  calories: number;
+  /** The morning check-in, or null on a day without one. */
+  weightKg: number | null;
+};
+
+/**
+ * Intake and bodyweight on the same days, for the chart that puts them one
+ * above the other.
+ *
+ * Every day in the window is returned, logged or not: the gaps are part of
+ * what the chart says, and filling them in on the client would mean sending
+ * two sparse series and reconstructing the calendar twice.
+ */
+export async function getEnergyBalance(
+  userId: string,
+  days: number,
+  timeZone = "UTC",
+): Promise<EnergyDay[]> {
+  const zone = safeZone(timeZone);
+  const now = new Date();
+  const from = startOfDayInZone(addDaysInZone(now, -(days - 1), zone), zone);
+  const to = endOfDayInZone(now, zone);
+
+  const [meals, weights] = await Promise.all([
+    db.meal.findMany({
+      where: { userId, eatenAt: { gte: from, lte: to } },
+      select: { eatenAt: true, calories: true },
+    }),
+    db.weightEntry.findMany({
+      where: {
+        userId,
+        day: { gte: dayKeyInZone(from, zone), lte: dayKeyInZone(to, zone) },
+      },
+      select: { day: true, weightKg: true },
+    }),
+  ]);
+
+  // Keyed by the athlete's own calendar date, as the compliance strip is.
+  const bucket = new Map<string, EnergyDay>();
+  for (let i = 0; i < days; i++) {
+    const d = addDaysInZone(from, i, zone);
+    bucket.set(toDateParam(d, zone), {
+      day: dayKeyInZone(d, zone),
+      calories: 0,
+      weightKg: null,
+    });
+  }
+
+  for (const meal of meals) {
+    const b = bucket.get(toDateParam(meal.eatenAt, zone));
+    if (b) b.calories += meal.calories ?? 0;
+  }
+
+  for (const w of weights) {
+    // `day` is a date-only column, already the athlete's local calendar date.
+    const b = bucket.get(w.day.toISOString().slice(0, 10));
+    if (b) b.weightKg = w.weightKg;
+  }
+
+  return [...bucket.values()].map((d) => ({
+    ...d,
+    calories: Math.round(d.calories),
+  }));
+}
+
 export type CoachNote = {
   body: string;
   createdAt: Date;

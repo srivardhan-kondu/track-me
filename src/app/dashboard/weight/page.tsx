@@ -1,4 +1,5 @@
 import { ComplianceStrip } from "@/components/charts/compliance-strip";
+import { EnergyBalance } from "@/components/charts/energy-balance";
 import { WeightChart } from "@/components/charts/weight-chart";
 import { EmptyState, SectionHeading } from "@/components/layout/page";
 import { WeightForm } from "@/components/log/weight-form";
@@ -18,7 +19,11 @@ import {
 import { getUnits } from "@/services/units";
 import { addDaysInZone, dayKeyInZone, safeZone } from "@/lib/tz";
 import { cn } from "@/lib/utils";
-import { getCompliance, getWeightSeries } from "@/services/reporting";
+import {
+  getCompliance,
+  getEnergyBalance,
+  getWeightSeries,
+} from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
 
 export const metadata = { title: "Weight" };
@@ -61,7 +66,7 @@ export default async function WeightPage({
         zone,
       );
 
-  const [series, compliance, entries, units] = await Promise.all([
+  const [series, compliance, entries, units, energy] = await Promise.all([
     getWeightSeries(user.id, range.days, zone),
     getCompliance(user.id, premium ? 14 : FREE_HISTORY_DAYS, zone),
     db.weightEntry.findMany({
@@ -70,6 +75,7 @@ export default async function WeightPage({
       take: 30,
     }),
     getUnits(user.id),
+    getEnergyBalance(user.id, range.days, zone),
   ]);
 
   const unit = units.weight;
@@ -171,6 +177,22 @@ export default async function WeightPage({
         </div>
 
         <WeightChart points={series} unit={unit} className="mt-7" />
+      </section>
+
+      <section className="rounded-2xl border border-line-strong bg-surface px-7 py-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1.5">
+          <h2 className="text-[13px] font-semibold text-fg">
+            Intake against the scale
+          </h2>
+          <p className="mono-label">{range.window} window</p>
+        </div>
+        <p className="mt-2 max-w-xl text-[12.5px] leading-relaxed text-fg-dim">
+          The two panels share one axis rather than one frame: calories and
+          kilograms are different scales, and drawing them against each other
+          would invent a relationship out of where the two happen to cross.
+        </p>
+
+        <EnergyBalance days={energy} unit={unit} className="mt-6" />
       </section>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">

@@ -1,3 +1,4 @@
+import { trailingMeanByDay } from "@/lib/series";
 import {
   displayWeight,
   weightLabel,
@@ -10,12 +11,19 @@ export type Point = { day: Date; weightKg: number };
 const W = 900;
 const H = 210;
 
+/** A week of trailing mean under the readings. */
+const TREND_DAYS = 7;
+
 /**
  * The weight trend as inline SVG, so it inherits the theme and ships no
  * charting library.
  *
- * The shaded band is where the last week has actually been sitting — the line
- * to notice, since Track Me stores no goal weight to draw one against.
+ * Two series: the mornings as they were read, and a seven-day trailing mean
+ * through them. The mean is the accent line and the readings are recessive
+ * dots, because a single morning is mostly water and salt — the dots are there
+ * to show how much scatter the trend was drawn through, not to be read one by
+ * one. The shaded band is where the last week has actually been sitting, since
+ * Track Me stores no goal weight to draw a line against.
  *
  * The geometry is done in the stored kilograms, which a change of unit cannot
  * move; only the figures printed along the way are converted.
@@ -89,22 +97,35 @@ export function WeightChart({
     ...p,
   }));
 
-  const line = coords.map((c) => `${c.cx.toFixed(1)},${c.cy.toFixed(1)}`).join(" ");
+  // Smoothed by date rather than by point count, so a fortnight away from the
+  // scale thins the window instead of stretching it across the gap.
+  const trend = trailingMeanByDay(
+    points.map((p) => ({ day: new Date(p.day), value: p.weightKg })),
+    TREND_DAYS,
+  );
+  const trendCoords = trend.map((t) => ({
+    cx: x(t.day.getTime()),
+    cy: y(t.value),
+    value: t.value,
+  }));
+
+  const line = trendCoords
+    .map((c) => `${c.cx.toFixed(1)},${c.cy.toFixed(1)}`)
+    .join(" ");
 
   // The same path closed along the baseline, so the area beneath can be filled.
-  const area = `${coords[0].cx.toFixed(1)},${H} ${line} ${coords[coords.length - 1].cx.toFixed(1)},${H}`;
+  const area = `${trendCoords[0].cx.toFixed(1)},${H} ${line} ${trendCoords[trendCoords.length - 1].cx.toFixed(1)},${H}`;
 
   // Where the last week has actually sat — the band scales with the athlete's
   // own noise rather than a fixed half-kilo, which would swallow a flat chart.
   const recent = points.slice(-7).map((p) => p.weightKg);
-  const recentAvg = recent.reduce((a, v) => a + v, 0) / Math.max(1, recent.length);
   const recentLow = Math.min(...recent);
   const recentHigh = Math.max(...recent);
   const bandTop = y(recentHigh);
   const bandHeight = Math.max(3, y(recentLow) - bandTop);
 
-  const last = coords[coords.length - 1];
-  const first = coords[0];
+  const last = trendCoords[trendCoords.length - 1];
+  const first = trendCoords[0];
 
   const axis = [0, 1, 2, 3].map((i) => {
     const t = tMin + (tSpan * i) / 3;
@@ -122,10 +143,10 @@ export function WeightChart({
           preserveAspectRatio="none"
           className="h-[210px] w-full"
           role="img"
-          aria-label={`Weight trend from ${displayWeight(
-            first.weightKg,
+          aria-label={`Seven-day weight trend from ${displayWeight(
+            first.value,
             unit,
-          )} to ${displayWeight(last.weightKg, unit)} ${
+          )} to ${displayWeight(last.value, unit)} ${
             unit === "LB" ? "pounds" : "kilograms"
           }`}
         >
@@ -150,18 +171,6 @@ export function WeightChart({
             fill="var(--sage)"
             opacity="0.09"
           />
-          <line
-            x1={0}
-            x2={W}
-            y1={y(recentAvg)}
-            y2={y(recentAvg)}
-            stroke="var(--sage)"
-            strokeWidth="1"
-            strokeDasharray="5 6"
-            opacity="0.6"
-            vectorEffect="non-scaling-stroke"
-          />
-
           {/* The violet wash under the trend, fading out toward the axis. */}
           <defs>
             <linearGradient id="weight-area" x1="0" y1="0" x2="0" y2="1">
@@ -175,7 +184,7 @@ export function WeightChart({
             points={line}
             fill="none"
             stroke="var(--accent)"
-            strokeWidth="2.2"
+            strokeWidth="2"
             strokeLinejoin="round"
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
@@ -190,7 +199,7 @@ export function WeightChart({
           {coords.map((c) => (
             <span
               key={c.day.toString()}
-              className="absolute h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ring-2 ring-bg"
+              className="absolute h-[8px] w-[8px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fg-faint ring-2 ring-surface"
               style={{
                 left: `${(c.cx / W) * 100}%`,
                 top: `${(c.cy / H) * 100}%`,
@@ -204,12 +213,24 @@ export function WeightChart({
           className="absolute right-0 -translate-y-1/2 rounded-md bg-accent px-2 py-[3px] font-mono text-[10.5px] font-semibold text-accent-ink"
           style={{ top: `${(last.cy / H) * 100}%` }}
         >
-          {displayWeight(last.weightKg, unit)}
+          {displayWeight(last.value, unit)}
         </span>
 
         <span className="mono-label absolute bottom-2.5 left-0">
           Last week {displayWeight(recentLow, unit)}–
           {displayWeight(recentHigh, unit)}
+        </span>
+      </div>
+
+      {/* Two series, so identity never rests on colour alone. */}
+      <div className="mt-2 flex items-center justify-end gap-3.5">
+        <span className="flex items-center gap-1.5 text-[10.5px] text-fg-dim">
+          <span className="h-[8px] w-[8px] rounded-full bg-fg-faint" />
+          Daily
+        </span>
+        <span className="flex items-center gap-1.5 text-[10.5px] text-fg-dim">
+          <span className="h-[2px] w-4 rounded-full bg-accent" />
+          {TREND_DAYS}-day trend
         </span>
       </div>
 
