@@ -584,3 +584,67 @@ export async function getCoachLinksForAthlete(athleteId: string) {
     accepted: links.filter((l) => l.status === "ACCEPTED"),
   };
 }
+
+export type WeekFigures = {
+  workouts: number;
+  /** Tonnage: weight × sets × reps, summed over every logged exercise. */
+  volumeKg: number;
+  calories: number;
+  /** Mean logged session length, over the sessions that recorded one. */
+  avgMinutes: number;
+};
+
+/**
+ * The four figures on the dashboard hero strip.
+ *
+ * Tonnage only counts exercises that recorded all three of weight, sets and
+ * reps — a voice-logged "some squats" contributes nothing rather than a zero
+ * that would drag the number down silently.
+ */
+export async function getWeekFigures(
+  userId: string,
+  days = 7,
+  timeZone = "UTC",
+): Promise<WeekFigures> {
+  const zone = safeZone(timeZone);
+  const now = new Date();
+  const from = startOfDayInZone(addDaysInZone(now, -(days - 1), zone), zone);
+  const to = endOfDayInZone(now, zone);
+
+  const [workouts, meals] = await Promise.all([
+    db.workout.findMany({
+      where: { userId, performedAt: { gte: from, lte: to } },
+      select: {
+        durationMin: true,
+        exercises: { select: { weightKg: true, sets: true, reps: true } },
+      },
+    }),
+    db.meal.aggregate({
+      where: { userId, eatenAt: { gte: from, lte: to } },
+      _sum: { calories: true },
+    }),
+  ]);
+
+  let volumeKg = 0;
+  for (const workout of workouts) {
+    for (const e of workout.exercises) {
+      if (e.weightKg && e.sets && e.reps) {
+        volumeKg += e.weightKg * e.sets * e.reps;
+      }
+    }
+  }
+
+  const timed = workouts.filter((w) => w.durationMin && w.durationMin > 0);
+  const avgMinutes = timed.length
+    ? Math.round(
+        timed.reduce((sum, w) => sum + (w.durationMin ?? 0), 0) / timed.length,
+      )
+    : 0;
+
+  return {
+    workouts: workouts.length,
+    volumeKg: Math.round(volumeKg),
+    calories: Math.round(meals._sum.calories ?? 0),
+    avgMinutes,
+  };
+}

@@ -120,8 +120,8 @@ export function Upgrade({ currentTerm }: { currentTerm: PlanTerm | null }) {
         name: "Track Me",
         description: PLANS.find((p) => p.term === term)!.title,
         prefill: order.prefill,
-        // Matches the amber the rest of the interface reserves for actions.
-        theme: { color: "#c8862c" },
+        // Matches the violet the rest of the interface reserves for actions.
+        theme: { color: "#9878e6" },
         handler: (result) => void confirm(result),
         // Closing the sheet is not a failure; the payment simply did not start.
         modal: { ondismiss: () => setPending(null) },

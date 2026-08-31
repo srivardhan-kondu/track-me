@@ -21,8 +21,8 @@ mkdirSync(OUT, { recursive: true });
 
 // An app icon cannot follow the theme, so it takes the dark-mode pairing:
 // --accent over --accent-ink, the same tile the signed-in nav shows.
-const TILE = [230, 175, 104];
-const INK = [35, 21, 2];
+const TILE = [152, 120, 230];
+const INK = [0, 10, 17];
 const SS = 6; // supersampling factor
 
 // Glyph geometry, in the 32-unit box the mark is drawn in.

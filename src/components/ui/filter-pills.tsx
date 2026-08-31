@@ -15,7 +15,7 @@ export function SegmentedLinks({
   return (
     <div
       className={cn(
-        "flex items-center gap-0.5 rounded-[11px] border border-line p-1",
+        "flex items-center gap-1 rounded-full border border-line bg-surface-muted p-1",
         className,
       )}
     >
@@ -27,10 +27,10 @@ export function SegmentedLinks({
             href={option.href}
             aria-current={selected ? "true" : undefined}
             className={cn(
-              "flex h-7 items-center rounded-[8px] px-3 text-[12px] transition-colors",
+              "flex h-8 items-center rounded-full px-4 text-[12px] transition-colors",
               selected
-                ? "bg-hover font-semibold text-fg"
-                : "font-medium text-fg-muted hover:bg-hover hover:text-fg",
+                ? "bg-accent font-semibold text-accent-ink"
+                : "font-medium text-fg-muted hover:text-fg",
             )}
           >
             {option.label}
@@ -61,10 +61,10 @@ export function FilterPills({
             href={option.href}
             aria-current={selected ? "true" : undefined}
             className={cn(
-              "rounded-full px-3.5 py-[7px] text-[12px] transition-colors",
+              "rounded-full px-4 py-[8px] text-[12px] transition-colors",
               selected
-                ? "bg-surface-inset font-semibold text-fg"
-                : "border border-line font-medium text-fg-muted hover:bg-hover hover:text-fg",
+                ? "bg-accent font-semibold text-accent-ink"
+                : "border border-line font-medium text-fg-muted hover:border-accent-line hover:text-fg",
             )}
           >
             {option.label}

@@ -1,9 +1,11 @@
 import { Plus } from "lucide-react";
+import { redirect } from "next/navigation";
 
 import { ATHLETE_NAV, COACH_NAV } from "@/components/layout/nav";
 import { AppShell } from "@/components/layout/shell";
 import { TimeZoneSync } from "@/components/layout/timezone-sync";
 import { MealForm } from "@/components/log/meal-form";
+import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 
 export default async function DashboardLayout({
@@ -12,6 +14,18 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+
+  /*
+    Athletes meet onboarding once, before anything else. Coaches never do —
+    the flow asks about training a body they are not tracking here.
+  */
+  if (user.role === "ATHLETE") {
+    const record = await db.user.findUnique({
+      where: { id: user.id },
+      select: { onboardedAt: true },
+    });
+    if (!record?.onboardedAt) redirect("/onboarding");
+  }
 
   return (
     <>

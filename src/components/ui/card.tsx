@@ -3,19 +3,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const cardVariants = cva("rounded-2xl border", {
+const cardVariants = cva("rounded-[20px] border", {
   variants: {
     tone: {
-      /** The default panel: a step up from the page, hairline edge. */
-      default: "border-line-strong bg-surface text-fg",
+      /** The default panel: a filled step up from the page's black. */
+      default: "border-line bg-surface text-fg",
       /** Carries no fill — for secondary figures that should recede. */
       quiet: "border-line bg-transparent text-fg",
       /** A step down: rows that have already been read. */
       muted: "border-line bg-surface-muted text-fg",
+      /** The one card on a screen that carries the accent. */
+      accent: "border-accent-line bg-accent-soft text-fg",
+      /** The hero panel — a violet gradient rather than a flat fill. */
+      hero: "accent-gradient accent-glow border-transparent text-fg",
       /** Anything from the coach. */
       sage: "border-sage-line bg-sage-soft text-fg",
       /** Something to attend to, never alarming. */
-      clay: "border-clay-line bg-transparent text-fg",
+      clay: "border-clay-line bg-clay-soft text-fg",
       /** Nothing here yet, but something will be. */
       dashed: "border-dashed border-line-strong bg-transparent text-fg",
     },

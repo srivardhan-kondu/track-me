@@ -11,6 +11,7 @@ import { premiumStatus, requireUser } from "@/lib/session";
 import { cn, initials } from "@/lib/utils";
 import { safeZone } from "@/lib/tz";
 import { aiEnabled } from "@/services/ai/client";
+import { ProfileForm } from "@/components/settings/profile-form";
 import { getCoachLinksForAthlete } from "@/services/reporting";
 import { storageProvider, usingObjectStorage } from "@/services/storage";
 
@@ -131,6 +132,11 @@ export default async function SettingsPage() {
 
   const coachLinks = await getCoachLinksForAthlete(user.id);
 
+  const profile = await db.user.findUnique({
+    where: { id: user.id },
+    select: { gender: true, age: true, heightCm: true },
+  });
+
   return (
     <>
       <div className="min-w-0">
@@ -167,6 +173,17 @@ export default async function SettingsPage() {
               </Badge>
             </div>
           </section>
+
+          <Panel
+            title="About you"
+            description="What onboarding asked for. Change or clear any of it."
+          >
+            <ProfileForm
+              gender={profile?.gender ?? null}
+              age={profile?.age ?? null}
+              heightCm={profile?.heightCm ?? null}
+            />
+          </Panel>
 
           <Panel title="Plan" description={plan.detail}>
             {checkoutEnabled ? (

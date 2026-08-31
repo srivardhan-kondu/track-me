@@ -79,6 +79,9 @@ export function WeightChart({
 
   const line = coords.map((c) => `${c.cx.toFixed(1)},${c.cy.toFixed(1)}`).join(" ");
 
+  // The same path closed along the baseline, so the area beneath can be filled.
+  const area = `${coords[0].cx.toFixed(1)},${H} ${line} ${coords[coords.length - 1].cx.toFixed(1)},${H}`;
+
   // Where the last week has actually sat — the band scales with the athlete's
   // own noise rather than a fixed half-kilo, which would swallow a flat chart.
   const recent = points.slice(-7).map((p) => p.weightKg);
@@ -142,6 +145,15 @@ export function WeightChart({
             vectorEffect="non-scaling-stroke"
           />
 
+          {/* The violet wash under the trend, fading out toward the axis. */}
+          <defs>
+            <linearGradient id="weight-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.34" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <polygon points={area} fill="url(#weight-area)" />
+
           <polyline
             points={line}
             fill="none"
@@ -152,6 +164,23 @@ export function WeightChart({
             vectorEffect="non-scaling-stroke"
           />
         </svg>
+
+        {/*
+          Markers sit in their own un-stretched overlay: the chart SVG uses
+          preserveAspectRatio="none", which would squash a circle into an oval.
+        */}
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          {coords.map((c) => (
+            <span
+              key={c.day.toString()}
+              className="absolute h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ring-2 ring-bg"
+              style={{
+                left: `${(c.cx / W) * 100}%`,
+                top: `${(c.cy / H) * 100}%`,
+              }}
+            />
+          ))}
+        </div>
 
         {/* Drawn in HTML: the SVG is stretched, which would distort text. */}
         <span

@@ -1,102 +1,98 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ---------------------------------------------------------------------------
-   Track Me — the warm-charcoal system.
+   Track Me — the violet-on-black system.
 
-   One amber accent carries every primary action. Sage means "going well",
-   clay means "look at this". Everything else is a warm neutral at one of six
-   steps, so a screen reads as depth rather than as a grid of boxes.
+   One violet accent carries every primary action, every active state and every
+   plotted line. Backgrounds are near-black with a trace of violet in them, so
+   surfaces separate by depth rather than by borders. Mint means "going well",
+   rose means "look at this".
 
-   Type: Manrope for interface text, Instrument Serif for the one number that
-   matters on a screen, JetBrains Mono for labels, times and units.
+   Type: Manrope throughout — regular for prose, extrabold for the one number
+   that matters on a screen, and a wide-tracked uppercase cut for panel labels.
+
+   Dark only. The screens were designed for this palette and nothing else, so
+   there is no light variant and no toggle to get to one.
 --------------------------------------------------------------------------- */
 
-/* Light — the same palette on warm paper instead of warm charcoal. */
+/*
+  Every value below is sampled straight from the reference screens in
+  design/screens — the page black, the card fill, the one violet and the
+  hairline are measured, not approximated.
+
+  The references contain exactly one saturated hue (~260°). There is no green
+  and no red anywhere in them: a gain, a loss and a target met are all violet,
+  and depth does the work colour usually would. `--clay` is the single
+  exception, kept for destructive confirmations, which the mockups never show.
+*/
 :root {
-  --bg: oklch(0.977 0.005 80);
-  --bg-sunken: oklch(0.955 0.007 80);
-  --surface: oklch(1 0 0);
-  --surface-raised: oklch(0.993 0.004 80);
-  --surface-muted: oklch(0.968 0.005 80);
-  --surface-inset: oklch(0.947 0.007 80);
-  --hover: oklch(0.955 0.007 80);
-  --line: oklch(0.9 0.007 80);
-  --line-strong: oklch(0.855 0.009 80);
-  --track: oklch(0.905 0.008 80);
+  /* Depth: the page is a blue-black, surfaces lift toward navy. */
+  --bg: #000a11;
+  --bg-sunken: #00060c;
+  --surface: #061018;
+  --surface-raised: #0a131c;
+  --surface-muted: #040d14;
+  --surface-inset: #0a131c;
+  --hover: #121a22;
+  --line: #1b2026;
+  --line-strong: #272d35;
+  --track: #1b2026;
 
-  --fg: oklch(0.24 0.012 70);
-  --fg-muted: oklch(0.43 0.012 75);
-  --fg-dim: oklch(0.52 0.012 75);
-  --fg-faint: oklch(0.62 0.012 75);
+  --fg: #ffffff;
+  --fg-muted: #8a8c8f;
+  --fg-dim: #626568;
+  --fg-faint: #4c5055;
 
-  --accent: oklch(0.74 0.13 68);
-  --accent-ink: oklch(0.24 0.05 60);
-  --accent-text: oklch(0.53 0.12 60);
-  --accent-soft: oklch(0.945 0.035 75);
-  --accent-line: oklch(0.83 0.08 72);
+  /*
+    The one violet. `ink` is what sits on a filled violet — the reference sets
+    button labels in the page's own black, not in white.
+  */
+  --accent: #9878e6;
+  --accent-strong: #8664e2;
+  --accent-ink: #000a11;
+  --accent-text: #9878e6;
+  --accent-soft: #0f1124;
+  --accent-line: #2e2a55;
+  --accent-glow: rgba(152, 120, 230, 0.35);
 
-  --sage: oklch(0.62 0.11 158);
-  --sage-text: oklch(0.5 0.1 158);
-  --sage-soft: oklch(0.955 0.028 158);
-  --sage-line: oklch(0.86 0.05 158);
+  /* The gradient panel behind today's workout and the greeting card. */
+  --hero: #080f1d;
 
-  --clay: oklch(0.62 0.15 32);
-  --clay-text: oklch(0.53 0.16 30);
-  --clay-soft: oklch(0.96 0.028 32);
-  --clay-line: oklch(0.87 0.055 32);
+  /* A gain, a streak alive, a target met — still violet, just lighter. */
+  --sage: #b49ff0;
+  --sage-text: #b49ff0;
+  --sage-soft: #0f1124;
+  --sage-line: #2e2a55;
 
-  --blue: oklch(0.6 0.13 245);
-  --blue-text: oklch(0.52 0.13 250);
-  --blue-soft: oklch(0.955 0.028 245);
+  /* Destructive only. Nothing in the reference screens uses it. */
+  --clay: #e8768f;
+  --clay-text: #e8768f;
+  --clay-soft: #1d0f16;
+  --clay-line: #3d2029;
 
-  --radius: 0.75rem;
-}
+  /* The second series on a chart — periwinkle, adjacent to the accent. */
+  --blue: #8ea6f2;
+  --blue-text: #8ea6f2;
+  --blue-soft: #0d1220;
 
-/* Dark — the canonical look. */
-.dark {
-  --bg: oklch(0.17 0.006 70);
-  --bg-sunken: oklch(0.152 0.006 70);
-  --surface: oklch(0.205 0.006 70);
-  --surface-raised: oklch(0.215 0.007 70);
-  --surface-muted: oklch(0.19 0.006 70);
-  --surface-inset: oklch(0.183 0.006 70);
-  --hover: oklch(0.235 0.008 70);
-  --line: oklch(0.245 0.006 70);
-  --line-strong: oklch(0.27 0.007 70);
-  --track: oklch(0.27 0.007 70);
-
-  --fg: oklch(0.95 0.01 80);
-  --fg-muted: oklch(0.68 0.012 80);
-  --fg-dim: oklch(0.6 0.012 80);
-  --fg-faint: oklch(0.5 0.012 80);
-
-  --accent: oklch(0.79 0.11 72);
-  --accent-ink: oklch(0.21 0.04 72);
-  --accent-text: oklch(0.79 0.11 72);
-  --accent-soft: oklch(0.235 0.01 72);
-  --accent-line: oklch(0.45 0.06 72);
-
-  --sage: oklch(0.79 0.09 158);
-  --sage-text: oklch(0.79 0.09 158);
-  --sage-soft: oklch(0.19 0.012 158);
-  --sage-line: oklch(0.29 0.02 158);
-
-  --clay: oklch(0.75 0.1 32);
-  --clay-text: oklch(0.75 0.1 32);
-  --clay-soft: oklch(0.235 0.02 32);
-  --clay-line: oklch(0.32 0.03 32);
-
-  --blue: oklch(0.79 0.09 240);
-  --blue-text: oklch(0.79 0.09 240);
-  --blue-soft: oklch(0.235 0.02 240);
+  --radius: 1.25rem;
 }
 
 @theme inline {
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+  /*
+    The display face is the same family at its heaviest cut — the mockup's big
+    figures are a grotesque, not a serif. `font-serif` is kept as the class
+    name so every screen that already reaches for the display face keeps
+    working; the `.font-serif` rule below is what actually gives it weight.
+  */
+  --font-serif: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  /*
+    Likewise `font-mono`: labels and units are set in the same family, tracked
+    out and uppercased, rather than in a true monospace. Figures that need to
+    line up column-to-column use the `.tabular` utility instead.
+  */
+  --font-mono: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 
   --color-bg: var(--bg);
   --color-bg-sunken: var(--bg-sunken);
@@ -115,10 +111,12 @@
   --color-fg-faint: var(--fg-faint);
 
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-ink: var(--accent-ink);
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
   --color-accent-line: var(--accent-line);
+  --color-hero: var(--hero);
 
   --color-sage: var(--sage);
   --color-sage-text: var(--sage-text);
@@ -134,10 +132,13 @@
   --color-blue-text: var(--blue-text);
   --color-blue-soft: var(--blue-soft);
 
-  /* Macro colours: protein reads cool, carbs take the accent, fat is clay. */
-  --color-protein: var(--blue);
+  /*
+    Macros are three steps of the one violet rather than three hues — the
+    reference's stacked bars separate by lightness, not by colour.
+  */
+  --color-protein: #c4b0f5;
   --color-carbs: var(--accent);
-  --color-fat: var(--clay);
+  --color-fat: #6247a8;
 
   /* Aliases kept so shared primitives read in the usual vocabulary. */
   --color-background: var(--bg);
@@ -154,11 +155,12 @@
   --color-destructive: var(--clay);
   --color-success: var(--sage);
 
-  --radius-sm: 0.5rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 0.875rem;
-  --radius-2xl: 1rem;
+  /* Softer, larger radii than the old system — the mockup's cards are pills. */
+  --radius-sm: 0.625rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.25rem;
 }
 
 @layer base {
@@ -167,10 +169,6 @@
   }
 
   html {
-    color-scheme: light;
-  }
-
-  html.dark {
     color-scheme: dark;
   }
 
@@ -181,10 +179,10 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Instrument Serif has no bold cut; keep headings at its single weight. */
+  /* The display cut: same family, heaviest weight, tightened. */
   .font-serif {
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    letter-spacing: -0.017em;
   }
 
   ::selection {
@@ -199,36 +197,36 @@
 }
 
 @layer components {
-  /* The small uppercase mono label that titles every panel and column. */
+  /* The small uppercase label that titles every panel and column. */
   .mono-label {
-    font-family: var(--font-mono);
     font-size: 0.625rem;
-    font-weight: 400;
-    letter-spacing: 0.13em;
+    font-weight: 600;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--fg-faint);
   }
 
-  /* Four hairline-separated figures instead of four heavy stat cards. */
+  /*
+    Four figures in one rounded panel instead of four separate cards. On the
+    violet system the cells are separated by fill, not by hairlines.
+  */
   .metric-strip {
     display: grid;
+    gap: 1px;
     overflow: hidden;
+    background: var(--line);
     border: 1px solid var(--line);
-    border-radius: 0.875rem;
+    border-radius: 1.25rem;
   }
 
-  .metric-strip > * + * {
-    border-top: 1px solid var(--line);
+  .metric-strip > * {
+    background: var(--surface);
   }
 
   @media (min-width: 640px) {
     .metric-strip {
       grid-auto-flow: column;
       grid-auto-columns: 1fr;
-    }
-    .metric-strip > * + * {
-      border-top: 0;
-      border-left: 1px solid var(--line);
     }
   }
 
@@ -238,6 +236,27 @@
       135deg,
       var(--line-strong) 0 6px,
       var(--surface-muted) 6px 12px
+    );
+  }
+
+  /*
+    The violet lift under a primary action or a hero card. Kept as a class so
+    the same shadow reads identically wherever the accent carries weight.
+  */
+  .accent-glow {
+    box-shadow: 0 10px 30px -12px var(--accent-glow);
+  }
+
+  /*
+    A hero panel — the gradient the mockup runs behind the greeting card and
+    behind today's workout.
+  */
+  .accent-gradient {
+    background-image: linear-gradient(
+      135deg,
+      #1a1440 0%,
+      #12112c 45%,
+      var(--hero) 100%
     );
   }
 }
@@ -288,12 +307,12 @@
 /* The listening ring on the record button. */
 @keyframes trackme-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 10px color-mix(in oklch, var(--accent) 14%, transparent),
-                0 0 0 22px color-mix(in oklch, var(--accent) 6%, transparent);
+    box-shadow: 0 0 0 10px color-mix(in oklch, var(--accent) 22%, transparent),
+                0 0 0 22px color-mix(in oklch, var(--accent) 9%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 14px color-mix(in oklch, var(--accent) 18%, transparent),
-                0 0 0 30px color-mix(in oklch, var(--accent) 7%, transparent);
+    box-shadow: 0 0 0 14px color-mix(in oklch, var(--accent) 28%, transparent),
+                0 0 0 30px color-mix(in oklch, var(--accent) 11%, transparent);
   }
 }
 
