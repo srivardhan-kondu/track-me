@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Camera, LineChart, Mic, Users } from "lucide-react";
 
 import { Logo } from "@/components/layout/shell";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { currentUser } from "@/lib/session";
@@ -65,6 +66,9 @@ export default async function LandingPage() {
           <Button asChild size="lg" variant="outline">
             <Link href="/signin?role=COACH">I&apos;m a coach</Link>
           </Button>
+          <Button asChild size="lg" variant="ghost">
+            <Link href="/pricing">See pricing</Link>
+          </Button>
           <InstallButton variant="ghost" className="h-[42px] px-5 text-sm" />
         </div>
       </section>
@@ -86,11 +90,13 @@ export default async function LandingPage() {
         ))}
       </section>
 
-      <footer className="border-t border-line pt-6">
+      <div className="border-t border-line pt-6">
         <p className="font-serif text-[15px] italic text-fg-muted">
           The goal is not calorie counting. The goal is accountability.
         </p>
-      </footer>
+      </div>
+
+      <SiteFooter className="mt-9 border-t-0 pt-0" />
     </main>
   );
 }

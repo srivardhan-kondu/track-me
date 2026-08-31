@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { SignInForm } from "@/components/auth/signin-form";
 import { Logo } from "@/components/layout/shell";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { devLoginEnabled, googleEnabled, reviewLoginEnabled } from "@/lib/auth";
 import { currentUser } from "@/lib/session";
 
@@ -31,6 +32,8 @@ export default async function SignInPage({
           defaultRole={role === "COACH" ? "COACH" : "ATHLETE"}
           error={error}
         />
+
+        <SiteFooter className="mt-10" />
       </div>
     </main>
   );
