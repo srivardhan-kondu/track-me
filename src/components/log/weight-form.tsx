@@ -108,11 +108,11 @@ export function WeightForm({
               <Input
                 id="weight-kg"
                 type="number"
-                step="0.1"
+                step="0.01"
                 min={20}
                 max={400}
                 inputMode="decimal"
-                placeholder="78.4"
+                placeholder="77.05"
                 value={weightKg}
                 onChange={(e) => setWeightKg(e.target.value)}
                 required
