@@ -10,6 +10,7 @@ const OPTIONS = [
   { href: "/api/export?format=csv&type=workouts", label: "Workouts", hint: "CSV" },
   { href: "/api/export?format=csv&type=meals", label: "Meals", hint: "CSV" },
   { href: "/api/export?format=csv&type=weights", label: "Weigh-ins", hint: "CSV" },
+  { href: "/api/export?format=csv&type=water", label: "Water", hint: "CSV" },
 ];
 
 export function ExportData() {

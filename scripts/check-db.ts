@@ -61,12 +61,13 @@ async function main() {
   }
 
   try {
-    const [users, meals, workouts, weights, photos, comments] =
+    const [users, meals, workouts, weights, water, photos, comments] =
       await Promise.all([
         db.user.count(),
         db.meal.count(),
         db.workout.count(),
         db.weightEntry.count(),
+        db.waterEntry.count(),
         db.progressPhoto.count(),
         db.comment.count(),
       ]);
@@ -76,6 +77,7 @@ async function main() {
     console.log(`  meals          ${meals}`);
     console.log(`  workouts       ${workouts}`);
     console.log(`  weigh-ins      ${weights}`);
+    console.log(`  water days     ${water}`);
     console.log(`  progress pics  ${photos}`);
     console.log(`  comments       ${comments}`);
 

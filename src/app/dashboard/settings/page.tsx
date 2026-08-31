@@ -12,6 +12,7 @@ import { cn, initials } from "@/lib/utils";
 import { safeZone } from "@/lib/tz";
 import { aiEnabled } from "@/services/ai/client";
 import { ProfileForm } from "@/components/settings/profile-form";
+import { WaterGoalForm } from "@/components/settings/water-goal-form";
 import { getCoachLinksForAthlete } from "@/services/reporting";
 import { storageProvider, usingObjectStorage } from "@/services/storage";
 
@@ -102,7 +103,7 @@ export default async function SettingsPage() {
 
   const profile = await db.user.findUnique({
     where: { id: user.id },
-    select: { gender: true, age: true, heightCm: true },
+    select: { gender: true, age: true, heightCm: true, waterGoalMl: true },
   });
 
   return (
@@ -153,6 +154,13 @@ export default async function SettingsPage() {
               age={profile?.age ?? null}
               heightCm={profile?.heightCm ?? null}
             />
+          </Panel>
+
+          <Panel
+            title="Hydration"
+            description="The daily water target every bar and percentage is measured against."
+          >
+            <WaterGoalForm goalMl={profile?.waterGoalMl ?? null} />
           </Panel>
 
           {status.premium && (

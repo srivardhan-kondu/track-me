@@ -147,6 +147,20 @@ async function seedAthlete(
 
     if (skipped) continue;
 
+    // Hydration lands either side of the 3 L default, so the demo has days
+    // that met the goal and days that fell short of it.
+    await db.waterEntry.upsert({
+      where: {
+        userId_day: { userId: athleteId, day: dayKey(at(daysAgo, 7)) },
+      },
+      create: {
+        userId: athleteId,
+        day: dayKey(at(daysAgo, 7)),
+        ml: 250 * (7 + Math.floor(random() * 7)),
+      },
+      update: {},
+    });
+
     // Most days log 3–4 meals.
     const mealCount = random() < 0.7 ? 4 : 3;
     for (let i = 0; i < mealCount; i++) {
@@ -278,17 +292,18 @@ async function main() {
     seed: 7,
   });
 
-  const [meals, workouts, weights] = await Promise.all([
+  const [meals, workouts, weights, waterDays] = await Promise.all([
     db.meal.count(),
     db.workout.count(),
     db.weightEntry.count(),
+    db.waterEntry.count(),
   ]);
 
   console.log(`
 Seeded:
   coach    ${COACH_EMAIL}
   athletes ${ATHLETE_EMAIL}, ${ATHLETE_TWO_EMAIL}
-  ${meals} meals, ${workouts} workouts, ${weights} weigh-ins
+  ${meals} meals, ${workouts} workouts, ${weights} weigh-ins, ${waterDays} water days
 
 Sign in with any of those emails using the development sign-in.
 `);

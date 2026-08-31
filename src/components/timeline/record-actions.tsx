@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { MoreHorizontal, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { deleteWaterEntry } from "@/app/actions/water";
 import { deleteWeightEntry } from "@/app/actions/weight";
 import { deleteWorkout, reprocessWorkout } from "@/app/actions/workouts";
 import { Button } from "@/components/ui/button";
@@ -90,6 +91,41 @@ export function WeightActions({ entryId }: { entryId: string }) {
         >
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function WaterActions({ entryId }: { entryId: string }) {
+  const router = useRouter();
+
+  async function remove() {
+    const res = await runAction(() => deleteWaterEntry(entryId));
+    if (!res.ok) return toast.error(res.error);
+    toast.success("Day cleared.");
+    router.refresh();
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="h-7 w-7 shrink-0 text-fg-faint"
+          aria-label="Water options"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          onClick={remove}
+          className="text-clay-text focus:text-clay-text"
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Clear day
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
