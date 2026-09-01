@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { enqueue } from "@/lib/jobs";
+import { expandToSets } from "@/lib/live-session";
 import { enforce, RateLimited } from "@/lib/rate-limit";
 import { requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/uploads";
@@ -74,6 +75,15 @@ export async function createManualWorkout(
           reps: ex.reps ?? null,
           position: i,
           catalogId: ex.catalogId ?? catalogIds[i],
+          // Same store as a live session: three sets of ten typed into this
+          // form are three set rows, not one row saying "3 x 10".
+          setLog: {
+            create: expandToSets(
+              ex.weightKg ?? null,
+              ex.sets ?? null,
+              ex.reps ?? null,
+            ),
+          },
         })),
       },
     },

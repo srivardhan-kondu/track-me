@@ -81,6 +81,7 @@ model User {
   adminActions   AdminAudit[]    @relation("AdminAuditActor")
   meals          Meal[]
   workouts       Workout[]
+  workoutDraft   WorkoutDraft?
   weightEntries  WeightEntry[]
   waterEntries   WaterEntry[]
   progressPhotos ProgressPhoto[]
@@ -228,6 +229,15 @@ model Meal {
   carbs    Float?
   fat      Float?
 
+  /// Dietary fibre in grams.
+  ///
+  /// Null rather than zero wherever it is not known, which is most of the
+  /// history and every meal the offline estimator scored: its food table has
+  /// no fibre figures, and printing 0 g would be claiming a meal had none.
+  /// Only the vision model returns this, so the screens show it where it
+  /// exists and stay quiet where it does not.
+  fiber Float?
+
   /// Raw per-ingredient breakdown returned by the vision model.
   items Json?
 
@@ -286,12 +296,23 @@ model Exercise {
   id        String @id @default(cuid())
   workoutId String
 
-  name     String
+  name String
+
+  /// The summary of the movement: the heaviest working set's load and reps,
+  /// and how many working sets were done.
+  ///
+  /// Every one of these predates set-by-set logging, and half the app still
+  /// reads them — the muscle map counts `sets`, the personal records read
+  /// `weightKg` and `reps`. A dictated workout has nothing finer than this,
+  /// so they stay the shape of the table rather than becoming a cache of
+  /// `setLog`. When set rows exist they are derived from them on write, and
+  /// the readers that want the real detail go to `setLog` instead.
   weightKg Float?
   sets     Int?
   reps     Int?
+
   /// Ordering within the workout as dictated.
-  position Int    @default(0)
+  position Int @default(0)
 
   /// Resolved catalog entry, when the movement was recognised. Null keeps an
   /// unrecognised exercise loggable rather than rejecting it.
@@ -300,8 +321,84 @@ model Exercise {
   workout Workout          @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   catalog CatalogExercise? @relation(fields: [catalogId], references: [id], onDelete: SetNull)
 
+  /// The individual sets, when the session was logged live. Empty for
+  /// anything dictated: the parser is given "four sets of eight at sixty",
+  /// which is the summary above and not four distinct sets.
+  setLog ExerciseSet[]
+
   @@index([workoutId])
   @@index([catalogId])
+}
+
+/// What a set is for. Only WORKING sets count toward volume and toward the
+/// set totals a coach reads — a warm-up single at half the weight is not a
+/// third of the day's chest work, and counting it as one flatters every
+/// figure in the app.
+enum SetKind {
+  WARMUP
+  WORKING
+  DROP
+  FAILURE
+}
+
+/// One set, as it was actually performed.
+///
+/// Only completed sets are written: a row the athlete added and never ticked
+/// was a plan, not a set, and it is dropped when the session is finished.
+model ExerciseSet {
+  id         String @id @default(cuid())
+  exerciseId String
+
+  /// Ordering within the exercise — the number in the SET column.
+  position Int @default(0)
+
+  kind SetKind @default(WORKING)
+
+  /// Null is bodyweight, which is a real answer for a pull-up and not a
+  /// missing one. It contributes nothing to tonnage either way.
+  weightKg Float?
+  reps     Int?
+
+  /// For movements held rather than repeated — a plank, a hang, a warm-up on
+  /// the bike. Set instead of `reps`, never alongside it.
+  seconds Int?
+
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([exerciseId])
+}
+
+/// A workout being logged live, before the athlete has finished it.
+///
+/// Kept off `Workout` on purpose. A session in progress is not a session, and
+/// if it were a Workout row behind a flag then every total in the app — the
+/// week's tonnage, the muscle map, the streak, the coach's feed — would have
+/// to learn to exclude it, and the one query that forgot would quietly count
+/// a warm-up somebody walked away from. Here it is invisible until Finish is
+/// pressed, which is the moment it becomes real.
+///
+/// One per athlete: starting a second session while one is open resumes the
+/// open one instead, which is the only behaviour that does not lose work.
+model WorkoutDraft {
+  userId String @id
+
+  /// When the athlete pressed Start. The header's clock counts from here, so
+  /// closing the tab and coming back does not reset the session.
+  startedAt DateTime @default(now())
+
+  title String?
+  notes String?
+
+  /// The exercises and their sets exactly as they sit on screen, ticked and
+  /// unticked alike. Json rather than real rows because nothing reads this
+  /// but the screen that wrote it, and a half-typed weight has no business
+  /// in a table the reports query. It is validated on the way out, when it
+  /// becomes a Workout.
+  payload Json
+
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ---------------------------------------------------------------------------

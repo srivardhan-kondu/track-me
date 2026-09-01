@@ -15,6 +15,12 @@ export type NutritionResult = {
   protein: number;
   carbs: number;
   fat: number;
+  /**
+   * Dietary fibre in grams, or null when nothing here could work it out — the
+   * offline estimator has no fibre data, and a zero would read as a claim that
+   * the meal contained none.
+   */
+  fiber: number | null;
   /** True when a real vision model produced the estimate. */
   aiGenerated: boolean;
   /** What the call cost, for the caller to record. Zero for the fallback. */
@@ -29,6 +35,7 @@ const ItemSchema = z.object({
   protein: z.number(),
   carbs: z.number(),
   fat: z.number(),
+  fiber: z.number(),
 });
 
 const ResponseSchema = z.object({
@@ -39,12 +46,22 @@ const ResponseSchema = z.object({
   protein: z.number(),
   carbs: z.number(),
   fat: z.number(),
+  fiber: z.number(),
 });
 
 const JSON_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["title", "slot", "items", "calories", "protein", "carbs", "fat"],
+  required: [
+    "title",
+    "slot",
+    "items",
+    "calories",
+    "protein",
+    "carbs",
+    "fat",
+    "fiber",
+  ],
   properties: {
     title: {
       type: "string",
@@ -59,7 +76,16 @@ const JSON_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["name", "quantity", "grams", "calories", "protein", "carbs", "fat"],
+        required: [
+          "name",
+          "quantity",
+          "grams",
+          "calories",
+          "protein",
+          "carbs",
+          "fat",
+          "fiber",
+        ],
         properties: {
           name: { type: "string" },
           quantity: {
@@ -76,6 +102,11 @@ const JSON_SCHEMA = {
           protein: { type: "number" },
           carbs: { type: "number" },
           fat: { type: "number" },
+          fiber: {
+            type: "number",
+            description:
+              "Dietary fibre in grams. Zero for foods that genuinely contain none, such as meat, eggs, dairy and oil.",
+          },
         },
       },
     },
@@ -83,6 +114,7 @@ const JSON_SCHEMA = {
     protein: { type: "number", description: "Total protein in grams." },
     carbs: { type: "number", description: "Total carbohydrate in grams." },
     fat: { type: "number", description: "Total fat in grams." },
+    fiber: { type: "number", description: "Total dietary fibre in grams." },
   },
 } as const;
 
@@ -125,7 +157,10 @@ Reference weights for household units — use these exact values:
 Other rules:
 - Quantities the athlete states always win over anything the photo suggests.
 - Estimate rather than refuse. An approximate number is far more useful than none.
-- Report protein, carbs and fat in grams; calories in kcal.
+- Report protein, carbs, fat and fibre in grams; calories in kcal.
+- Fibre is part of the carbohydrate figure, not an addition to it: report carbs
+  as total carbohydrate and fibre as the portion of it that is fibre. Foods that
+  contain none — meat, fish, eggs, dairy, oil, whey — are zero, not a guess.
 - Infer the meal slot when it is obvious, otherwise return null.
 - If nothing in the input is food, return an empty item list and zero totals.`;
 
@@ -141,6 +176,9 @@ function fallback(transcript: string): NutritionResult {
     protein: est.protein,
     carbs: est.carbs,
     fat: est.fat,
+    // The food table carries no fibre figures, and inventing one for every
+    // food in it would be worse than admitting the estimator does not know.
+    fiber: null,
     aiGenerated: false,
     costUnits: 0,
   };
@@ -223,6 +261,7 @@ export async function analyzeMeal(
     protein: parsed.protein,
     carbs: parsed.carbs,
     fat: parsed.fat,
+    fiber: parsed.fiber,
     aiGenerated: true,
     costUnits,
   };

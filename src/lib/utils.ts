@@ -38,17 +38,38 @@ export function formatMacro(n: number | null | undefined, unit = "g"): string {
 }
 
 /**
- * Tonnes moved in a session: weight × sets × reps, summed. Bodyweight and
- * part-filled entries contribute nothing rather than guessing a load.
+ * Tonnes moved in a session. Bodyweight and part-filled entries contribute
+ * nothing rather than guessing a load.
+ *
+ * A session logged set by set is added up set by set — 50x8 then 60x6 then
+ * 65x4 is 1,020 kg, and no single weight-times-sets-times-reps sum of those
+ * three rows gets near it. A dictated session has only the summary columns to
+ * work from, so it falls back to exactly the arithmetic it always used.
+ *
+ * Warm-ups are excluded on both paths: a live session never writes them as
+ * working sets, and a dictated one never had them to begin with.
  */
 export function tonnesLifted(
   exercises: {
     weightKg: number | null;
     sets: number | null;
     reps: number | null;
+    setLog?: { kind: string; weightKg: number | null; reps: number | null }[];
   }[],
 ): number {
   const kg = exercises.reduce((total, ex) => {
+    if (ex.setLog && ex.setLog.length > 0) {
+      return (
+        total +
+        ex.setLog.reduce((sum, set) => {
+          if (set.kind === "WARMUP" || set.weightKg === null || set.reps === null) {
+            return sum;
+          }
+          return sum + set.weightKg * set.reps;
+        }, 0)
+      );
+    }
+
     if (ex.weightKg === null || ex.sets === null || ex.reps === null) {
       return total;
     }

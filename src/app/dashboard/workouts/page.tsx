@@ -1,3 +1,7 @@
+import Link from "next/link";
+import { ChevronRight, Mic, Play } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import { VolumeBars, type VolumeBar } from "@/components/charts/volume-bars";
 import { MuscleMap } from "@/components/charts/muscle-map";
 import { VolumeBreakdown } from "@/components/exercises/volume-breakdown";
@@ -21,8 +25,8 @@ import { formatTonnage } from "@/lib/units";
 import { tonnesLifted } from "@/lib/utils";
 import { getMuscleVolume } from "@/services/exercises/volume";
 import { getUnits } from "@/services/units";
-import type { TimelineWorkout } from "@/services/reporting";
-import { mediaUrl } from "@/services/storage";
+import { exerciseInclude, type TimelineWorkout } from "@/services/reporting";
+import { StartWorkout } from "@/components/workouts/start-workout";
 
 export const metadata = { title: "Workouts" };
 // Meal and workout logging run transcription and analysis in after(), which
@@ -43,12 +47,12 @@ export default async function WorkoutsPage() {
   const days = historyDays(premium, DAYS);
   const from = startOfDayInZone(addDaysInZone(new Date(), -(days - 1), zone), zone);
 
-  const [workouts, pending, volume, units] = await Promise.all([
+  const [workouts, pending, volume, units, draft] = await Promise.all([
     db.workout.findMany({
       where: { userId: user.id, performedAt: { gte: from } },
       orderBy: { performedAt: "desc" },
       include: {
-        exercises: { orderBy: { position: "asc" } },
+        exercises: exerciseInclude,
         comments: {
           orderBy: { createdAt: "asc" },
           include: {
@@ -62,6 +66,10 @@ export default async function WorkoutsPage() {
     }),
     getMuscleVolume(user.id, 7, zone),
     getUnits(user.id),
+    db.workoutDraft.findUnique({
+      where: { userId: user.id },
+      select: { startedAt: true },
+    }),
   ]);
 
   const weeks = Math.max(1, Math.round(days / 7));
@@ -91,12 +99,9 @@ export default async function WorkoutsPage() {
   const thisWeek = bars[bars.length - 1].value;
   const best = Math.max(...bars.map((b) => b.value));
 
-  const resolved = await Promise.all(
-    workouts.map(async (w) => ({
-      workout: w as unknown as TimelineWorkout,
-      audioUrl: await mediaUrl(w.audioKey),
-    })),
-  );
+  // No presigned audio here any more: the cards no longer play the voice note,
+  // so signing one URL per session on every page load bought nothing.
+  const recent = workouts as unknown as TimelineWorkout[];
 
   return (
     <>
@@ -113,8 +118,53 @@ export default async function WorkoutsPage() {
           </p>
         </div>
 
-        <WorkoutForm unit={units.weight} />
+        {/*
+          Two ways in, in the order they are wanted. Logging as you lift is
+          the main event; dictating it afterwards is for the session you
+          forgot to open the app for.
+
+          While a session is running the button steps aside: the strip below
+          says the same thing better, and two violet ways to resume stacked on
+          top of each other is one too many.
+        */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {!draft && <StartWorkout />}
+          <WorkoutForm
+            unit={units.weight}
+            trigger={
+              <Button variant="outline">
+                <Mic className="h-4 w-4" />
+                Log a past session
+              </Button>
+            }
+          />
+        </div>
       </div>
+
+      {draft && (
+        <Link
+          href="/session"
+          className="accent-gradient flex items-center gap-3.5 rounded-2xl border border-accent-line px-5 py-4 transition-colors hover:border-accent"
+        >
+          <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
+            <Play className="h-[18px] w-[18px]" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13.5px] font-semibold text-fg">
+              Resume your workout
+            </span>
+            <span className="mt-0.5 block text-[12.5px] text-fg-dim">
+              Started{" "}
+              {formatDateInZone(draft.startedAt, zone, {
+                hour: "numeric",
+                minute: "2-digit",
+              })}{" "}
+              — pick up where you left off.
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-accent-text" />
+        </Link>
+      )}
 
       {!premium && (
         <PremiumNotice
@@ -187,21 +237,32 @@ export default async function WorkoutsPage() {
       <section className="flex flex-col gap-3.5">
         <SectionHeading>Recent sessions</SectionHeading>
 
-        {resolved.length === 0 ? (
+        {recent.length === 0 ? (
           <EmptyState
             title="Nothing logged yet"
-            body="After your next session, say what you lifted. Track Me works out the sets, the reps and the volume."
-            action={<WorkoutForm unit={units.weight} />}
+            body="Start a session and tick each set off as you do it — last time's weights sit beside today's, so the next number chooses itself. Or say what you lifted afterwards and Track Me works out the sets for you."
+            action={
+              <>
+                <StartWorkout />
+                <WorkoutForm
+                  unit={units.weight}
+                  trigger={
+                    <Button variant="outline">
+                      <Mic className="h-4 w-4" />
+                      Log a past session
+                    </Button>
+                  }
+                />
+              </>
+            }
           />
         ) : (
           <div className="flex flex-col gap-2.5">
-            {resolved.map(({ workout, audioUrl }, i) => (
+            {recent.map((workout) => (
               <SessionCard
                 key={workout.id}
                 workout={workout}
-                audioUrl={audioUrl}
                 unit={units.weight}
-                open={i === 0}
                 when={
                   isSameDayInZone(workout.performedAt, new Date(), zone)
                     ? `Today ${formatDateInZone(workout.performedAt, zone, {
@@ -214,9 +275,6 @@ export default async function WorkoutsPage() {
                         month: "short",
                       })
                 }
-                viewerId={user.id}
-                isOwner
-                canComment
               />
             ))}
           </div>

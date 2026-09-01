@@ -33,3 +33,6 @@ yarn-error.log*
 .idea
 .vscode/*
 !.vscode/extensions.json
+
+# Backfill receipts — kept locally so a run can be undone, never committed.
+backfill-sets-*.json

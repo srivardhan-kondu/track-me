@@ -3,9 +3,13 @@ import { db } from "@/lib/db";
 /**
  * Strength progression and personal records.
  *
- * An Exercise row records a whole movement as it was dictated — "four sets of
- * eight at sixty" — not one row per set, so the best single set in a session
- * is simply that row's reps at that row's weight.
+ * A record is set by one set, so this reads sets rather than sessions.
+ *
+ * Where they exist, that means the real set rows: a session logged live at
+ * 50x8, 60x6 and 65x4 offers three candidate records, and the heaviest is not
+ * always the best one — 60x6 estimates a higher one-rep max than 65x4 does. A
+ * dictated exercise has only its summary, "four sets of eight at sixty",
+ * which is one candidate repeated, so it contributes that.
  */
 
 /**
@@ -53,7 +57,7 @@ async function loadSets(userId: string, days?: number): Promise<Row[]> {
     ? new Date(Date.now() - days * 86_400_000)
     : undefined;
 
-  return db.exercise.findMany({
+  const exercises = await db.exercise.findMany({
     where: {
       workout: {
         userId,
@@ -68,8 +72,25 @@ async function loadSets(userId: string, days?: number): Promise<Row[]> {
       weightKg: true,
       reps: true,
       workout: { select: { performedAt: true } },
+      setLog: { select: { kind: true, weightKg: true, reps: true } },
     },
     orderBy: { workout: { performedAt: "asc" } },
+  });
+
+  return exercises.flatMap((ex) => {
+    if (ex.setLog.length === 0) {
+      return [{ name: ex.name, weightKg: ex.weightKg, reps: ex.reps, workout: ex.workout }];
+    }
+
+    // A warm-up is not a record attempt, whatever the bar said.
+    return ex.setLog
+      .filter((s) => s.kind !== "WARMUP" && s.weightKg && s.reps)
+      .map((s) => ({
+        name: ex.name,
+        weightKg: s.weightKg,
+        reps: s.reps,
+        workout: ex.workout,
+      }));
   });
 }
 

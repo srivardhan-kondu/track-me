@@ -1,4 +1,5 @@
-import { AlertTriangle, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, ChevronRight, Loader2 } from "lucide-react";
 
 import { AnalysisNote } from "@/components/billing/analysis-note";
 import { AudioNote } from "@/components/timeline/audio-note";
@@ -16,6 +17,7 @@ import {
   weightLabel,
   type WeightUnit,
 } from "@/lib/units";
+import { groupExercises } from "@/lib/exercise-groups";
 import { cn, round } from "@/lib/utils";
 import { mediaUrl } from "@/services/storage";
 import type { TimelineEntry } from "@/services/reporting";
@@ -286,6 +288,16 @@ function MealBody({
                   {round(meal.calories) ?? "—"} kcal
                 </span>
               )}
+              {isOwner && (
+                <Link
+                  href={`/dashboard/meals/${meal.id}`}
+                  aria-label="Open this meal"
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-fg-faint transition-colors hover:bg-hover hover:text-accent-text"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              )}
+
               {isOwner && <MealActions meal={meal} />}
             </div>
           </div>
@@ -397,6 +409,10 @@ function WorkoutBody({
   upsell: boolean;
   unit: WeightUnit;
 }) {
+  // The parser writes a row per dictated set, so the count and the list both
+  // come from the regrouped movements rather than the raw rows.
+  const groups = groupExercises(workout.exercises);
+
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-start justify-between gap-3">
@@ -406,34 +422,48 @@ function WorkoutBody({
           </h3>
           <p className="mt-1 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
             <span>
-              {workout.exercises.length} exercise
-              {workout.exercises.length === 1 ? "" : "s"}
+              {groups.length} exercise
+              {groups.length === 1 ? "" : "s"}
             </span>
             {workout.durationMin ? <span>· {workout.durationMin} min</span> : null}
             <StatusBadge status={workout.status} />
           </p>
         </div>
 
+        {/*
+          Only for the owner: a coach reading an athlete's day would be sent
+          to their own dashboard, where this session does not exist.
+        */}
+        {isOwner && (
+          <Link
+            href={`/dashboard/workouts/${workout.id}`}
+            aria-label="Open this workout"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-fg-faint transition-colors hover:bg-hover hover:text-accent-text"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        )}
+
         {isOwner && <WorkoutActions workoutId={workout.id} />}
       </div>
 
-      {workout.exercises.length > 0 && (
+      {groups.length > 0 && (
         <ul className="flex flex-col gap-2 border-t border-line pt-3.5">
-          {workout.exercises.map((ex) => (
+          {groups.map((group) => (
             <li
-              key={ex.id}
+              key={group.id}
               className="flex items-baseline gap-4 text-[12.5px] text-fg-muted"
             >
-              <span className="min-w-0 flex-1 truncate">{ex.name}</span>
+              <span className="min-w-0 flex-1 truncate">{group.name}</span>
               <span className="tabular shrink-0 font-mono text-[11.5px] text-fg-dim">
-                {ex.weightKg !== null
-                  ? `${displayWeight(ex.weightKg, unit)} ${weightLabel(unit)}`
-                  : "BW"}
-                {ex.sets !== null && ex.reps !== null
-                  ? ` · ${ex.sets} × ${ex.reps}`
-                  : ex.sets !== null
-                    ? ` · ${ex.sets} sets`
-                    : ""}
+                {/*
+                  A movement has no single weight-times-reps to quote — its
+                  sets were 50x8, 60x6, 65x4 — so the timeline says how many
+                  and how heavy it got, and the session card shows the rest.
+                */}
+                {group.workingSets} set{group.workingSets === 1 ? "" : "s"}
+                {group.topKg !== null &&
+                  ` · top ${displayWeight(group.topKg, unit)} ${weightLabel(unit)}`}
               </span>
             </li>
           ))}

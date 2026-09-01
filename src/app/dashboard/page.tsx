@@ -1,3 +1,7 @@
+import Link from "next/link";
+import { ChevronRight, Mic, Play } from "lucide-react";
+
+import { StartWorkout } from "@/components/workouts/start-workout";
 import { DaySwitcher } from "@/components/dashboard/day-switcher";
 import { FuelPanel } from "@/components/dashboard/fuel-panel";
 import { HydrationCard } from "@/components/dashboard/hydration-card";
@@ -92,6 +96,7 @@ export default async function TodayPage({
     lastWeight,
     week,
     profile,
+    draft,
   ] = await Promise.all([
       getDayTimeline(user.id, date, zone),
       getDayTotals(user.id, date, zone),
@@ -117,6 +122,10 @@ export default async function TodayPage({
           heightUnit: true,
           volumeUnit: true,
         },
+      }),
+      db.workoutDraft.findUnique({
+        where: { userId: user.id },
+        select: { startedAt: true },
       }),
     ]);
 
@@ -206,11 +215,51 @@ export default async function TodayPage({
 
       <InstallBanner />
 
+      {/*
+        A session already running is the most important thing on this screen —
+        it is the only state where the app is in the middle of something.
+      */}
+      {draft && (
+        <Link
+          href="/session"
+          className="accent-gradient flex items-center gap-3.5 rounded-2xl border border-accent-line px-5 py-4 transition-colors hover:border-accent"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
+            <Play className="h-[18px] w-[18px]" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13.5px] font-semibold text-fg">
+              Resume your workout
+            </span>
+            <span className="mt-0.5 block text-[12.5px] text-fg-dim">
+              Started{" "}
+              {formatDateInZone(draft.startedAt, zone, {
+                hour: "numeric",
+                minute: "2-digit",
+              })}{" "}
+              — pick up where you left off.
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-accent-text" />
+        </Link>
+      )}
+
       <div className="flex flex-wrap items-center gap-2.5">
         <MealForm />
+        {/*
+          Straight into the live logger, the same as the button on Training.
+          Dictating a session afterwards lives behind the mic beside it — this
+          screen must not be the one place the old form is still the default.
+        */}
+        {!draft && <StartWorkout variant="outline" />}
         <WorkoutForm
           unit={units.weight}
-          trigger={<Button variant="outline">Log workout</Button>}
+          trigger={
+            <Button variant="outline">
+              <Mic className="h-4 w-4" />
+              Log a past session
+            </Button>
+          }
         />
         <WeightForm
           defaultWeight={lastWeight?.weightKg ?? null}

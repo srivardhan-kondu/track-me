@@ -76,6 +76,7 @@ export async function GET(req: Request) {
         protein: true,
         carbs: true,
         fat: true,
+        fiber: true,
         transcript: true,
       },
     }),
@@ -90,7 +91,16 @@ export async function GET(req: Request) {
         transcript: true,
         exercises: {
           orderBy: { position: "asc" },
-          select: { name: true, sets: true, reps: true, weightKg: true },
+          select: {
+            name: true,
+            sets: true,
+            reps: true,
+            weightKg: true,
+            setLog: {
+              orderBy: { position: "asc" },
+              select: { kind: true, weightKg: true, reps: true, seconds: true },
+            },
+          },
         },
       },
     }),
@@ -165,31 +175,58 @@ export async function GET(req: Request) {
     } else if (type === "water") {
       rows = water;
     } else {
-      // One row per exercise, so the file is usable in a spreadsheet: a
-      // session with four movements becomes four rows sharing a date.
-      rows = workouts.flatMap<Record<string, unknown>>((w) =>
-        w.exercises.length === 0
-          ? [
-              {
-                performedAt: w.performedAt,
-                title: w.title,
-                durationMin: w.durationMin,
-                exercise: "",
+      // One row per set where the session was logged set by set, and one row
+      // per exercise where it was dictated — which is as fine as the record
+      // goes in each case. A session with four movements becomes at least
+      // four rows sharing a date, usable in a spreadsheet either way.
+      rows = workouts.flatMap<Record<string, unknown>>((w) => {
+        const session = {
+          performedAt: w.performedAt,
+          title: w.title,
+          durationMin: w.durationMin,
+        };
+
+        if (w.exercises.length === 0) {
+          return [
+            {
+              ...session,
+              exercise: "",
+              set: null,
+              setType: "",
+              sets: null,
+              reps: null,
+              weightKg: null,
+              seconds: null,
+            },
+          ];
+        }
+
+        return w.exercises.flatMap<Record<string, unknown>>((e) =>
+          e.setLog.length > 0
+            ? e.setLog.map((s, i) => ({
+                ...session,
+                exercise: e.name,
+                set: i + 1,
+                setType: s.kind,
                 sets: null,
-                reps: null,
-                weightKg: null,
-              },
-            ]
-          : w.exercises.map((e) => ({
-              performedAt: w.performedAt,
-              title: w.title,
-              durationMin: w.durationMin,
-              exercise: e.name,
-              sets: e.sets,
-              reps: e.reps,
-              weightKg: e.weightKg,
-            })),
-      );
+                reps: s.reps,
+                weightKg: s.weightKg,
+                seconds: s.seconds,
+              }))
+            : [
+                {
+                  ...session,
+                  exercise: e.name,
+                  set: null,
+                  setType: "",
+                  sets: e.sets,
+                  reps: e.reps,
+                  weightKg: e.weightKg,
+                  seconds: null,
+                },
+              ],
+        );
+      });
     }
 
     return new NextResponse(toCsv(rows), {
