@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 import { db } from "@/lib/db";
 import { addDaysInZone, safeZone, startOfDayInZone } from "@/lib/tz";
 
@@ -43,41 +45,40 @@ export type VolumeReport = {
   patterns: { pattern: string; sets: number }[];
 };
 
-export async function getMuscleVolume(
-  userId: string,
-  days = 7,
-  timeZone = "UTC",
-): Promise<VolumeReport> {
-  const zone = safeZone(timeZone);
-  const now = new Date();
-  const from = startOfDayInZone(addDaysInZone(now, -(days - 1), zone), zone);
-
-  const exercises = await db.exercise.findMany({
-    where: { workout: { userId, performedAt: { gte: from, lte: now } } },
+/** Everything the attribution needs to know about one logged exercise. */
+const attributionSelect = {
+  name: true,
+  sets: true,
+  catalog: {
     select: {
       name: true,
-      sets: true,
-      catalog: {
+      pattern: true,
+      muscles: {
         select: {
-          name: true,
-          pattern: true,
-          muscles: {
+          role: true,
+          muscle: {
             select: {
-              role: true,
-              muscle: {
-                select: {
-                  id: true,
-                  name: true,
-                  group: { select: { id: true, key: true, name: true, position: true } },
-                },
+              id: true,
+              name: true,
+              group: {
+                select: { id: true, key: true, name: true, position: true },
               },
             },
           },
         },
       },
     },
-  });
+  },
+} satisfies Prisma.ExerciseSelect;
 
+type AttributedExercise = Prisma.ExerciseGetPayload<{
+  select: typeof attributionSelect;
+}>;
+
+/** Sets a week, or sets in one session — the same arithmetic either way. */
+function attribute(
+  exercises: AttributedExercise[],
+): Omit<VolumeReport, "from" | "to"> {
   const groups = new Map<string, GroupVolume & { position: number }>();
   const muscles = new Map<string, MuscleVolume>();
   const patterns = new Map<string, number>();
@@ -150,8 +151,6 @@ export async function getMuscleVolume(
   const round1 = (n: number) => Math.round(n * 10) / 10;
 
   return {
-    from,
-    to: now,
     groups: [...groups.values()]
       .sort((a, b) => b.sets - a.sets || a.position - b.position)
       .map(({ position: _position, ...g }) => ({ ...g, sets: round1(g.sets) })),
@@ -164,6 +163,39 @@ export async function getMuscleVolume(
       .map(([pattern, sets]) => ({ pattern, sets }))
       .sort((a, b) => b.sets - a.sets),
   };
+}
+
+/** What an athlete trained over the last `days`, in their own time zone. */
+export async function getMuscleVolume(
+  userId: string,
+  days = 7,
+  timeZone = "UTC",
+): Promise<VolumeReport> {
+  const zone = safeZone(timeZone);
+  const now = new Date();
+  const from = startOfDayInZone(addDaysInZone(now, -(days - 1), zone), zone);
+
+  const exercises = await db.exercise.findMany({
+    where: { workout: { userId, performedAt: { gte: from, lte: now } } },
+    select: attributionSelect,
+  });
+
+  return { from, to: now, ...attribute(exercises) };
+}
+
+/**
+ * What one session trained — the map on the screen that comes up the moment
+ * an athlete presses Finish.
+ */
+export async function getWorkoutMuscleVolume(
+  workoutId: string,
+): Promise<Omit<VolumeReport, "from" | "to">> {
+  const exercises = await db.exercise.findMany({
+    where: { workoutId },
+    select: attributionSelect,
+  });
+
+  return attribute(exercises);
 }
 
 /**

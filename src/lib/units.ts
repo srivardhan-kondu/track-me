@@ -133,6 +133,19 @@ export function weightBounds(unit: WeightUnit): {
  * "short tons", they say thousands of pounds. Both take kilograms, since that
  * is what the sets are stored in.
  */
+/**
+ * One session's volume, in the athlete's own unit and at full resolution.
+ *
+ * Tonnes are how a week is spoken; a session is not. Ticking off a set of
+ * eight moves "0.8 t" to "0.8 t", so the one figure that should visibly
+ * respond to the work sits there dead. A plain grouped "1,020 kg" climbs with
+ * every set, which is what a live session needs and what the reference shows.
+ */
+export function formatLoad(kg: number, unit: WeightUnit): string {
+  const n = unit === "LB" ? kgToLb(kg) : kg;
+  return `${Math.round(n).toLocaleString("en-US")} ${weightLabel(unit)}`;
+}
+
 export function formatTonnage(kg: number, unit: WeightUnit): string {
   if (unit === "LB") {
     const lb = kgToLb(kg);

@@ -143,6 +143,8 @@ export type EstimatedItem = {
   protein: number;
   carbs: number;
   fat: number;
+  /** Only the vision model returns this; the table below has no fibre data. */
+  fiber?: number;
 };
 
 /** Keyword-and-quantity estimate over a meal description. */

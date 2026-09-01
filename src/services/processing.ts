@@ -9,6 +9,8 @@ import {
   MAX_IN_FLIGHT,
   type JobRow,
 } from "@/lib/jobs";
+import { mergeDictated } from "@/lib/exercise-groups";
+import { expandToSets } from "@/lib/live-session";
 import { premiumStatus } from "@/lib/session";
 import {
   budgetStatus,
@@ -104,6 +106,7 @@ async function runMealAnalysis(mealId: string, typedDescription: string | null) 
       protein: result.protein,
       carbs: result.carbs,
       fat: result.fat,
+      fiber: result.fiber,
       items: result.items,
       aiGenerated: result.aiGenerated,
       status: "COMPLETE",
@@ -158,9 +161,23 @@ async function runWorkoutParse(
   );
   await charge(result.costUnits);
 
+  /*
+    An athlete dictating set by set — "t-bar row, twenty-five for thirteen;
+    then thirty for ten" — gives the parser one movement and several sets, and
+    it faithfully returns one exercise per set. Stored that way, five movements
+    become fifteen exercises, each with a single set, and the session reads as
+    a list of near-duplicates.
+
+    So consecutive mentions of the same movement are folded back into one
+    exercise carrying all of its sets. Only consecutive ones: a movement the
+    athlete genuinely returned to at the end of the session is a second block,
+    the same as it would be if they had logged it live.
+  */
+  const merged = mergeDictated(result.exercises, expandToSets);
+
   // Attach each movement to the catalog so its sets count toward muscle
   // volume. An unrecognised name still logs, just without attribution.
-  const catalogIds = await resolveExerciseIds(result.exercises.map((e) => e.name));
+  const catalogIds = await resolveExerciseIds(merged.map((e) => e.name));
 
   await db.$transaction([
     // Replace any prior parse so a re-run does not duplicate exercises.
@@ -176,13 +193,17 @@ async function runWorkoutParse(
         status: "COMPLETE",
         error: null,
         exercises: {
-          create: result.exercises.map((ex, i) => ({
+          create: merged.map((ex, i) => ({
             name: ex.name,
             weightKg: ex.weightKg,
             sets: ex.sets,
             reps: ex.reps,
             position: i,
             catalogId: catalogIds[i],
+            // A dictated session is stored the same way a logged one is, so
+            // it reads back set by set and fills the PREVIOUS column next
+            // time this movement comes round.
+            setLog: { create: ex.setLog },
           })),
         },
       },

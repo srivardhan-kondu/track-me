@@ -1,6 +1,7 @@
 import { PremiumNotice } from "@/components/billing/premium-notice";
 import { DayDivider, EmptyState } from "@/components/layout/page";
 import { MealForm } from "@/components/log/meal-form";
+import { DayCard } from "@/components/meals/day-card";
 import { MealRow } from "@/components/meals/meal-row";
 import { ProcessingWatcher } from "@/components/timeline/processing-watcher";
 import { FilterPills } from "@/components/ui/filter-pills";
@@ -77,12 +78,13 @@ export default async function MealsPage({
     }),
   ]);
 
-  // Signed media URLs have to be resolved on the server.
+  // Signed media URLs have to be resolved on the server. Only the thumbnail
+  // is needed here — the voice note is played on the meal's own page, so this
+  // list no longer signs a second URL per row that nothing renders.
   const resolved = await Promise.all(
     meals.map(async (meal) => ({
       meal: meal as unknown as TimelineMeal,
       imageUrl: await mediaUrl(meal.imageKey),
-      audioUrl: await mediaUrl(meal.audioKey),
     })),
   );
 
@@ -164,33 +166,66 @@ export default async function MealsPage({
             const day = fromDateParam(key, zone);
             const isToday = isSameDayInZone(day, new Date(), zone);
 
-            const kcal = rows.reduce(
-              (a, r) => a + (r.meal.calories ?? 0),
-              0,
-            );
-            const protein = rows.reduce(
-              (a, r) => a + (r.meal.protein ?? 0),
-              0,
+            const totals = rows.reduce(
+              (a, r) => ({
+                calories: a.calories + (r.meal.calories ?? 0),
+                protein: a.protein + (r.meal.protein ?? 0),
+                carbs: a.carbs + (r.meal.carbs ?? 0),
+                fat: a.fat + (r.meal.fat ?? 0),
+                /*
+                  Stays null until some meal that day actually has a figure,
+                  so a day of offline estimates reads as unknown, not as zero.
+
+                  `== null` rather than `=== null` on purpose: this reduce runs
+                  over a value that reached here through a cast, and a missing
+                  field would otherwise be added as undefined and turn the
+                  whole day's total into NaN.
+                */
+                fiber:
+                  r.meal.fiber == null ? a.fiber : (a.fiber ?? 0) + r.meal.fiber,
+              }),
+              {
+                calories: 0,
+                protein: 0,
+                carbs: 0,
+                fat: 0,
+                fiber: null as number | null,
+              },
             );
 
+            /*
+              A day that is over is one card. Nobody scrolling a fortnight back
+              is reading what they had at 4pm three Tuesdays ago plate by
+              plate — they want to know whether the day landed, and the plates
+              are one tap away for the day they actually have a question about.
+            */
+            if (!isToday) {
+              return (
+                <DayCard
+                  key={key}
+                  href={`/dashboard/meals/day/${key}`}
+                  label={formatDateInZone(day, zone, {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                  meals={rows.length}
+                  totals={totals}
+                />
+              );
+            }
+
+            // Today is still being written, and a running total is not much
+            // use until it is finished — so it stays open.
             return (
               <section key={key} className="flex flex-col gap-2.5">
                 <DayDivider
-                  className={isToday ? undefined : "pt-4"}
-                  label={
-                    isToday
-                      ? `Today · ${formatDateInZone(day, zone, {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}`
-                      : formatDateInZone(day, zone, {
-                          weekday: "long",
-                          month: "short",
-                          day: "numeric",
-                        })
-                  }
-                  meta={`${Math.round(kcal).toLocaleString()} kcal · ${Math.round(protein)} p`}
+                  label={`Today · ${formatDateInZone(day, zone, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}`}
+                  meta={`${Math.round(totals.calories).toLocaleString()} kcal · ${Math.round(totals.protein)} p`}
                 />
 
                 {rows
@@ -199,18 +234,12 @@ export default async function MealsPage({
                     (a, b) =>
                       b.meal.eatenAt.getTime() - a.meal.eatenAt.getTime(),
                   )
-                  .map(({ meal, imageUrl, audioUrl }) => (
+                  .map(({ meal, imageUrl }) => (
                     <MealRow
                       key={meal.id}
                       meal={meal}
                       imageUrl={imageUrl}
-                      audioUrl={audioUrl}
                       time={formatTimeInZone(meal.eatenAt, zone)}
-                      viewerId={user.id}
-                      isOwner
-                      canComment
-                      dim={!isToday}
-                      upsell={!premium}
                     />
                   ))}
               </section>

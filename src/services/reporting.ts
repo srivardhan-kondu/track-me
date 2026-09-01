@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 import { db } from "@/lib/db";
 import {
   addDaysInZone,
@@ -7,7 +9,7 @@ import {
   startOfDayInZone,
   toDateParam,
 } from "@/lib/tz";
-import { round } from "@/lib/utils";
+import { round, tonnesLifted } from "@/lib/utils";
 
 export type TimelineEntry =
   | { kind: "meal"; at: Date; id: string; data: TimelineMeal }
@@ -25,6 +27,8 @@ export type TimelineMeal = {
   protein: number | null;
   carbs: number | null;
   fat: number | null;
+  /** Null wherever it was never worked out — see the column's own note. */
+  fiber: number | null;
   items: unknown;
   aiGenerated: boolean | null;
   status: string;
@@ -50,6 +54,15 @@ export type TimelineWorkout = {
     weightKg: number | null;
     sets: number | null;
     reps: number | null;
+    /** Empty on anything dictated; one row per set on a session logged live. */
+    setLog: {
+      id: string;
+      position: number;
+      kind: string;
+      weightKg: number | null;
+      reps: number | null;
+      seconds: number | null;
+    }[];
   }[];
   comments: TimelineComment[];
 };
@@ -77,6 +90,16 @@ const commentInclude = {
   },
 } as const;
 
+/**
+ * An exercise with its sets. Shared so every surface that shows a session —
+ * the day timeline, the training page, a coach's view of an athlete — reads
+ * the same set rows and totals the same tonnage.
+ */
+export const exerciseInclude = {
+  orderBy: { position: "asc" },
+  include: { setLog: { orderBy: { position: "asc" } } },
+} satisfies Prisma.Workout$exercisesArgs;
+
 /** Everything an athlete logged on one calendar day, in chronological order. */
 export async function getDayTimeline(
   userId: string,
@@ -96,10 +119,7 @@ export async function getDayTimeline(
     db.workout.findMany({
       where: { userId, performedAt: { gte: from, lte: to } },
       orderBy: { performedAt: "asc" },
-      include: {
-        exercises: { orderBy: { position: "asc" } },
-        comments: commentInclude,
-      },
+      include: { exercises: exerciseInclude, comments: commentInclude },
     }),
     db.weightEntry.findFirst({
       where: { userId, day: dayKeyInZone(date, zone) },
@@ -145,6 +165,11 @@ export type DayTotals = {
   protein: number;
   carbs: number;
   fat: number;
+  /**
+   * Grams of fibre, or null when no meal that day carried a figure. A day of
+   * offline estimates has an unknown fibre total, not a zero one.
+   */
+  fiber: number | null;
   mealCount: number;
   workoutCount: number;
   /** Millilitres of water logged on the day. */
@@ -163,7 +188,13 @@ export async function getDayTotals(
   const [agg, workoutCount, water] = await Promise.all([
     db.meal.aggregate({
       where: { userId, eatenAt: { gte: from, lte: to } },
-      _sum: { calories: true, protein: true, carbs: true, fat: true },
+      _sum: {
+        calories: true,
+        protein: true,
+        carbs: true,
+        fat: true,
+        fiber: true,
+      },
       _count: true,
     }),
     db.workout.count({
@@ -182,6 +213,9 @@ export async function getDayTotals(
     protein: round(agg._sum.protein ?? 0) ?? 0,
     carbs: round(agg._sum.carbs ?? 0) ?? 0,
     fat: round(agg._sum.fat ?? 0) ?? 0,
+    // A null sum means not one meal that day carried a fibre figure, which is
+    // a different fact from a day that genuinely totalled zero grams.
+    fiber: agg._sum.fiber === null ? null : round(agg._sum.fiber),
     mealCount: agg._count,
     workoutCount,
     waterMl: water?.ml ?? 0,
@@ -689,6 +723,8 @@ export async function getCoachRoster(coachId: string) {
       protein: round(dayMeals.reduce((a, m) => a + (m.protein ?? 0), 0)) ?? 0,
       carbs: round(dayMeals.reduce((a, m) => a + (m.carbs ?? 0), 0)) ?? 0,
       fat: round(dayMeals.reduce((a, m) => a + (m.fat ?? 0), 0)) ?? 0,
+      // The coach's roster does not read fibre, so it is not queried here.
+      fiber: null,
       mealCount: dayMeals.length,
       workoutCount: dayWorkouts.length,
       waterMl: todayWater?.ml ?? 0,
@@ -764,7 +800,14 @@ export async function getWeekFigures(
       where: { userId, performedAt: { gte: from, lte: to } },
       select: {
         durationMin: true,
-        exercises: { select: { weightKg: true, sets: true, reps: true } },
+        exercises: {
+          select: {
+            weightKg: true,
+            sets: true,
+            reps: true,
+            setLog: { select: { kind: true, weightKg: true, reps: true } },
+          },
+        },
       },
     }),
     db.meal.aggregate({
@@ -773,13 +816,11 @@ export async function getWeekFigures(
     }),
   ]);
 
+  // Through `tonnesLifted` rather than inline, so a set-by-set session is
+  // added up the same way here as it is on the training page.
   let volumeKg = 0;
   for (const workout of workouts) {
-    for (const e of workout.exercises) {
-      if (e.weightKg && e.sets && e.reps) {
-        volumeKg += e.weightKg * e.sets * e.reps;
-      }
-    }
+    volumeKg += tonnesLifted(workout.exercises) * 1000;
   }
 
   const timed = workouts.filter((w) => w.durationMin && w.durationMin > 0);

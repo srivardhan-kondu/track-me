@@ -1,16 +1,25 @@
-import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
-import { AudioNote } from "@/components/timeline/audio-note";
-import { CommentThread } from "@/components/timeline/comment-thread";
-import { WorkoutActions } from "@/components/timeline/record-actions";
-import {
-  displayWeight,
-  formatTonnage,
-  weightLabel,
-  type WeightUnit,
-} from "@/lib/units";
+import { groupExercises } from "@/lib/exercise-groups";
+import { formatLength } from "@/lib/live-session";
+import { formatLoad, type WeightUnit } from "@/lib/units";
 import { cn, tonnesLifted } from "@/lib/utils";
 import type { TimelineWorkout } from "@/services/reporting";
+
+/**
+ * A session as a card, not as a session.
+ *
+ * Printing every set of every movement on the training page turned it into a
+ * wall: ten sessions of five movements is a hundred and fifty numbers, and
+ * nobody scrolling their history is reading any of them. So the card carries
+ * the three figures that say how it went and the first few movements to say
+ * what it was, and the sets — which are the point, but only once you have
+ * chosen a session — live one tap away on the detail page.
+ */
+
+/** Movements listed before the card defers to the detail page. */
+const PREVIEW = 3;
 
 /** A stable tint per session name, so a training split reads by colour. */
 const TINTS = [
@@ -36,38 +45,27 @@ function mark(title: string) {
 export function SessionCard({
   workout,
   when,
-  audioUrl,
-  viewerId,
-  isOwner,
-  canComment,
   unit = "KG",
-  open = false,
 }: {
   unit?: WeightUnit;
   workout: TimelineWorkout;
   /** Mono meta line: when it happened. */
   when: string;
-  audioUrl: string | null;
-  viewerId: string;
-  isOwner: boolean;
-  canComment: boolean;
-  /** The most recent session opens with its sets already showing. */
-  open?: boolean;
 }) {
   const title = workout.title ?? "Workout";
+  const groups = groupExercises(workout.exercises);
+  const sets = groups.reduce((a, g) => a + g.workingSets, 0);
   const tonnes = tonnesLifted(workout.exercises);
 
+  const shown = groups.slice(0, PREVIEW);
+  const hidden = groups.length - shown.length;
+
   return (
-    <details
-      open={open}
-      className={cn(
-        "group rounded-[14px] border",
-        open
-          ? "border-line-strong bg-surface-raised"
-          : "border-line bg-surface-muted",
-      )}
+    <Link
+      href={`/dashboard/workouts/${workout.id}`}
+      className="group flex flex-col rounded-[14px] border border-line bg-surface-muted p-4 transition-colors hover:border-line-strong hover:bg-surface"
     >
-      <summary className="flex cursor-pointer list-none items-center gap-3.5 p-4 marker:content-none">
+      <div className="flex items-center gap-3.5">
         <span
           className={cn(
             "grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] font-mono text-[11px] font-semibold",
@@ -83,82 +81,54 @@ export function SessionCard({
           </span>
           <span className="mt-1 block truncate font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
             {when}
-            {workout.durationMin ? ` · ${workout.durationMin} min` : ""}
-            {workout.exercises.length > 0
-              ? ` · ${workout.exercises.length} exercises`
-              : ""}
           </span>
         </span>
 
-        {tonnes > 0 && (
-          <span className="tabular shrink-0 font-mono text-[13.5px] text-fg">
-            {formatTonnage(tonnes * 1000, unit)}
-          </span>
-        )}
-
-        <ChevronDown className="h-4 w-4 shrink-0 text-fg-faint transition-transform group-open:rotate-180" />
-      </summary>
-
-      <div className="flex flex-col gap-3.5 border-t border-line px-4 pb-4 pt-3.5">
-        {workout.exercises.length > 0 && (
-          <ul className="flex flex-col gap-2.5">
-            {workout.exercises.map((ex) => (
-              <li
-                key={ex.id}
-                className="flex items-baseline gap-4 text-[12.5px] text-fg-muted"
-              >
-                <span className="min-w-0 flex-1 truncate">{ex.name}</span>
-                <span className="tabular shrink-0 font-mono text-[11.5px] text-fg-dim">
-                  {ex.weightKg !== null
-                    ? `${displayWeight(ex.weightKg, unit)} ${weightLabel(unit)}`
-                    : "BW"}
-                  {ex.sets !== null && ex.reps !== null
-                    ? ` · ${ex.sets} × ${ex.reps}`
-                    : ex.sets !== null
-                      ? ` · ${ex.sets} sets`
-                      : ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {workout.notes && (
-          <p className="text-[12.5px] leading-relaxed text-fg-dim">
-            {workout.notes}
-          </p>
-        )}
-
-        {audioUrl && <AudioNote src={audioUrl} />}
-
-        {workout.transcript && (
-          <p className="font-serif text-[13.5px] italic leading-relaxed text-fg-muted">
-            &ldquo;{workout.transcript}&rdquo;
-          </p>
-        )}
-
-        {workout.status === "FAILED" && workout.error && (
-          <p className="text-[11.5px] text-clay-text">{workout.error}</p>
-        )}
-
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <CommentThread
-              viewerId={viewerId}
-              canComment={canComment}
-              target={{ workoutId: workout.id }}
-              comments={workout.comments.map((c) => ({
-                id: c.id,
-                body: c.body,
-                createdAt: c.createdAt.toISOString(),
-                author: c.author,
-              }))}
-            />
-          </div>
-
-          {isOwner && <WorkoutActions workoutId={workout.id} />}
-        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-fg-faint transition-colors group-hover:text-accent-text" />
       </div>
-    </details>
+
+      <div className="mt-4 grid grid-cols-3 gap-3">
+        <Figure label="Time" value={formatLength(workout.durationMin ?? 0)} />
+        <Figure label="Volume" value={formatLoad(tonnes * 1000, unit)} />
+        <Figure label="Sets" value={String(sets)} />
+      </div>
+
+      {shown.length > 0 && (
+        <div className="mt-4 flex flex-col gap-2 border-t border-line pt-3.5">
+          {shown.map((group) => (
+            <p
+              key={group.id}
+              className="flex items-baseline gap-2 text-[12.5px] text-fg-muted"
+            >
+              <span className="tabular shrink-0 text-fg-dim">
+                {group.workingSets} set{group.workingSets === 1 ? "" : "s"}
+              </span>
+              <span className="min-w-0 truncate">{group.name}</span>
+            </p>
+          ))}
+
+          {hidden > 0 && (
+            <p className="text-[12.5px] font-semibold text-accent-text">
+              See {hidden} more exercise{hidden === 1 ? "" : "s"}
+            </p>
+          )}
+        </div>
+      )}
+
+      {workout.status === "FAILED" && workout.error && (
+        <p className="mt-3 text-[11.5px] text-clay-text">{workout.error}</p>
+      )}
+    </Link>
+  );
+}
+
+function Figure({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="mono-label">{label}</p>
+      <p className="tabular mt-1 truncate text-[15px] font-extrabold leading-none text-fg">
+        {value}
+      </p>
+    </div>
   );
 }

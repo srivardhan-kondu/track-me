@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { estimateFromText } from "../src/services/ai/food-table";
+import { analyzeMeal } from "../src/services/ai/nutrition";
 
 /** Grams the estimator assigned to a named food. */
 function grams(text: string, name: string): number {
@@ -60,5 +61,18 @@ describe("meal quantity parsing", () => {
   it("does not double-count a food mentioned twice", () => {
     const r = estimateFromText("chicken for lunch and more chicken at dinner");
     assert.equal(r.items.filter((i) => i.name === "Chicken breast").length, 1);
+  });
+});
+
+describe("fibre", () => {
+  it("is unknown, not zero, when the offline estimator did the scoring", async () => {
+    // The food table carries no fibre figures, so the free-plan path must say
+    // it does not know rather than assert a meal contained none.
+    const result = await analyzeMeal({ transcript: "two rotis and dal" }, false);
+
+    assert.equal(result.fiber, null);
+    assert.equal(result.aiGenerated, false);
+    // The macros it does know are still returned.
+    assert.ok(result.calories > 0);
   });
 });
