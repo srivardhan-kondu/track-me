@@ -12,10 +12,13 @@ import type { ComplianceDay, WeightPoint } from "@/services/reporting";
 export function WeightRailCard({
   points,
   days,
+  targetKg = null,
   unit = "KG",
 }: {
   points: WeightPoint[];
   days: number;
+  /** The goal set in Settings. Null shows the card exactly as it always was. */
+  targetKg?: number | null;
   unit?: WeightUnit;
 }) {
   const latest = points[points.length - 1]?.weightKg ?? null;
@@ -67,6 +70,30 @@ export function WeightRailCard({
               </span>
             )}
           </div>
+
+          {/*
+            The distance still to go, in whichever direction. A goal weight
+            that never appears anywhere is just a number in a database, and
+            "4.5 kg to go" is the only form of it anybody acts on.
+          */}
+          {targetKg !== null && (
+            <p className="mt-2 text-[11.5px] text-fg-dim">
+              {Math.abs(latest - targetKg) < 0.1 ? (
+                <span className="text-sage-text">Goal weight reached.</span>
+              ) : (
+                <>
+                  <span className="tabular text-fg-muted">
+                    {displayWeight(Math.abs(latest - targetKg), unit)}{" "}
+                    {weightLabel(unit)}
+                  </span>{" "}
+                  {latest > targetKg ? "to lose" : "to gain"} — goal{" "}
+                  <span className="tabular">
+                    {displayWeight(targetKg, unit)} {weightLabel(unit)}
+                  </span>
+                </>
+              )}
+            </p>
+          )}
 
           {points.length > 1 && (
             <svg

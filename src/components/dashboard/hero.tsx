@@ -66,10 +66,13 @@ function WeekStat({
   value,
   unit,
   label,
+  target,
 }: {
   value: string;
   unit?: string;
   label: string;
+  /** Shown under the figure as "of 2,400", when a target has been set. */
+  target?: string;
 }) {
   return (
     <div className="px-1.5 py-3.5 text-center">
@@ -80,6 +83,11 @@ function WeekStat({
         {unit && <span className="text-[10px] text-fg-dim">{unit}</span>}
       </p>
       <p className="mt-1.5 text-[10px] leading-none text-fg-dim">{label}</p>
+      {target && (
+        <p className="tabular mt-1 text-[9.5px] leading-none text-accent-text">
+          of {target}
+        </p>
+      )}
     </div>
   );
 }
@@ -87,7 +95,9 @@ function WeekStat({
 export type WeekFigures = {
   workouts: number;
   volumeKg: number;
-  calories: number;
+  /** Mean calories per day logged, not the week's total. */
+  avgCalories: number;
+  loggedDays: number;
   avgMinutes: number;
 };
 
@@ -110,6 +120,7 @@ export function DashboardHero({
   gender,
   consistencyPct,
   week,
+  targetCalories = null,
   weightUnit = "KG",
   action,
 }: {
@@ -118,6 +129,8 @@ export function DashboardHero({
   gender: "FEMALE" | "MALE" | null | undefined;
   consistencyPct: number;
   week: WeekFigures;
+  /** Null until the athlete sets one in Settings; nothing is shown without it. */
+  targetCalories?: number | null;
   /** Tonnage is a lifted weight, so it reads in the athlete's own unit. */
   weightUnit?: WeightUnit;
   /** The primary call to action, rendered under the ring. */
@@ -178,11 +191,26 @@ export function DashboardHero({
               label="Volume"
             />
           </div>
+          {/*
+            A daily average, not the week's total. The figure here used to be
+            seven days of eating under a label that read like one day's, which
+            is a number nobody can act on.
+          */}
           <div className="bg-surface">
-            <WeekStat value={compact(week.calories)} label="Calories" />
+            <WeekStat
+              value={week.loggedDays > 0 ? compact(week.avgCalories) : "—"}
+              label="Avg. calories"
+              target={
+                targetCalories ? compact(targetCalories) : undefined
+              }
+            />
           </div>
           <div className="bg-surface">
-            <WeekStat value={`${week.avgMinutes}`} unit="min" label="Avg. Time" />
+            <WeekStat
+              value={week.avgMinutes > 0 ? `${week.avgMinutes}` : "—"}
+              unit={week.avgMinutes > 0 ? "min" : undefined}
+              label="Avg. workout"
+            />
           </div>
         </div>
       </div>
