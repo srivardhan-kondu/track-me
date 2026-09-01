@@ -13,6 +13,7 @@ import { safeZone } from "@/lib/tz";
 import { formatHeight, unitPrefs } from "@/lib/units";
 import { aiEnabled } from "@/services/ai/client";
 import { ProfileForm } from "@/components/settings/profile-form";
+import { GoalsForm } from "@/components/settings/goals-form";
 import { WaterGoalForm } from "@/components/settings/water-goal-form";
 import { getCoachLinksForAthlete } from "@/services/reporting";
 import { storageProvider, usingObjectStorage } from "@/services/storage";
@@ -109,6 +110,8 @@ export default async function SettingsPage() {
       age: true,
       heightCm: true,
       waterGoalMl: true,
+      targetCalories: true,
+      targetWeightKg: true,
       weightUnit: true,
       heightUnit: true,
       volumeUnit: true,
@@ -169,6 +172,17 @@ export default async function SettingsPage() {
               age={profile?.age ?? null}
               heightCm={profile?.heightCm ?? null}
               units={units}
+            />
+          </Panel>
+
+          <Panel
+            title="Targets"
+            description="What you are aiming at. Neither has a default — a calorie number depends on your weight and your training, and a goal weight is yours to name."
+          >
+            <GoalsForm
+              targetCalories={profile?.targetCalories ?? null}
+              targetWeightKg={profile?.targetWeightKg ?? null}
+              unit={units.weight}
             />
           </Panel>
 

@@ -274,6 +274,10 @@ async function main() {
       weightUnit: "LB",
       heightUnit: "FT",
       volumeUnit: "FL_OZ",
+      // Targets on one athlete and none on the other, so the demo shows both
+      // the home screen measuring against a goal and the plain figure.
+      targetCalories: 2400,
+      targetWeightKg: 74,
     },
   });
 

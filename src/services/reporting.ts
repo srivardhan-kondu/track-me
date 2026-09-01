@@ -773,7 +773,16 @@ export type WeekFigures = {
   workouts: number;
   /** Tonnage: weight × sets × reps, summed over every logged exercise. */
   volumeKg: number;
-  calories: number;
+  /**
+   * Mean calories per day the athlete actually logged.
+   *
+   * Averaged over logged days rather than over the whole window, matching
+   * `getSummary`: a day nobody recorded is a gap in the record, and dividing
+   * by seven would report it as a day of eating nothing.
+   */
+  avgCalories: number;
+  /** Days that contributed to the average — how much to trust it. */
+  loggedDays: number;
   /** Mean logged session length, over the sessions that recorded one. */
   avgMinutes: number;
 };
@@ -810,9 +819,11 @@ export async function getWeekFigures(
         },
       },
     }),
-    db.meal.aggregate({
+    // Rows rather than an aggregate: the average is per day logged, so which
+    // days those were has to be counted, not just the total.
+    db.meal.findMany({
       where: { userId, eatenAt: { gte: from, lte: to } },
-      _sum: { calories: true },
+      select: { calories: true, eatenAt: true },
     }),
   ]);
 
@@ -830,10 +841,16 @@ export async function getWeekFigures(
       )
     : 0;
 
+  // Same rule as `getSummary`: average over the days actually logged, so a
+  // day nobody recorded does not read as a day of eating nothing.
+  const loggedDays = new Set(meals.map((m) => toDateParam(m.eatenAt, zone)));
+  const eaten = meals.reduce((a, m) => a + (m.calories ?? 0), 0);
+
   return {
     workouts: workouts.length,
     volumeKg: Math.round(volumeKg),
-    calories: Math.round(meals._sum.calories ?? 0),
+    avgCalories: loggedDays.size ? Math.round(eaten / loggedDays.size) : 0,
+    loggedDays: loggedDays.size,
     avgMinutes,
   };
 }

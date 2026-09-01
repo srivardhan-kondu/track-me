@@ -118,6 +118,8 @@ export default async function TodayPage({
         select: {
           gender: true,
           waterGoalMl: true,
+          targetCalories: true,
+          targetWeightKg: true,
           weightUnit: true,
           heightUnit: true,
           volumeUnit: true,
@@ -165,6 +167,7 @@ export default async function TodayPage({
           gender={profile?.gender ?? null}
           consistencyPct={consistencyPct}
           week={week}
+          targetCalories={profile?.targetCalories ?? null}
           weightUnit={units.weight}
         />
       ) : (
@@ -338,7 +341,12 @@ export default async function TodayPage({
             // yesterday from its own timeline logs it to yesterday.
             day={isToday ? undefined : toDateParam(date, zone)}
           />
-          <WeightRailCard points={series} days={railDays} unit={units.weight} />
+          <WeightRailCard
+            points={series}
+            days={railDays}
+            targetKg={profile?.targetWeightKg ?? null}
+            unit={units.weight}
+          />
           <ConsistencyCard days={compliance} />
           {note && <CoachNoteCard note={note} />}
         </aside>

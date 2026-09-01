@@ -48,6 +48,17 @@ model User {
   /// so "never chose" stays distinguishable from "chose the default".
   waterGoalMl Int?
 
+  /// Daily calorie target. Null means the athlete never set one, and the
+  /// screens then report what they ate without marking it against anything —
+  /// there is no sensible default here the way there is for water, because a
+  /// number depends on bodyweight, training load and whether they are cutting.
+  targetCalories Int?
+
+  /// Goal bodyweight in kilograms. Metric like every other stored weight; the
+  /// athlete's own unit is applied on the way to a screen and on the way in
+  /// from a form, and this column never moves.
+  targetWeightKg Float?
+
   /// How this athlete reads a measurement. Presentation only: every column
   /// stays metric whatever these say, so switching to pounds re-reads the
   /// history rather than rewriting it, and a coach sees the athlete's own
