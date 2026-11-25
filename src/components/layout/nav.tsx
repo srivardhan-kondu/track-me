@@ -156,8 +156,31 @@ function isActive(pathname: string, item: NavItem) {
   return item.exact ? pathname === item.href : pathname.startsWith(item.href);
 }
 
-export function SidebarNav({ groups }: { groups: NavGroup[] }) {
+/**
+ * The path the nav should light up: the one just tapped, before the server has
+ * answered, and the real one after. Without this the highlight sat on the old
+ * tab until the next page arrived, which is what made taps feel ignored.
+ */
+function useOptimisticPath() {
   const pathname = usePathname();
+  const [pending, setPending] = React.useState<string | null>(null);
+
+  React.useEffect(() => setPending(null), [pathname]);
+
+  const onNavigate = React.useCallback(
+    (href: string) => (e: React.MouseEvent) => {
+      // A new tab or window leaves this page where it is.
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      setPending(href);
+    },
+    [],
+  );
+
+  return { path: pending ?? pathname, onNavigate };
+}
+
+export function SidebarNav({ groups }: { groups: NavGroup[] }) {
+  const { path, onNavigate } = useOptimisticPath();
 
   return (
     <nav className="flex flex-col gap-6">
@@ -166,11 +189,12 @@ export function SidebarNav({ groups }: { groups: NavGroup[] }) {
           <p className="mono-label px-2.5 pb-2">{group.label}</p>
 
           {group.items.map((item) => {
-            const active = isActive(pathname, item);
+            const active = isActive(path, item);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onNavigate(item.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13.5px] transition-colors",
@@ -206,7 +230,7 @@ export function BottomNav({
   groups: NavGroup[];
   action?: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  const { path, onNavigate } = useOptimisticPath();
   const items = groups.flatMap((g) => g.items);
 
   return (
@@ -224,15 +248,16 @@ export function BottomNav({
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map((item) => {
-            const active = isActive(pathname, item);
+            const active = isActive(path, item);
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onNavigate(item.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-w-0 flex-col items-center gap-1.5 px-0.5 py-3 transition-colors",
+                  "flex min-w-0 flex-col items-center gap-1.5 px-0.5 py-3 transition-[color,transform] duration-150 active:scale-95",
                   active ? "text-accent-text" : "text-fg-faint",
                 )}
               >

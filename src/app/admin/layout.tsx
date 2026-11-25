@@ -1,3 +1,4 @@
+import { FreshOnVisit } from "@/components/admin/fresh-on-visit";
 import { ADMIN_NAV } from "@/components/layout/nav";
 import { AppShell } from "@/components/layout/shell";
 import { requireAdmin } from "@/lib/session";
@@ -24,6 +25,7 @@ export default async function AdminLayout({
 
   return (
     <AppShell groups={ADMIN_NAV} user={{ ...user, isAdmin: true }} badge="Admin">
+      <FreshOnVisit />
       {children}
     </AppShell>
   );

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 
 import { grantsAdmin } from "@/lib/admin";
@@ -23,7 +24,12 @@ export type SessionUser = {
   isAdmin: boolean;
 };
 
-export async function currentUser(): Promise<SessionUser | null> {
+/**
+ * Memoised per request. The layout and the page both ask who is signed in, and
+ * every `auth()` runs the JWT callback, which reads the user row — without the
+ * cache one navigation paid for that lookup two or three times over, in series.
+ */
+export const currentUser = cache(async (): Promise<SessionUser | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
   return {
@@ -35,7 +41,7 @@ export async function currentUser(): Promise<SessionUser | null> {
     timeZone: session.user.timeZone ?? null,
     isAdmin: Boolean(session.user.isAdmin),
   };
-}
+});
 
 /** Redirects to sign-in when there is no session. */
 export async function requireUser(): Promise<SessionUser> {
@@ -83,8 +89,12 @@ export type PremiumStatus = Entitlement & {
   trialing: boolean;
 };
 
-/** The caller's billing state, for rendering upgrade prompts. */
-export async function premiumStatus(userId: string): Promise<PremiumStatus> {
+/**
+ * The caller's billing state, for rendering upgrade prompts. Memoised per
+ * request for the same reason as `currentUser`: the layout and the page both
+ * need it.
+ */
+export const premiumStatus = cache(async (userId: string): Promise<PremiumStatus> => {
   // No trial dates either, so no countdown or "trial ended" copy can appear.
   if (FREE_FOR_ALL) {
     return {
@@ -119,7 +129,7 @@ export async function premiumStatus(userId: string): Promise<PremiumStatus> {
     premium: isPremium(current),
     trialing: isTrialing(current),
   };
-}
+});
 
 /**
  * Gates a premium feature. Throws rather than redirecting, for the same reason

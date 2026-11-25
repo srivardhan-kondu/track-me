@@ -363,7 +363,52 @@
   animation: trackme-pulse 1.8s ease-in-out infinite;
 }
 
+/*
+  Taps register the instant they land. `manipulation` drops the browser's
+  double-tap-to-zoom wait on anything clickable, and the grey flash mobile
+  Safari paints over a tapped element is replaced by each control's own
+  pressed state.
+*/
+a,
+button,
+[role="button"],
+[role="tab"],
+label,
+summary,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The page-loading bar: races most of the way, then waits for the page. */
+@keyframes nav-progress-run {
+  0% { transform: scaleX(0); }
+  20% { transform: scaleX(0.45); }
+  60% { transform: scaleX(0.75); }
+  100% { transform: scaleX(0.92); }
+}
+
+.nav-progress-run {
+  transform-origin: left;
+  animation: nav-progress-run 6s cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
+}
+
+.nav-progress-done {
+  transform-origin: left;
+  transform: scaleX(1);
+  opacity: 0;
+  transition: transform 150ms ease-out, opacity 200ms ease-in 100ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .nav-progress-run {
+    animation: none;
+  }
   .trackme-overlay[data-state="open"],
   .trackme-dialog[data-state="open"],
   .trackme-listening {
