@@ -278,6 +278,11 @@ async function main() {
       // the home screen measuring against a goal and the plain figure.
       targetCalories: 2400,
       targetWeightKg: 74,
+      // Demo accounts have been using the app for weeks; without this the
+      // dashboard layout sends them straight to the first-run wizard.
+      gender: "MALE",
+      age: 29,
+      onboardedAt: new Date(),
     },
   });
 
@@ -287,13 +292,18 @@ async function main() {
       name: "Priya Nair",
       role: "ATHLETE",
       heightCm: 163,
+      gender: "FEMALE",
+      age: 31,
+      onboardedAt: new Date(),
     },
   });
 
   await db.coachAthlete.createMany({
     data: [
-      { coachId: coach.id, athleteId: athlete.id },
-      { coachId: coach.id, athleteId: athleteTwo.id },
+      // Accepted, as if each athlete had approved the request: a pending link
+      // grants the coach nothing, so the review pages would 404.
+      { coachId: coach.id, athleteId: athlete.id, status: "ACCEPTED", respondedAt: new Date() },
+      { coachId: coach.id, athleteId: athleteTwo.id, status: "ACCEPTED", respondedAt: new Date() },
     ],
   });
 
