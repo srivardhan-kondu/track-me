@@ -36,3 +36,6 @@ yarn-error.log*
 
 # Backfill receipts — kept locally so a run can be undone, never committed.
 backfill-sets-*.json
+
+# Demo-data receipts — kept locally so a run can be undone, never committed.
+demo-user-*.json
