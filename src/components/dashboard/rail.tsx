@@ -8,6 +8,7 @@ import {
 import { cn, initials, round } from "@/lib/utils";
 import type { ComplianceDay, WeightPoint } from "@/services/reporting";
 
+import { LOCALE } from "@/lib/locale";
 /** Latest weight with a bare sparkline — enough to see the direction. */
 export function WeightRailCard({
   points,
@@ -138,7 +139,7 @@ export function ConsistencyCard({ days }: { days: ComplianceDay[] }) {
           <div
             key={day.toISOString()}
             className="flex flex-1 flex-col items-center gap-2"
-            title={`${day.toLocaleDateString(undefined, {
+            title={`${day.toLocaleDateString(LOCALE, {
               weekday: "short",
               month: "short",
               day: "numeric",
@@ -154,7 +155,7 @@ export function ConsistencyCard({ days }: { days: ComplianceDay[] }) {
               )}
             />
             <span className="font-mono text-[10px] text-fg-faint">
-              {day.toLocaleDateString(undefined, { weekday: "narrow" })}
+              {day.toLocaleDateString(LOCALE, { weekday: "narrow" })}
             </span>
           </div>
         ))}

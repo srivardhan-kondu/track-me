@@ -8,6 +8,8 @@
  * the athlete's IANA zone explicitly.
  */
 
+import { LOCALE } from "./locale";
+
 export const DEFAULT_TIME_ZONE = "UTC";
 
 /** Guards against a bad or unknown zone reaching Intl and throwing. */
@@ -137,7 +139,7 @@ export function hourInZone(date: Date, timeZone: string): number {
 }
 
 export function formatTimeInZone(date: Date, timeZone: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(LOCALE, {
     timeZone,
     hour: "numeric",
     minute: "2-digit",
@@ -149,5 +151,5 @@ export function formatDateInZone(
   timeZone: string,
   options: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "long" },
 ): string {
-  return new Intl.DateTimeFormat(undefined, { timeZone, ...options }).format(date);
+  return new Intl.DateTimeFormat(LOCALE, { timeZone, ...options }).format(date);
 }

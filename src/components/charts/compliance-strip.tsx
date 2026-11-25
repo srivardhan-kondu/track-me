@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { ComplianceDay } from "@/services/reporting";
 
+import { LOCALE } from "@/lib/locale";
 /**
  * A fortnight of logging as a calendar grid: one cell per day, warmer the
  * more that day held.
@@ -31,7 +32,7 @@ export function ComplianceStrip({
                 score === 2 && "bg-accent/65",
                 score === 3 && "bg-accent",
               )}
-              title={`${d.day.toLocaleDateString(undefined, {
+              title={`${d.day.toLocaleDateString(LOCALE, {
                 weekday: "short",
                 month: "short",
                 day: "numeric",
@@ -50,7 +51,7 @@ export function ComplianceStrip({
       ) : (
         <div className="flex justify-between">
           <span className="mono-label">
-            {days[0]?.day.toLocaleDateString(undefined, {
+            {days[0]?.day.toLocaleDateString(LOCALE, {
               month: "short",
               day: "numeric",
             })}

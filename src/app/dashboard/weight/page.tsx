@@ -26,6 +26,7 @@ import {
 } from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Weight" };
 
 const RANGES = [
@@ -245,7 +246,7 @@ export default async function WeightPage({
                           i === 0 ? "text-fg" : "text-fg-muted",
                         )}
                       >
-                        {new Date(entry.day).toLocaleDateString(undefined, {
+                        {new Date(entry.day).toLocaleDateString(LOCALE, {
                           weekday: "short",
                           day: "numeric",
                           month: "short",

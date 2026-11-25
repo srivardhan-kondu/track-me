@@ -13,6 +13,7 @@ import { getSystemStatus } from "@/services/admin";
 import { storageProvider, usingObjectStorage } from "@/services/storage";
 import { cn } from "@/lib/utils";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "System" };
 
 /** A rate-limit window in the units a person thinks in. */
@@ -26,7 +27,7 @@ function window(seconds: number): string {
 function limitValue(bucket: string, max: number): string {
   return bucket === "uploadBytes"
     ? `${Math.round(max / (1024 * 1024))} MB`
-    : max.toLocaleString();
+    : max.toLocaleString(LOCALE);
 }
 
 export default async function AdminSystemPage() {
@@ -65,7 +66,7 @@ export default async function AdminSystemPage() {
         />
         <Metric
           label="Live rate windows"
-          value={rateLimitRows.toLocaleString()}
+          value={rateLimitRows.toLocaleString(LOCALE)}
           note="swept by the worker"
         />
       </MetricStrip>
@@ -222,7 +223,7 @@ export default async function AdminSystemPage() {
             <div key={table.table}>
               <p className="mono-label">{table.table}</p>
               <p className="tabular mt-1 text-[14px] font-semibold text-fg">
-                {table.rows.toLocaleString()}
+                {table.rows.toLocaleString(LOCALE)}
               </p>
             </div>
           ))}

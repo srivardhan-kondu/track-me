@@ -18,6 +18,7 @@ import {
 import type { TimelineMeal } from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Meals" };
 
 /**
@@ -166,7 +167,7 @@ function Figure({
     <div className="px-5 py-4">
       <p className="mono-label">{label}</p>
       <p className="tabular mt-1.5 text-[19px] font-extrabold leading-none text-fg">
-        {value.toLocaleString()}
+        {value.toLocaleString(LOCALE)}
         {unit && (
           <span className="ml-1 text-[12px] font-semibold text-fg-dim">
             {unit}

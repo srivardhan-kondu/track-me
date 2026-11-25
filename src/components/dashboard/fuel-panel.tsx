@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { DayTotals } from "@/services/reporting";
 
+import { LOCALE } from "@/lib/locale";
 /** The athlete's own recent average, used as the reference line for the day. */
 export type MacroBaseline = {
   calories: number;
@@ -84,7 +85,7 @@ export function FuelPanel({
 
         <div className="mt-3 flex items-baseline gap-2">
           <span className="tabular font-serif text-[52px] leading-none text-fg">
-            {totals.calories.toLocaleString()}
+            {totals.calories.toLocaleString(LOCALE)}
           </span>
           <span className="text-[13px] font-medium text-fg-dim">kcal</span>
         </div>
@@ -96,7 +97,7 @@ export function FuelPanel({
               {" · "}
               {diff === 0
                 ? "right on your usual day"
-                : `${diff > 0 ? "+" : ""}${diff.toLocaleString()} vs your usual ${baseline.calories.toLocaleString()}`}
+                : `${diff > 0 ? "+" : ""}${diff.toLocaleString(LOCALE)} vs your usual ${baseline.calories.toLocaleString(LOCALE)}`}
             </>
           ) : (
             " logged"

@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { deleteProgressPhoto } from "@/app/actions/weight";
+import { SafeImage } from "@/components/ui/safe-image";
 import { runAction } from "@/lib/run-action";
 
 export function ProgressPhotoCard({
@@ -32,19 +33,23 @@ export function ProgressPhotoCard({
     router.refresh();
   }
 
+  const unavailable = (
+    <div className="hatched grid h-full w-full place-items-center">
+      <span className="mono-label">Unavailable</span>
+    </div>
+  );
+
   return (
     <figure className="group relative aspect-[3/4] overflow-hidden rounded-[11px] border border-line bg-surface-inset">
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <SafeImage
           src={url}
           alt={`${pose} pose taken ${takenAt}`}
           className="h-full w-full object-cover"
+          fallback={unavailable}
         />
       ) : (
-        <div className="hatched grid h-full w-full place-items-center">
-          <span className="mono-label">Unavailable</span>
-        </div>
+        unavailable
       )}
 
       <figcaption className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/75 to-transparent px-2.5 py-2">

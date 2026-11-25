@@ -30,6 +30,7 @@ import { formatHeight, formatWeight, unitPrefs } from "@/lib/units";
 import { initials } from "@/lib/utils";
 import { getUserDetail } from "@/services/admin";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Account" };
 
 /** A label and a value, stacked — the console's smallest read-only field. */
@@ -123,7 +124,7 @@ export default async function AdminUserPage({
       <MetricStrip>
         <Metric
           label="Records logged"
-          value={logged.toLocaleString()}
+          value={logged.toLocaleString(LOCALE)}
           note={`${user._count.meals} meals · ${user._count.workouts} workouts`}
         />
         <Metric

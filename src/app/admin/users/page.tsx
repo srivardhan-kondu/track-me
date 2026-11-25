@@ -19,6 +19,7 @@ import {
 import { initials } from "@/lib/utils";
 import { listUsers } from "@/services/admin";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Users" };
 
 type Params = {
@@ -78,7 +79,7 @@ export default async function AdminUsersPage({
   return (
     <>
       <PageHeader
-        eyebrow={`${page.total.toLocaleString()} account${page.total === 1 ? "" : "s"}`}
+        eyebrow={`${page.total.toLocaleString(LOCALE)} account${page.total === 1 ? "" : "s"}`}
         title="Users"
         subtitle="Every account, what it is entitled to, and what it has actually done."
       />
@@ -219,7 +220,7 @@ export default async function AdminUsersPage({
 
                 <Td align="right">
                   <span className="tabular text-[12.5px] text-fg">
-                    {logged.toLocaleString()}
+                    {logged.toLocaleString(LOCALE)}
                   </span>
                 </Td>
 

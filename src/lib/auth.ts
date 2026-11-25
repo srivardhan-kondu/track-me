@@ -163,7 +163,9 @@ if (devLoginEnabled) {
       async authorize(creds) {
         const email = String(creds?.email ?? "").trim().toLowerCase();
         if (!email || !email.includes("@")) return null;
-        if (!(await signInAllowed(email))) return null;
+        // No throttle here: there is no password to guess, so it protected
+        // nothing, and it locked out anyone switching between the demo
+        // accounts more than five times in fifteen minutes.
 
         const role = creds?.role === "COACH" ? "COACH" : "ATHLETE";
         const name = email

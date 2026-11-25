@@ -11,6 +11,7 @@ import {
 import { PREMIUM_FEATURES } from "@/lib/plans";
 import { checkoutEnabled, liveMode } from "@/lib/razorpay";
 
+import { LOCALE } from "@/lib/locale";
 /**
  * The plan board.
  *
@@ -32,7 +33,7 @@ type Status = {
 /** One line describing what the account currently has, and until when. */
 export function planSummary(status: Status): { label: string; detail: string } {
   const on = (d: Date) =>
-    d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+    d.toLocaleDateString(LOCALE, { day: "numeric", month: "long", year: "numeric" });
 
   if (status.plan === "PREMIUM" && !status.planExpiresAt) {
     return { label: "Lifetime", detail: "Paid once. Nothing to renew." };

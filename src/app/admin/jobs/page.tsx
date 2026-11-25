@@ -20,6 +20,7 @@ import { ago, pageParam, queueHealth, stamp } from "@/lib/admin";
 import { MAX_IN_FLIGHT } from "@/lib/jobs";
 import { getQueueTally, getStalledRecords, listJobs } from "@/services/admin";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Queue" };
 
 type Params = { state?: string; page?: string };
@@ -87,15 +88,15 @@ export default async function AdminJobsPage({
       />
 
       <MetricStrip>
-        <Metric label="Queued" value={queue.queued.toLocaleString()} />
+        <Metric label="Queued" value={queue.queued.toLocaleString(LOCALE)} />
         <Metric
           label="Running"
-          value={queue.running.toLocaleString()}
+          value={queue.running.toLocaleString(LOCALE)}
           note={`ceiling ${MAX_IN_FLIGHT}`}
         />
         <Metric
           label="Gave up"
-          value={queue.failed.toLocaleString()}
+          value={queue.failed.toLocaleString(LOCALE)}
           tone={queue.failed > 0 ? "clay" : "default"}
           note={queue.failed > 0 ? "nothing will retry these" : "none"}
         />

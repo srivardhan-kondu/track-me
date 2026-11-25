@@ -15,6 +15,7 @@ import { budgetHealth, inr, inrShort, queueHealth } from "@/lib/admin";
 import { cn } from "@/lib/utils";
 import { getOverview, getTrends } from "@/services/admin";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Overview" };
 
 /** Change against the period before it, in the only form that reads quickly. */
@@ -134,13 +135,13 @@ export default async function AdminOverviewPage() {
       <MetricStrip>
         <Metric
           label="Accounts"
-          value={users.total.toLocaleString()}
+          value={users.total.toLocaleString(LOCALE)}
           note={`+${users.new7d} this week`}
           noteTone={users.new7d >= users.prev7d ? "sage" : "default"}
         />
         <Metric
           label="Paying"
-          value={accounts.paid.toLocaleString()}
+          value={accounts.paid.toLocaleString(LOCALE)}
           note={`${Math.round(accounts.conversion * 100)}% of finished trials`}
         />
         <Metric
@@ -160,7 +161,7 @@ export default async function AdminOverviewPage() {
         />
         <Metric
           label="Active · 7d"
-          value={activity.active7d.toLocaleString()}
+          value={activity.active7d.toLocaleString(LOCALE)}
           note={`${activity.active24h} today`}
         />
       </MetricStrip>
@@ -169,7 +170,7 @@ export default async function AdminOverviewPage() {
         <TrendChart
           label="Sign-ups"
           points={trends.signups}
-          headline={users.new30d.toLocaleString()}
+          headline={users.new30d.toLocaleString(LOCALE)}
           format={(v) => `${v} sign-up${v === 1 ? "" : "s"}`}
           note={
             <>
@@ -190,7 +191,7 @@ export default async function AdminOverviewPage() {
           points={trends.logs}
           headline={trends.logs
             .reduce((sum, p) => sum + p.value, 0)
-            .toLocaleString()}
+            .toLocaleString(LOCALE)}
           format={(v) => `${v} record${v === 1 ? "" : "s"}`}
           note={`${activity.mealsToday} meals, ${activity.workoutsToday} workouts and ${activity.weighInsToday} weigh-ins logged today.`}
         />
@@ -200,7 +201,7 @@ export default async function AdminOverviewPage() {
         <Panel
           title="Where the accounts stand"
           description="Every account is in exactly one of these four states."
-          meta={`${users.total.toLocaleString()} total`}
+          meta={`${users.total.toLocaleString(LOCALE)} total`}
         >
           <StackedBar
             segments={[
@@ -233,7 +234,7 @@ export default async function AdminOverviewPage() {
               <div key={String(label)}>
                 <dt className="mono-label">{label}</dt>
                 <dd className="tabular mt-1.5 text-[15px] font-semibold text-fg">
-                  {Number(value).toLocaleString()}
+                  {Number(value).toLocaleString(LOCALE)}
                 </dd>
               </div>
             ))}
@@ -270,7 +271,7 @@ export default async function AdminOverviewPage() {
                       tone === "clay" ? "text-clay-text" : "text-fg",
                     )}
                   >
-                    {Number(value).toLocaleString()}
+                    {Number(value).toLocaleString(LOCALE)}
                   </dd>
                 </div>
               ))}

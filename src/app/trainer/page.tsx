@@ -16,6 +16,7 @@ import {
 import { cn, initials } from "@/lib/utils";
 import { getCoachRoster, getPendingRequests } from "@/services/reporting";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Coach dashboard" };
 
 function relativeDays(date: Date | null): string {
@@ -175,7 +176,7 @@ export default async function TrainerPage() {
                 <div className="flex gap-4">
                   <Figure
                     label="Today"
-                    value={todayTotals.calories.toLocaleString()}
+                    value={todayTotals.calories.toLocaleString(LOCALE)}
                     unit="kcal"
                   />
                   <Figure

@@ -14,13 +14,14 @@ import {
   RELIABLE_REPS,
 } from "@/services/strength";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Strength" };
 
 /** A year of training shows a trend without drowning the chart. */
 const WINDOW_DAYS = 365;
 
 function shortDate(d: Date) {
-  return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return d.toLocaleDateString(LOCALE, { day: "numeric", month: "short" });
 }
 
 export default async function StrengthPage() {

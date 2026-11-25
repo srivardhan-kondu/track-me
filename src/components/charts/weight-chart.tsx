@@ -6,6 +6,7 @@ import {
 } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
+import { LOCALE } from "@/lib/locale";
 export type Point = { day: Date; weightKg: number };
 
 const W = 900;
@@ -129,7 +130,7 @@ export function WeightChart({
 
   const axis = [0, 1, 2, 3].map((i) => {
     const t = tMin + (tSpan * i) / 3;
-    return new Date(t).toLocaleDateString(undefined, {
+    return new Date(t).toLocaleDateString(LOCALE, {
       month: "short",
       day: "numeric",
     });
