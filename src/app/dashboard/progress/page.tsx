@@ -1,7 +1,9 @@
 import { EmptyState } from "@/components/layout/page";
 import { ProgressPhotoCard } from "@/components/log/progress-photo-card";
 import { ProgressUploader } from "@/components/log/progress-uploader";
+import { SafeImage } from "@/components/ui/safe-image";
 import { db } from "@/lib/db";
+import { LOCALE } from "@/lib/locale";
 import { PremiumNotice } from "@/components/billing/premium-notice";
 import { premiumStatus, requireUser } from "@/lib/session";
 import { formatWeight, type WeightUnit } from "@/lib/units";
@@ -20,7 +22,7 @@ type Resolved = {
 };
 
 function shortDate(date: Date) {
-  return date.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return date.toLocaleDateString(LOCALE, { day: "numeric", month: "short" });
 }
 
 /** The check-in nearest a photo, so a comparison carries its numbers. */
@@ -69,8 +71,12 @@ function CompareTile({
 
       <div className="relative h-[260px] overflow-hidden rounded-xl border border-line bg-surface-inset">
         {photo.url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo.url} alt={caption} className="h-full w-full object-cover" />
+          <SafeImage
+            src={photo.url}
+            alt={caption}
+            className="h-full w-full object-cover"
+            fallback={<div className="hatched h-full w-full" />}
+          />
         ) : (
           <div className="hatched h-full w-full" />
         )}
@@ -188,8 +194,7 @@ export default async function ProgressPage() {
         <div className="flex flex-col gap-5">
           {[...months.entries()].map(([key, monthPhotos]) => {
             const [year, month] = key.split("-").map(Number);
-            const label = new Date(year, month - 1, 1).toLocaleDateString(
-              undefined,
+            const label = new Date(year, month - 1, 1).toLocaleDateString(LOCALE,
               { month: "long", year: "numeric" },
             );
 
