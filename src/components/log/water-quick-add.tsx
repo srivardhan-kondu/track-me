@@ -59,14 +59,14 @@ export function WaterQuickAdd({
           onClick={() => add(preset.ml)}
           disabled={pending !== null}
           className={cn(
-            "flex items-baseline gap-1.5 rounded-full border px-3.5 py-2 text-[12.5px] font-medium transition-colors disabled:opacity-50",
+            "flex items-baseline gap-1.5 rounded-full border px-3.5 py-2 text-[13.5px] font-medium transition-colors disabled:opacity-50",
             pending === preset.ml
               ? "border-blue bg-blue-soft text-blue-text"
               : "border-line-strong text-fg-muted hover:border-blue hover:bg-blue-soft hover:text-fg",
           )}
         >
           <span>{preset.label}</span>
-          <span className="tabular font-mono text-[10.5px] text-fg-dim">
+          <span className="tabular font-mono text-[11.5px] text-fg-dim">
             +{displayVolume(preset.ml, unit)}
           </span>
         </button>
@@ -77,7 +77,7 @@ export function WaterQuickAdd({
           type="button"
           onClick={() => add(-lastAdded)}
           disabled={pending !== null}
-          className="flex items-center gap-1.5 rounded-full px-2.5 py-2 text-[12px] font-medium text-fg-faint transition-colors hover:text-fg-muted disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-2 text-[13px] font-medium text-fg-faint transition-colors hover:text-fg-muted disabled:opacity-50"
         >
           <Undo2 className="h-3.5 w-3.5" />
           Undo

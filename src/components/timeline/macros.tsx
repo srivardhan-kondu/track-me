@@ -26,9 +26,9 @@ export function MacroRow({
       {MACROS.map(({ key, label, text }) => (
         <span
           key={key}
-          className="flex items-baseline gap-1.5 text-[11.5px] text-fg-muted"
+          className="flex items-baseline gap-1.5 text-[12.5px] text-fg-muted"
         >
-          <span className={cn("text-[9px] leading-none", text)}>●</span>
+          <span className={cn("text-[11px] leading-none", text)}>●</span>
           {label}
           <span className="tabular font-medium text-fg-muted">
             {round(macros[key]) ?? "—"}g
@@ -50,7 +50,7 @@ export function MacroTicks({
   return (
     <div
       className={cn(
-        "tabular flex gap-3 font-mono text-[11px] text-fg-dim",
+        "tabular flex gap-3 font-mono text-[12px] text-fg-dim",
         className,
       )}
     >

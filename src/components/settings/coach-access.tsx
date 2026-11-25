@@ -60,10 +60,10 @@ export function CoachAccess({
 
   if (pending.length === 0 && accepted.length === 0) {
     return (
-      <p className="text-[12.5px] leading-relaxed text-fg-muted">
+      <p className="text-[13.5px] leading-relaxed text-fg-muted">
         No coach is monitoring you yet. Ask your trainer to request access using
         the email you signed up with,{" "}
-        <span className="font-mono text-[12px] text-fg">{email}</span>. Nothing
+        <span className="font-mono text-[13px] text-fg">{email}</span>. Nothing
         is shared until you allow it here.
       </p>
     );
@@ -170,10 +170,10 @@ function Row({
       </Avatar>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[12.5px] font-semibold text-fg">
+        <p className="truncate text-[13.5px] font-semibold text-fg">
           {person.name ?? "Coach"}
         </p>
-        <p className="mt-0.5 truncate text-[11.5px] text-fg-muted">
+        <p className="mt-0.5 truncate text-[12.5px] text-fg-muted">
           {person.email} · {note}
         </p>
       </div>

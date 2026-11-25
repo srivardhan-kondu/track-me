@@ -164,7 +164,7 @@ export async function reprocessMeal(mealId: string): Promise<ActionResult> {
     await enforce(
       "aiReprocess",
       user.id,
-      "You have re-analysed several entries recently.",
+      "You have re-analyzed several entries recently.",
     );
   } catch (err) {
     if (err instanceof RateLimited) return { ok: false, error: err.message };

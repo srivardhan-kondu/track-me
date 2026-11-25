@@ -53,10 +53,10 @@ export function ProgressPhotoCard({
       )}
 
       <figcaption className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/75 to-transparent px-2.5 py-2">
-        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/90">
+        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/90">
           {takenAt}
         </span>
-        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/60">
+        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/60">
           {pose}
         </span>
       </figcaption>

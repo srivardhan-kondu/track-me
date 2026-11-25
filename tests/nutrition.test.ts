@@ -9,7 +9,7 @@ function grams(text: string, name: string): number {
   const { items } = estimateFromText(text);
   const item = items.find((i) => i.name === name);
   assert.ok(item, `expected "${name}" in: ${items.map((i) => i.name).join(", ")}`);
-  return parseFloat(item.quantity);
+  return item.grams;
 }
 
 describe("meal quantity parsing", () => {
@@ -85,5 +85,44 @@ describe("fibre", () => {
     assert.equal(result.aiGenerated, false);
     // The macros it does know are still returned.
     assert.ok(result.calories > 0);
+  });
+});
+
+describe("US meals on the free tier", () => {
+  const names = (text: string) => estimateFromText(text).items.map((i) => i.name).sort();
+
+  it("recognizes a typical American day", () => {
+    assert.deepEqual(names("bagel with cream cheese and a latte"), ["Bagel", "Cream cheese", "Latte"]);
+    assert.deepEqual(names("turkey sandwich and chips"), ["Chips", "Sandwich", "Turkey / ham"]);
+    assert.deepEqual(names("chicken burrito"), ["Burrito", "Chicken breast"]);
+    assert.deepEqual(names("6 buffalo wings and fries"), ["Chicken wings", "French fries"]);
+    assert.deepEqual(names("a cheeseburger"), ["Burger"]);
+  });
+
+  it("does not count a food twice inside a longer name", () => {
+    assert.deepEqual(names("mac and cheese"), ["Mac and cheese"]);
+    assert.deepEqual(names("fried rice"), ["Fried rice"]);
+    assert.deepEqual(names("orange juice"), ["Sweet drink"]);
+    assert.deepEqual(names("green beans"), ["Vegetables"]);
+  });
+
+  it("reads ounces, pounds and fluid ounces", () => {
+    assert.equal(grams("8 oz steak", "Beef"), 227);
+    assert.equal(grams("half lb of shrimp", "Shrimp"), 100); // no digits: default portion
+    assert.equal(grams("1 lb shrimp", "Shrimp"), 454);
+    assert.equal(grams("16 fl oz smoothie", "Smoothie"), 473);
+  });
+
+  it("reads US kitchen measures", () => {
+    assert.equal(grams("2 tbsp ranch", "Dressing / mayo"), 30);
+    assert.equal(grams("two bottles of beer", "Beer"), 710);
+    assert.equal(grams("2 plates of pasta", "Pasta (cooked)"), 500);
+  });
+});
+
+describe("dictated US measures read back as said", () => {
+  it("keeps the ounces in front of the grams", () => {
+    const [item] = estimateFromText("8 oz steak").items;
+    assert.equal(item.quantity, "8 oz (227 g)");
   });
 });

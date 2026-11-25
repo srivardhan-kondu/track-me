@@ -44,7 +44,7 @@ function Field({
   return (
     <div>
       <dt className="mono-label">{label}</dt>
-      <dd className="mt-1.5 text-[12.5px] text-fg-muted">{children}</dd>
+      <dd className="mt-1.5 text-[13.5px] text-fg-muted">{children}</dd>
     </div>
   );
 }
@@ -83,7 +83,7 @@ export default async function AdminUserPage({
     <>
       <Link
         href="/admin/users"
-        className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-fg-dim transition-colors hover:text-fg"
+        className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-fg-dim transition-colors hover:text-fg"
       >
         <ArrowLeft className="h-4 w-4" />
         All users
@@ -112,7 +112,7 @@ export default async function AdminUserPage({
             {user.role === "COACH" && <Badge variant="secondary">Coach</Badge>}
           </div>
 
-          <p className="mt-2 text-[13px] text-fg-dim">
+          <p className="mt-2 text-[14px] text-fg-dim">
             {user.email ?? "no email on file"}
           </p>
           <Mono className="mt-1 block" title="Account id">
@@ -258,7 +258,7 @@ export default async function AdminUserPage({
             meta={`${jobs.length} shown`}
           >
             {jobs.length === 0 ? (
-              <p className="text-[12.5px] text-fg-dim">
+              <p className="text-[13.5px] text-fg-dim">
                 Nothing of theirs is in the queue.
               </p>
             ) : (
@@ -279,7 +279,7 @@ export default async function AdminUserPage({
                     >
                       {job.state.toLowerCase()}
                     </Badge>
-                    <span className="text-[12.5px] text-fg-muted">
+                    <span className="text-[13.5px] text-fg-muted">
                       {job.kind === "MEAL_ANALYSIS" ? "Meal" : "Workout"}
                     </span>
                     <Mono className="min-w-0 flex-1 truncate">
@@ -311,7 +311,7 @@ export default async function AdminUserPage({
               <div>
                 <p className="mono-label">Coaches with access</p>
                 {coachLinks.length === 0 ? (
-                  <p className="mt-2 text-[12.5px] text-fg-dim">None.</p>
+                  <p className="mt-2 text-[13.5px] text-fg-dim">None.</p>
                 ) : (
                   <ul className="mt-2.5 flex flex-col gap-2">
                     {coachLinks.map((link) => (
@@ -321,7 +321,7 @@ export default async function AdminUserPage({
                       >
                         <Link
                           href={`/admin/users/${link.coach.id}`}
-                          className="truncate text-[12.5px] text-fg-muted hover:text-fg"
+                          className="truncate text-[13.5px] text-fg-muted hover:text-fg"
                         >
                           {link.coach.name ?? link.coach.email}
                         </Link>
@@ -345,7 +345,7 @@ export default async function AdminUserPage({
               <div>
                 <p className="mono-label">Athletes they coach</p>
                 {athleteLinks.length === 0 ? (
-                  <p className="mt-2 text-[12.5px] text-fg-dim">None.</p>
+                  <p className="mt-2 text-[13.5px] text-fg-dim">None.</p>
                 ) : (
                   <ul className="mt-2.5 flex flex-col gap-2">
                     {athleteLinks.map((link) => (
@@ -355,7 +355,7 @@ export default async function AdminUserPage({
                       >
                         <Link
                           href={`/admin/users/${link.athlete.id}`}
-                          className="truncate text-[12.5px] text-fg-muted hover:text-fg"
+                          className="truncate text-[13.5px] text-fg-muted hover:text-fg"
                         >
                           {link.athlete.name ?? link.athlete.email}
                         </Link>
@@ -444,12 +444,12 @@ export default async function AdminUserPage({
             description="What admins have done to this account."
           >
             {audit.length === 0 ? (
-              <p className="text-[12.5px] text-fg-dim">Nothing yet.</p>
+              <p className="text-[13.5px] text-fg-dim">Nothing yet.</p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {audit.map((entry) => (
                   <li key={entry.id} className="border-b border-line pb-3 last:border-0 last:pb-0">
-                    <p className="text-[12.5px] text-fg-muted">{entry.summary}</p>
+                    <p className="text-[13.5px] text-fg-muted">{entry.summary}</p>
                     <Mono className="mt-1 block">
                       {entry.actorEmail ?? "unknown"} · {stamp(entry.createdAt)}
                     </Mono>

@@ -30,14 +30,14 @@ export function SiteFooter({ className }: { className?: string }) {
           <Link
             key={link.href}
             href={link.href}
-            className="text-[12px] text-fg-dim transition-colors hover:text-fg"
+            className="text-[13px] text-fg-dim transition-colors hover:text-fg"
           >
             {link.label}
           </Link>
         ))}
       </nav>
 
-      <p className="mt-5 text-[11.5px] leading-relaxed text-fg-faint">
+      <p className="mt-5 text-[12.5px] leading-relaxed text-fg-faint">
         {BUSINESS.product} is operated by {BUSINESS.legalName}.{" "}
         <Link
           href={`mailto:${BUSINESS.email}`}

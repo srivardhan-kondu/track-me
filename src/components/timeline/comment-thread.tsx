@@ -77,14 +77,14 @@ export function CommentThread({
         <div key={c.id} className="flex gap-2.5">
           <Avatar className="h-6 w-6">
             {c.author.image && <AvatarImage src={c.author.image} alt="" />}
-            <AvatarFallback className="text-[8px]">
+            <AvatarFallback className="text-[10px]">
               {initials(c.author.name)}
             </AvatarFallback>
           </Avatar>
 
           <div className="min-w-0 flex-1 rounded-xl border border-sage-line bg-sage-soft px-3 py-2.5">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="truncate text-[11.5px] font-semibold text-fg">
+              <span className="truncate text-[12.5px] font-semibold text-fg">
                 {c.author.name ?? "Coach"}
               </span>
               {/*
@@ -93,7 +93,7 @@ export function CommentThread({
               */}
               <span
                 suppressHydrationWarning
-                className="shrink-0 font-mono text-[10px] uppercase tracking-[0.1em] text-fg-dim"
+                className="shrink-0 font-mono text-[11px] uppercase tracking-[0.1em] text-fg-dim"
               >
                 {new Date(c.createdAt).toLocaleDateString(LOCALE, {
                   month: "short",
@@ -101,7 +101,7 @@ export function CommentThread({
                 })}
               </span>
             </div>
-            <p className="mt-1 whitespace-pre-wrap break-words text-[12.5px] leading-relaxed text-fg-muted">
+            <p className="mt-1 whitespace-pre-wrap break-words text-[13.5px] leading-relaxed text-fg-muted">
               {c.body}
             </p>
           </div>

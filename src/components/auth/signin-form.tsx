@@ -84,7 +84,7 @@ export function SignInForm({
     const res = await signIn("review", { email, password, redirect: false });
     if (res?.error) {
       setPending(null);
-      toast.error("Those credentials were not recognised.");
+      toast.error("Those credentials were not recognized.");
       return;
     }
     window.location.href = "/";
@@ -95,7 +95,7 @@ export function SignInForm({
       <h1 className="font-serif text-[26px] leading-none text-fg">
         Welcome to Track Me
       </h1>
-      <p className="mt-2.5 text-[12.5px] leading-relaxed text-fg-dim">
+      <p className="mt-2.5 text-[13.5px] leading-relaxed text-fg-dim">
         Log training in seconds. Your coach sees it automatically.
       </p>
 
@@ -177,7 +177,7 @@ export function SignInForm({
 
         {devLoginEnabled && (
           <form onSubmit={handleDev} className="flex flex-col gap-4">
-            <p className="rounded-xl border border-dashed border-line-strong p-3.5 text-[11.5px] leading-relaxed text-fg-dim">
+            <p className="rounded-xl border border-dashed border-line-strong p-3.5 text-[12.5px] leading-relaxed text-fg-dim">
               Google OAuth is not configured, so Track Me is using its local
               development sign-in. Set{" "}
               <code className="font-mono text-fg-muted">AUTH_GOOGLE_ID</code>{" "}
@@ -232,7 +232,7 @@ export function SignInForm({
         )}
 
         {!googleEnabled && !devLoginEnabled && !reviewLoginEnabled && (
-          <p className="text-[12.5px] leading-relaxed text-fg-dim">
+          <p className="text-[13.5px] leading-relaxed text-fg-dim">
             No sign-in provider is configured. Set{" "}
             <code className="font-mono text-fg-muted">AUTH_GOOGLE_ID</code> and{" "}
             <code className="font-mono text-fg-muted">AUTH_GOOGLE_SECRET</code>{" "}

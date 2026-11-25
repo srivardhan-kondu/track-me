@@ -52,7 +52,7 @@ export function ImagePicker({
 
   return (
     <div className={cn("flex flex-col gap-2.5", className)}>
-      <span className="text-[12.5px] font-medium text-fg-muted">{label}</span>
+      <span className="text-[13.5px] font-medium text-fg-muted">{label}</span>
 
       <input
         ref={galleryRef}
@@ -80,7 +80,7 @@ export function ImagePicker({
           />
 
           {value && (
-            <span className="absolute bottom-2.5 left-2.5 rounded bg-black/55 px-2 py-1 font-mono text-[9.5px] uppercase tracking-[0.1em] text-white/90 backdrop-blur">
+            <span className="absolute bottom-2.5 left-2.5 rounded bg-black/55 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-white/90 backdrop-blur">
               {formatBytes(value.size)}
             </span>
           )}
@@ -125,7 +125,7 @@ export function ImagePicker({
             </Button>
           </div>
 
-          <p className="mt-2.5 text-[11.5px] leading-relaxed text-fg-dim">
+          <p className="mt-2.5 text-[12.5px] leading-relaxed text-fg-dim">
             {working ? "Preparing photo…" : hint}
           </p>
         </div>

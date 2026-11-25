@@ -41,10 +41,10 @@ function Attention({
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-clay-line/60 py-2.5 last:border-0">
       <span className="text-clay-text">{icon}</span>
-      <span className="min-w-0 flex-1 text-[12.5px] text-fg">{children}</span>
+      <span className="min-w-0 flex-1 text-[13.5px] text-fg">{children}</span>
       <Link
         href={href}
-        className="flex shrink-0 items-center gap-1 text-[12px] font-medium text-clay-text hover:underline"
+        className="flex shrink-0 items-center gap-1 text-[13px] font-medium text-clay-text hover:underline"
       >
         {cta}
         <ArrowRight className="h-3.5 w-3.5" />
@@ -250,7 +250,7 @@ export default async function AdminOverviewPage() {
             actions={
               <Link
                 href="/admin/jobs"
-                className="text-[12px] font-medium text-accent-text hover:underline"
+                className="text-[13px] font-medium text-accent-text hover:underline"
               >
                 Open
               </Link>
@@ -277,7 +277,7 @@ export default async function AdminOverviewPage() {
               ))}
             </dl>
 
-            <p className="mt-4 border-t border-line pt-3.5 text-[12px] leading-relaxed text-fg-dim">
+            <p className="mt-4 border-t border-line pt-3.5 text-[13px] leading-relaxed text-fg-dim">
               {queue.queued === 0
                 ? "Nothing waiting."
                 : `Oldest job has been waiting ${Math.round(queue.oldestQueuedSec / 60)} minutes.`}{" "}
@@ -296,7 +296,7 @@ export default async function AdminOverviewPage() {
             actions={
               <Link
                 href="/admin/system"
-                className="text-[12px] font-medium text-accent-text hover:underline"
+                className="text-[13px] font-medium text-accent-text hover:underline"
               >
                 Open
               </Link>
@@ -308,7 +308,7 @@ export default async function AdminOverviewPage() {
                   <span className="tabular font-serif text-[30px] leading-none text-fg">
                     ${ai.spentUsd.toFixed(2)}
                   </span>
-                  <span className="font-mono text-[11px] text-fg-dim">
+                  <span className="font-mono text-[12px] text-fg-dim">
                     of ${ai.budgetUsd.toFixed(2)}
                   </span>
                 </div>
@@ -325,14 +325,14 @@ export default async function AdminOverviewPage() {
                   />
                 </div>
 
-                <p className="mt-3.5 text-[12px] leading-relaxed text-fg-dim">
+                <p className="mt-3.5 text-[13px] leading-relaxed text-fg-dim">
                   A ceiling, not a bill. Past it, analysis is parked until
                   tomorrow rather than run — the athlete&apos;s log is still
                   recorded either way.
                 </p>
               </>
             ) : (
-              <p className="text-[12.5px] text-fg-dim">
+              <p className="text-[13.5px] text-fg-dim">
                 The spend ledger could not be read.
               </p>
             )}

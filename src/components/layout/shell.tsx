@@ -67,7 +67,7 @@ export function AppShell({
         <div className="flex min-w-0 items-center gap-2 px-2 pb-7">
           <Logo href={home} />
           {badge && (
-            <span className="shrink-0 rounded-full bg-surface-inset px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-fg-muted">
+            <span className="shrink-0 rounded-full bg-surface-inset px-2 py-0.5 font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
               {badge}
             </span>
           )}
@@ -86,7 +86,7 @@ export function AppShell({
 
           <Link
             href="/dashboard/settings"
-            className="pl-3 text-[12.5px] font-medium text-fg-dim transition-colors hover:text-fg"
+            className="pl-3 text-[13.5px] font-medium text-fg-dim transition-colors hover:text-fg"
           >
             Settings
           </Link>
@@ -104,7 +104,7 @@ export function AppShell({
           <div className="flex min-w-0 items-center gap-2">
             <Logo href={home} />
             {badge && (
-              <span className="shrink-0 rounded-full bg-surface-inset px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-fg-muted">
+              <span className="shrink-0 rounded-full bg-surface-inset px-2 py-0.5 font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
                 {badge}
               </span>
             )}

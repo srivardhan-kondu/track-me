@@ -35,7 +35,7 @@ export default async function StrengthPage() {
           <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
             Strength
           </h1>
-          <p className="mt-2.5 text-[13px] leading-relaxed text-fg-dim">
+          <p className="mt-2.5 text-[14px] leading-relaxed text-fg-dim">
             Personal records and estimated one-rep max, tracked across every
             session you log.
           </p>
@@ -64,7 +64,7 @@ export default async function StrengthPage() {
         <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
           Strength
         </h1>
-        <p className="mt-2.5 text-[13px] leading-relaxed text-fg-dim">
+        <p className="mt-2.5 text-[14px] leading-relaxed text-fg-dim">
           Your best set of every movement, and where the trend is heading.
           One-rep maxes are estimated from the sets you logged, not tested.
         </p>
@@ -91,14 +91,14 @@ export default async function StrengthPage() {
                       className="rounded-2xl border border-line-strong bg-surface p-5"
                     >
                       <div className="flex items-baseline justify-between gap-3">
-                        <h3 className="text-[13px] font-semibold text-fg">
+                        <h3 className="text-[14px] font-semibold text-fg">
                           {p.exercise}
                         </h3>
                         <span
                           className={
                             rising
-                              ? "tabular font-mono text-[11.5px] text-sage-text"
-                              : "tabular font-mono text-[11.5px] text-fg-dim"
+                              ? "tabular font-mono text-[12.5px] text-sage-text"
+                              : "tabular font-mono text-[12.5px] text-fg-dim"
                           }
                         >
                           {formatWeightDelta(p.changeKg, unit)} {label}
@@ -107,7 +107,7 @@ export default async function StrengthPage() {
 
                       <p className="tabular mt-1 font-serif text-[26px] leading-none text-fg">
                         {displayWeight(latest.e1rm, unit)}
-                        <span className="ml-1 font-sans text-[12px] text-fg-dim">
+                        <span className="ml-1 font-sans text-[13px] text-fg-dim">
                           {label}
                         </span>
                       </p>
@@ -159,21 +159,21 @@ export default async function StrengthPage() {
                       key={r.exercise}
                       className="border-b border-line last:border-0"
                     >
-                      <td className="px-5 py-3.5 text-[12.5px] font-medium text-fg">
+                      <td className="px-5 py-3.5 text-[13.5px] font-medium text-fg">
                         {r.exercise}
-                        <span className="ml-2 font-mono text-[10px] text-fg-faint">
+                        <span className="ml-2 font-mono text-[11px] text-fg-faint">
                           {r.sessions}×
                         </span>
                       </td>
-                      <td className="tabular px-5 py-3.5 text-right font-mono text-[12px] text-fg-muted">
+                      <td className="tabular px-5 py-3.5 text-right font-mono text-[13px] text-fg-muted">
                         {displayWeight(r.heaviestKg, unit)} {label} ×{" "}
                         {r.heaviestReps}
                       </td>
-                      <td className="tabular px-5 py-3.5 text-right font-mono text-[12px] text-fg-muted">
+                      <td className="tabular px-5 py-3.5 text-right font-mono text-[13px] text-fg-muted">
                         {displayWeight(r.bestSetKg, unit)} {label} ×{" "}
                         {r.bestSetReps}
                       </td>
-                      <td className="tabular px-5 py-3.5 text-right font-mono text-[12px] font-semibold text-fg">
+                      <td className="tabular px-5 py-3.5 text-right font-mono text-[13px] font-semibold text-fg">
                         {displayWeight(r.bestE1RM, unit)} {label}
                         {r.estimateIsSoft && (
                           <span
@@ -184,7 +184,7 @@ export default async function StrengthPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-3.5 text-right text-[11.5px] text-fg-dim">
+                      <td className="px-5 py-3.5 text-right text-[12.5px] text-fg-dim">
                         {shortDate(r.achievedAt)}
                       </td>
                     </tr>
@@ -193,7 +193,7 @@ export default async function StrengthPage() {
               </table>
             </div>
 
-            <p className="text-[11.5px] leading-relaxed text-fg-dim">
+            <p className="text-[12.5px] leading-relaxed text-fg-dim">
               Estimated one-rep max uses Epley&apos;s formula. Sets marked{" "}
               <span className="font-mono">*</span> ran past {RELIABLE_REPS}{" "}
               reps, where the estimate says more about endurance than strength.

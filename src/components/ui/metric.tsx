@@ -48,12 +48,12 @@ export function Metric({
           {value}
         </span>
         {unit && (
-          <span className="font-mono text-[11px] text-fg-dim">{unit}</span>
+          <span className="font-mono text-[12px] text-fg-dim">{unit}</span>
         )}
         {note && (
           <span
             className={cn(
-              "tabular font-mono text-[11px]",
+              "tabular font-mono text-[12px]",
               noteTone === "default" ? "text-fg-dim" : TONE[noteTone],
             )}
           >
@@ -106,10 +106,10 @@ export function BigStat({
         >
           {value}
         </span>
-        {unit && <span className="text-[13px] text-fg-dim">{unit}</span>}
+        {unit && <span className="text-[14px] text-fg-dim">{unit}</span>}
       </div>
       {note && (
-        <p className="mt-2 text-[12.5px] leading-relaxed text-fg-dim">{note}</p>
+        <p className="mt-2 text-[13.5px] leading-relaxed text-fg-dim">{note}</p>
       )}
     </div>
   );
@@ -144,12 +144,12 @@ export function StatCard({
           {value}
         </span>
         {unit && (
-          <span className="font-mono text-[11px] text-fg-dim">{unit}</span>
+          <span className="font-mono text-[12px] text-fg-dim">{unit}</span>
         )}
         {note && (
           <span
             className={cn(
-              "tabular font-mono text-[11px]",
+              "tabular font-mono text-[12px]",
               noteTone === "default" ? "text-fg-dim" : TONE[noteTone],
             )}
           >

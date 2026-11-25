@@ -115,3 +115,23 @@ describe("tonnage", () => {
     assert.equal(formatTonnage(0, "KG"), "0 t");
   });
 });
+
+describe("regional defaults and portions", () => {
+  it("starts US zones on imperial and everyone else on metric", async () => {
+    const { unitsForTimeZone, IMPERIAL, METRIC } = await import("../src/lib/units");
+    assert.deepEqual(unitsForTimeZone("America/Chicago"), IMPERIAL);
+    assert.deepEqual(unitsForTimeZone("America/Indiana/Indianapolis"), IMPERIAL);
+    assert.deepEqual(unitsForTimeZone("Pacific/Honolulu"), IMPERIAL);
+    assert.deepEqual(unitsForTimeZone("America/Toronto"), METRIC);
+    assert.deepEqual(unitsForTimeZone("America/Mexico_City"), METRIC);
+    assert.deepEqual(unitsForTimeZone("Asia/Kolkata"), METRIC);
+    assert.deepEqual(unitsForTimeZone(null), METRIC);
+  });
+
+  it("round-trips a portion typed in ounces", async () => {
+    const { displayPortion, toGrams } = await import("../src/lib/units");
+    assert.equal(toGrams(6, "LB"), 170.1);
+    assert.equal(displayPortion(toGrams(6, "LB"), "LB"), 6);
+    assert.equal(displayPortion(150, "KG"), 150);
+  });
+});

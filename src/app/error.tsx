@@ -27,7 +27,7 @@ export default function RouteError({
       <h1 className="font-serif text-[26px] leading-tight text-fg">
         That screen failed to load
       </h1>
-      <p className="mt-3 text-[13.5px] leading-relaxed text-fg-muted">
+      <p className="mt-3 text-[14px] leading-relaxed text-fg-muted">
         Nothing you logged is affected. Try again, and if it keeps happening
         send us the detail below.
       </p>
@@ -36,19 +36,19 @@ export default function RouteError({
         <button
           type="button"
           onClick={reset}
-          className="flex h-[42px] items-center rounded-[14px] bg-accent px-5 text-[13.5px] font-semibold text-accent-ink"
+          className="flex h-[42px] items-center rounded-[14px] bg-accent px-5 text-[14px] font-semibold text-accent-ink"
         >
           Try again
         </button>
         <Link
           href="/dashboard"
-          className="flex h-[42px] items-center rounded-[14px] border border-line px-5 text-[13.5px] font-semibold text-fg"
+          className="flex h-[42px] items-center rounded-[14px] border border-line px-5 text-[14px] font-semibold text-fg"
         >
           Back to today
         </Link>
       </div>
 
-      <pre className="mt-8 overflow-x-auto rounded-[14px] border border-line bg-surface p-4 text-[11.5px] leading-relaxed text-fg-dim">
+      <pre className="mt-8 overflow-x-auto rounded-[14px] border border-line bg-surface p-4 text-[12.5px] leading-relaxed text-fg-dim">
         {error.message || "Unknown error"}
         {error.digest ? `\n\ndigest: ${error.digest}` : ""}
       </pre>

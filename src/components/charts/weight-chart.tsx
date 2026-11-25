@@ -46,7 +46,7 @@ export function WeightChart({
           className,
         )}
       >
-        <p className="text-[13px] leading-relaxed text-fg-dim">
+        <p className="text-[14px] leading-relaxed text-fg-dim">
           No check-ins yet. Weigh in tomorrow morning and the trend starts here.
         </p>
       </div>
@@ -64,11 +64,11 @@ export function WeightChart({
         <div>
           <p className="tabular font-serif text-[42px] leading-none text-fg">
             {displayWeight(points[0].weightKg, unit)}
-            <span className="ml-1.5 text-[13px] text-fg-dim">
+            <span className="ml-1.5 text-[14px] text-fg-dim">
               {weightLabel(unit)}
             </span>
           </p>
-          <p className="mt-3 text-[12.5px] text-fg-dim">
+          <p className="mt-3 text-[13.5px] text-fg-dim">
             One more check-in and the trend line appears.
           </p>
         </div>
@@ -211,7 +211,7 @@ export function WeightChart({
 
         {/* Drawn in HTML: the SVG is stretched, which would distort text. */}
         <span
-          className="absolute right-0 -translate-y-1/2 rounded-md bg-accent px-2 py-[3px] font-mono text-[10.5px] font-semibold text-accent-ink"
+          className="absolute right-0 -translate-y-1/2 rounded-md bg-accent px-2 py-[3px] font-mono text-[11.5px] font-semibold text-accent-ink"
           style={{ top: `${(last.cy / H) * 100}%` }}
         >
           {displayWeight(last.value, unit)}
@@ -225,11 +225,11 @@ export function WeightChart({
 
       {/* Two series, so identity never rests on colour alone. */}
       <div className="mt-2 flex items-center justify-end gap-3.5">
-        <span className="flex items-center gap-1.5 text-[10.5px] text-fg-dim">
+        <span className="flex items-center gap-1.5 text-[11.5px] text-fg-dim">
           <span className="h-[8px] w-[8px] rounded-full bg-fg-faint" />
           Daily
         </span>
-        <span className="flex items-center gap-1.5 text-[10.5px] text-fg-dim">
+        <span className="flex items-center gap-1.5 text-[11.5px] text-fg-dim">
           <span className="h-[2px] w-4 rounded-full bg-accent" />
           {TREND_DAYS}-day trend
         </span>

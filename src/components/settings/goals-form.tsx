@@ -57,7 +57,7 @@ export function GoalsForm({
     <form action={submit} className="flex flex-wrap items-end gap-3">
       <div className="min-w-[140px] flex-1">
         <Label htmlFor="target-calories" className="mb-2 block">
-          Daily calories (kcal)
+          Daily calories
         </Label>
         <Input
           id="target-calories"
@@ -95,7 +95,7 @@ export function GoalsForm({
         {pending ? "Saving…" : "Save targets"}
       </Button>
 
-      <p className="w-full text-[11.5px] leading-relaxed text-fg-dim">
+      <p className="w-full text-[12.5px] leading-relaxed text-fg-dim">
         Leave either blank and nothing is measured against it. The calorie
         target shows on your home screen beside what you have actually averaged;
         the goal weight shows on your weight card as the distance still to go.

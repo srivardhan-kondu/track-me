@@ -98,7 +98,7 @@ export default async function AdminPaymentsPage({
           meta={`${applied?._count ?? 0} payments`}
         >
           {sold.length === 0 ? (
-            <p className="text-[12.5px] text-fg-dim">
+            <p className="text-[13.5px] text-fg-dim">
               Nothing has been sold yet.
             </p>
           ) : (
@@ -125,7 +125,7 @@ export default async function AdminPaymentsPage({
                   <dd className="tabular mt-1.5 text-[18px] font-semibold text-fg">
                     {(row?._count ?? 0).toLocaleString(LOCALE)}
                   </dd>
-                  <dd className="tabular mt-0.5 font-mono text-[11px] text-fg-dim">
+                  <dd className="tabular mt-0.5 font-mono text-[12px] text-fg-dim">
                     {inrShort(row?._sum.amount ?? 0)}
                   </dd>
                 </div>
@@ -187,7 +187,7 @@ export default async function AdminPaymentsPage({
               </Td>
 
               <Td align="right">
-                <span className="tabular text-[13px] font-medium text-fg">
+                <span className="tabular text-[14px] font-medium text-fg">
                   {inr(payment.amount)}
                 </span>
                 {payment.currency !== "INR" && (
@@ -210,7 +210,7 @@ export default async function AdminPaymentsPage({
               </Td>
 
               <Td>
-                <span className="block truncate text-[12px]">
+                <span className="block truncate text-[13px]">
                   {payment.email ?? "no email"}
                 </span>
                 {payment.note && (
@@ -224,7 +224,7 @@ export default async function AdminPaymentsPage({
                 {payment.user ? (
                   <Link
                     href={`/admin/users/${payment.user.id}`}
-                    className="text-[12px] text-accent-text hover:underline"
+                    className="text-[13px] text-accent-text hover:underline"
                   >
                     {payment.user.name ?? payment.user.email}
                   </Link>

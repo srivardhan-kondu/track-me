@@ -91,7 +91,7 @@ export default function PricingPage() {
         <h1 className="font-serif text-[32px] leading-[1.1] text-fg sm:text-[38px]">
           Logging is free. Everything you look back on is Premium.
         </h1>
-        <p className="mt-4 text-[13.5px] leading-relaxed text-fg-dim">
+        <p className="mt-4 text-[14px] leading-relaxed text-fg-dim">
           Every plan starts with {TRIAL_DAYS} days of Premium, free, with no
           card required. Nothing you record is ever deleted — the free plan
           simply shows you the last {FREE_HISTORY_DAYS} days of it.
@@ -110,7 +110,7 @@ export default function PricingPage() {
             )}
           >
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[13px] font-semibold text-fg">{plan.name}</h2>
+              <h2 className="text-[14px] font-semibold text-fg">{plan.name}</h2>
               {plan.featured && <Badge>Best value</Badge>}
             </div>
 
@@ -119,7 +119,7 @@ export default function PricingPage() {
             </p>
             <p className="mono-label mt-2">{plan.cadence}</p>
 
-            <p className="mt-4 flex-1 text-[12px] leading-relaxed text-fg-dim">
+            <p className="mt-4 flex-1 text-[13px] leading-relaxed text-fg-dim">
               {plan.note}
             </p>
 
@@ -130,17 +130,17 @@ export default function PricingPage() {
         ))}
       </section>
 
-      <p className="mt-5 text-[12px] leading-relaxed text-fg-dim">
+      <p className="mt-5 text-[13px] leading-relaxed text-fg-dim">
         All prices are in Indian Rupees and include GST where applicable. There
         are no setup fees and no charges beyond the plan price shown.
       </p>
 
       <section className="mt-12 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-line bg-surface-muted p-6">
-          <h2 className="text-[13px] font-semibold text-fg">
+          <h2 className="text-[14px] font-semibold text-fg">
             Free, with no time limit
           </h2>
-          <ul className="mt-4 flex flex-col gap-2.5 text-[12.5px] leading-relaxed text-fg-muted">
+          <ul className="mt-4 flex flex-col gap-2.5 text-[13.5px] leading-relaxed text-fg-muted">
             {FREE_FEATURES.map((f) => (
               <li key={f} className="flex gap-2.5">
                 <span className="text-fg-faint">
@@ -153,10 +153,10 @@ export default function PricingPage() {
         </div>
 
         <div className="rounded-2xl border border-line-strong bg-surface p-6">
-          <h2 className="text-[13px] font-semibold text-fg">
+          <h2 className="text-[14px] font-semibold text-fg">
             Everything in Free, plus
           </h2>
-          <ul className="mt-4 flex flex-col gap-2.5 text-[12.5px] leading-relaxed text-fg-muted">
+          <ul className="mt-4 flex flex-col gap-2.5 text-[13.5px] leading-relaxed text-fg-muted">
             {PREMIUM_FEATURES.map((f) => (
               <li key={f} className="flex gap-2.5">
                 <span className="text-accent-text">
@@ -170,8 +170,8 @@ export default function PricingPage() {
       </section>
 
       <section className="mt-4 rounded-2xl border border-dashed border-line-strong p-5">
-        <h2 className="text-[12.5px] font-semibold text-fg">Not built yet</h2>
-        <p className="mt-2 text-[12px] leading-relaxed text-fg-dim">
+        <h2 className="text-[13.5px] font-semibold text-fg">Not built yet</h2>
+        <p className="mt-2 text-[13px] leading-relaxed text-fg-dim">
           Recovery tracking needs a wearable to sync from, and physique analysis
           is not something we are willing to ship until it is better than a
           guess. Neither is included in any plan today, and you are not paying
@@ -181,10 +181,10 @@ export default function PricingPage() {
       </section>
 
       <section className="mt-12 rounded-2xl border border-line bg-surface-muted p-6">
-        <h2 className="text-[13px] font-semibold text-fg">
+        <h2 className="text-[14px] font-semibold text-fg">
           Before you pay, the honest version
         </h2>
-        <div className="mt-3 flex flex-col gap-3 text-[12.5px] leading-relaxed text-fg-dim">
+        <div className="mt-3 flex flex-col gap-3 text-[13.5px] leading-relaxed text-fg-dim">
           <p>
             Subscriptions do not renew automatically. When a plan runs out you
             are moved back to the free plan and asked whether you want to

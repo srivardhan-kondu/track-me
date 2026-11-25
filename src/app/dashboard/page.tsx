@@ -231,10 +231,10 @@ export default async function TodayPage({
             <Play className="h-[18px] w-[18px]" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13.5px] font-semibold text-fg">
+            <span className="block text-[14px] font-semibold text-fg">
               Resume your workout
             </span>
-            <span className="mt-0.5 block text-[12.5px] text-fg-dim">
+            <span className="mt-0.5 block text-[13.5px] text-fg-dim">
               Started{" "}
               {formatDateInZone(draft.startedAt, zone, {
                 hour: "numeric",
@@ -278,7 +278,7 @@ export default async function TodayPage({
             than floating in its own row above the page.
           */}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-[12.5px] font-semibold text-fg">Timeline</h2>
+            <h2 className="text-[13.5px] font-semibold text-fg">Timeline</h2>
             <DaySwitcher
               prevHref={`/dashboard?date=${toDateParam(prev, zone)}`}
               todayHref="/dashboard"
@@ -321,7 +321,7 @@ export default async function TodayPage({
                   <p className="font-serif text-lg text-fg">
                     Nothing logged {isToday ? "yet today" : "that day"}
                   </p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-fg-dim">
+                  <p className="mt-1.5 text-[14px] leading-relaxed text-fg-dim">
                     {isToday
                       ? "Snap your next meal — it takes about ten seconds."
                       : "Days you miss change nothing. The trend is what matters."}

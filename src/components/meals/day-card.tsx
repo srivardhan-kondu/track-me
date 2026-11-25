@@ -41,7 +41,7 @@ export function DayCard({
     { label: "Carbs", value: totals.carbs, unit: "g" },
     { label: "Fat", value: totals.fat, unit: "g" },
     ...(totals.fiber !== null
-      ? [{ label: "Fibre", value: totals.fiber, unit: "g" }]
+      ? [{ label: "Fiber", value: totals.fiber, unit: "g" }]
       : []),
   ];
 
@@ -52,10 +52,10 @@ export function DayCard({
     >
       <div className="flex items-center gap-3.5">
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13.5px] font-semibold text-fg">
+          <span className="block truncate text-[14px] font-semibold text-fg">
             {label}
           </span>
-          <span className="mt-1 block font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
+          <span className="mt-1 block font-mono text-[12px] uppercase tracking-[0.06em] text-fg-dim">
             {meals} meal{meals === 1 ? "" : "s"}
           </span>
         </span>
@@ -104,7 +104,7 @@ function Figure({
       <p className="tabular mt-1 truncate text-[15px] font-extrabold leading-none text-fg">
         {value.toLocaleString(LOCALE)}
         {unit && (
-          <span className="ml-0.5 text-[11px] font-semibold text-fg-dim">
+          <span className="ml-0.5 text-[12px] font-semibold text-fg-dim">
             {unit}
           </span>
         )}

@@ -10,7 +10,7 @@ export default function OfflinePage() {
         <h1 className="mt-5 font-serif text-[26px] leading-none text-fg">
           You&apos;re offline
         </h1>
-        <p className="mt-3 text-[13px] leading-relaxed text-fg-dim">
+        <p className="mt-3 text-[14px] leading-relaxed text-fg-dim">
           Track Me needs a connection to save a meal and estimate its macros.
           Your logs are safe — reconnect and this page will load again.
         </p>

@@ -112,7 +112,7 @@ export default async function WorkoutsPage() {
           <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
             Training
           </h1>
-          <p className="mt-2.5 text-[13px] text-fg-dim">
+          <p className="mt-2.5 text-[14px] text-fg-dim">
             Last {premium ? `${weeks} weeks` : `${days} days`}
             {sessions > 0 && ` · ${perWeek} sessions a week`}
           </p>
@@ -150,10 +150,10 @@ export default async function WorkoutsPage() {
             <Play className="h-[18px] w-[18px]" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13.5px] font-semibold text-fg">
+            <span className="block text-[14px] font-semibold text-fg">
               Resume your workout
             </span>
-            <span className="mt-0.5 block text-[12.5px] text-fg-dim">
+            <span className="mt-0.5 block text-[13.5px] text-fg-dim">
               Started{" "}
               {formatDateInZone(draft.startedAt, zone, {
                 hour: "numeric",
@@ -176,7 +176,7 @@ export default async function WorkoutsPage() {
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="rounded-2xl border border-line-strong bg-surface px-6 py-5">
           <div className="flex items-baseline justify-between gap-4">
-            <p className="text-[12.5px] font-semibold text-fg">Weekly volume</p>
+            <p className="text-[13.5px] font-semibold text-fg">Weekly volume</p>
             <p className="mono-label">
               {units.weight === "LB" ? "Pounds lifted" : "Tonnes lifted"}
             </p>
@@ -215,7 +215,7 @@ export default async function WorkoutsPage() {
       <section className="flex flex-col gap-3.5">
         <SectionHeading meta="Last 7 days">Volume by muscle group</SectionHeading>
         <div className="rounded-2xl border border-line-strong bg-surface p-5">
-          <p className="mb-4 text-[12px] leading-relaxed text-fg-dim">
+          <p className="mb-4 text-[13px] leading-relaxed text-fg-dim">
             A set counts fully toward the muscles an exercise trains directly,
             and half toward those assisting. The figure reads the same numbers —
             what it shows better than the list is what got nothing.

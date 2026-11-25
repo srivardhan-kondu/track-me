@@ -20,7 +20,7 @@ import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Water" };
 
 const RANGES = [
-  { label: "14d", value: "14", days: 14, window: "fortnight" },
+  { label: "14d", value: "14", days: 14, window: "two-week" },
   { label: "30d", value: "30", days: 30, window: "30-day" },
   { label: "90d", value: "90", days: 90, window: "90-day" },
 ] as const;
@@ -115,7 +115,7 @@ export default async function WaterPage({
           <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
             Water
           </h1>
-          <p className="mt-2.5 text-[13px] text-fg-dim">
+          <p className="mt-2.5 text-[14px] text-fg-dim">
             Daily intake · {range.window} window
           </p>
         </div>
@@ -138,7 +138,7 @@ export default async function WaterPage({
       {!premium && (
         <PremiumNotice
           title="Showing the last 7 days"
-          body="Every glass you log is kept — Premium opens the fortnight, 30-day and 90-day windows behind it."
+          body="Every glass you log is kept — Premium opens the 14-day, 30-day and 90-day windows behind it."
         />
       )}
 
@@ -166,7 +166,7 @@ export default async function WaterPage({
 
           <div className="ml-auto max-w-[240px]">
             <p className="mono-label">Where this stands</p>
-            <p className="mt-2.5 text-[12.5px] leading-relaxed text-fg-muted">
+            <p className="mt-2.5 text-[13.5px] leading-relaxed text-fg-muted">
               {streak >= 2
                 ? `${streak} days running at ${formatWater(goalMl, unit)} or more. That is the habit, not the day.`
                 : todayMl >= goalMl
@@ -225,7 +225,7 @@ export default async function WaterPage({
                     <div className="min-w-0 flex-1">
                       <p
                         className={cn(
-                          "text-[13px] font-medium",
+                          "text-[14px] font-medium",
                           i === 0 ? "text-fg" : "text-fg-muted",
                         )}
                       >
@@ -251,14 +251,14 @@ export default async function WaterPage({
 
                     <span
                       className={cn(
-                        "tabular w-[46px] shrink-0 text-right font-mono text-[11.5px]",
+                        "tabular w-[46px] shrink-0 text-right font-mono text-[12.5px]",
                         met ? "text-blue-text" : "text-fg-dim",
                       )}
                     >
                       {hydrationPct(entry.ml, goalMl)}%
                     </span>
 
-                    <span className="tabular shrink-0 font-mono text-[13px] text-fg">
+                    <span className="tabular shrink-0 font-mono text-[14px] text-fg">
                       {formatWater(entry.ml, unit)}
                     </span>
 
@@ -272,8 +272,8 @@ export default async function WaterPage({
 
         <aside className="flex flex-col gap-5">
           <div className="rounded-2xl border border-line p-[18px]">
-            <p className="text-[12.5px] font-semibold text-fg">Your goal</p>
-            <p className="mt-1.5 text-[11.5px] leading-relaxed text-fg-dim">
+            <p className="text-[13.5px] font-semibold text-fg">Your goal</p>
+            <p className="mt-1.5 text-[12.5px] leading-relaxed text-fg-dim">
               What every bar and percentage on this page is measured against.
             </p>
             <div className="mt-3.5">
@@ -285,10 +285,10 @@ export default async function WaterPage({
           </div>
 
           <div className="rounded-2xl border border-line p-[18px]">
-            <p className="text-[12.5px] font-semibold text-fg">
+            <p className="text-[13.5px] font-semibold text-fg">
               How this is counted
             </p>
-            <p className="mt-2.5 text-[11.5px] leading-relaxed text-fg-dim">
+            <p className="mt-2.5 text-[12.5px] leading-relaxed text-fg-dim">
               One total per day, in your own timezone — {safeZone(user.timeZone)}.
               A glass logged at one in the morning belongs to the night before
               only if that is still the same day where you are.

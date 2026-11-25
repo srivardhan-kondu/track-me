@@ -47,7 +47,7 @@ export function ComplianceStrip({
       </div>
 
       {caption ? (
-        <p className="text-[12px] leading-relaxed text-fg-dim">{caption}</p>
+        <p className="text-[13px] leading-relaxed text-fg-dim">{caption}</p>
       ) : (
         <div className="flex justify-between">
           <span className="mono-label">

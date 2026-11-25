@@ -27,7 +27,7 @@ export function SegmentedLinks({
             href={option.href}
             aria-current={selected ? "true" : undefined}
             className={cn(
-              "flex h-8 items-center rounded-full px-4 text-[12px] transition-colors",
+              "flex h-8 items-center rounded-full px-4 text-[13px] transition-colors",
               selected
                 ? "bg-accent font-semibold text-accent-ink"
                 : "font-medium text-fg-muted hover:text-fg",
@@ -61,7 +61,7 @@ export function FilterPills({
             href={option.href}
             aria-current={selected ? "true" : undefined}
             className={cn(
-              "rounded-full px-4 py-[8px] text-[12px] transition-colors",
+              "rounded-full px-4 py-[8px] text-[13px] transition-colors",
               selected
                 ? "bg-accent font-semibold text-accent-ink"
                 : "border border-line font-medium text-fg-muted hover:border-accent-line hover:text-fg",

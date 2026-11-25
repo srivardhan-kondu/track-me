@@ -3,7 +3,9 @@
 import * as React from "react";
 import { Plus, X } from "lucide-react";
 
+import { useUnits } from "@/components/units-provider";
 import { totalsOf, type MealItem } from "@/lib/meal-items";
+import { displayPortion, toGrams } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
 /** A blank line, for "Add ingredient". */
@@ -55,7 +57,7 @@ function NumberCell({
       }}
       onBlur={() => setDraft(null)}
       className={cn(
-        "tabular h-9 rounded-[10px] border border-line bg-surface-inset px-2 text-right text-[12.5px] text-fg",
+        "tabular h-9 rounded-[10px] border border-line bg-surface-inset px-2 text-right text-[13.5px] text-fg",
         "focus-visible:border-accent focus-visible:outline-none",
         width,
       )}
@@ -80,6 +82,7 @@ export function IngredientTable({
   disabled?: boolean;
 }) {
   const totals = totalsOf(items);
+  const { weight } = useUnits();
 
   function patch(index: number, field: keyof MealItem, value: string | number) {
     onChange(
@@ -107,8 +110,8 @@ export function IngredientTable({
           <thead>
             <tr>
               <th className="mono-label pb-1 text-left">Ingredient</th>
-              <th className="mono-label pb-1 text-right">Grams</th>
-              <th className="mono-label pb-1 text-right">kcal</th>
+              <th className="mono-label pb-1 text-right">{weight === "LB" ? "Oz" : "Grams"}</th>
+              <th className="mono-label pb-1 text-right">Cal</th>
               <th className="mono-label pb-1 text-right">P</th>
               <th className="mono-label pb-1 text-right">C</th>
               <th className="mono-label pb-1 text-right">F</th>
@@ -127,14 +130,14 @@ export function IngredientTable({
                     placeholder="Ingredient"
                     onChange={(e) => patch(i, "name", e.target.value)}
                     disabled={disabled}
-                    className="h-9 w-full min-w-[104px] rounded-[10px] border border-line bg-surface-inset px-2.5 text-[12.5px] text-fg placeholder:text-fg-faint focus-visible:border-accent focus-visible:outline-none"
+                    className="h-9 w-full min-w-[104px] rounded-[10px] border border-line bg-surface-inset px-2.5 text-[13.5px] text-fg placeholder:text-fg-faint focus-visible:border-accent focus-visible:outline-none"
                   />
                 </td>
                 <td className="px-1 text-right">
                   <NumberCell
-                    label={`Ingredient ${i + 1} grams`}
-                    value={item.grams}
-                    onChange={(n) => patch(i, "grams", n)}
+                    label={`Ingredient ${i + 1} ${weight === "LB" ? "ounces" : "grams"}`}
+                    value={displayPortion(item.grams, weight)}
+                    onChange={(n) => patch(i, "grams", toGrams(n, weight))}
                   />
                 </td>
                 <td className="px-1 text-right">
@@ -184,7 +187,7 @@ export function IngredientTable({
 
             {items.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-6 text-center text-[12.5px] text-fg-dim">
+                <td colSpan={7} className="py-6 text-center text-[13.5px] text-fg-dim">
                   Nothing was picked out. Add what you ate.
                 </td>
               </tr>
@@ -198,16 +201,16 @@ export function IngredientTable({
           type="button"
           onClick={() => onChange([...items, emptyItem()])}
           disabled={disabled}
-          className="flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-[12px] font-medium text-fg-muted transition-colors hover:border-accent-line hover:text-fg"
+          className="flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-[13px] font-medium text-fg-muted transition-colors hover:border-accent-line hover:text-fg"
         >
           <Plus className="h-3.5 w-3.5" />
           Add ingredient
         </button>
 
-        <dl className="tabular flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[12px]">
+        <dl className="tabular flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[13px]">
           <div className="flex items-baseline gap-1.5">
             <dt className="text-fg-dim">Total</dt>
-            <dd className="font-semibold text-fg">{totals.calories} kcal</dd>
+            <dd className="font-semibold text-fg">{totals.calories} cal</dd>
           </div>
           <div className="flex items-baseline gap-1.5">
             <dt className="text-fg-dim">P</dt>

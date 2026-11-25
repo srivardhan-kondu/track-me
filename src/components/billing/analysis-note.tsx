@@ -49,7 +49,7 @@ export function AnalysisNote({
   const title = silent
     ? "This voice note was not transcribed"
     : kind === "meal"
-      ? "Estimated, not analysed"
+      ? "Estimated, not analyzed"
       : "Parsed offline";
 
   const body = silent
@@ -72,17 +72,17 @@ export function AnalysisNote({
         className,
       )}
     >
-      <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-fg">
+      <p className="flex items-center gap-1.5 text-[13.5px] font-semibold text-fg">
         {upsell && <Sparkles className="h-3.5 w-3.5 text-accent-text" />}
         {title}
       </p>
 
-      <p className="mt-1.5 text-[11.5px] leading-relaxed text-fg-dim">{body}</p>
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-fg-dim">{body}</p>
 
       {upsell && (
         <Link
           href="/dashboard/settings"
-          className="mt-2.5 inline-flex text-[11.5px] font-medium text-accent-text underline-offset-4 hover:underline"
+          className="mt-2.5 inline-flex text-[12.5px] font-medium text-accent-text underline-offset-4 hover:underline"
         >
           Unlock it from {rupees(PRICES.MONTHLY)} a month →
         </Link>

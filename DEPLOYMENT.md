@@ -266,3 +266,23 @@ rejecting a flood in a route handler still costs a function invocation, so it
 belongs at the edge. Configure it in **Vercel → Firewall** — 300 requests per
 minute per IP is a reasonable starting point, above anything a real client
 does. Vercel's managed DDoS protection sits in front of that.
+
+## Push reminders
+
+Optional. Without the keys the Reminders panel in Settings stays hidden and
+nothing is sent.
+
+1. Generate keys: `npx web-push generate-vapid-keys`
+2. In Vercel, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and
+   `VAPID_SUBJECT` (a `mailto:` address for your support inbox), then redeploy.
+3. In GitHub → Settings → Secrets and variables → Actions, add `APP_URL`
+   (the deployed origin, no trailing slash) and `CRON_SECRET` (same value as
+   Vercel). `.github/workflows/reminders.yml` then calls
+   `/api/reminders/run` every hour. Vercel Hobby only allows daily crons,
+   which cannot hit "8 am local" across timezones — that is why this one
+   lives in GitHub Actions.
+
+Athletes get a weigh-in nudge at 8 am and a "nothing logged" nudge at 8 pm in
+their own timezone, each only if they have not already done it, plus a
+notification when a coach comments. On iPhone, notifications need the app
+added to the Home Screen (iOS 16.4+).

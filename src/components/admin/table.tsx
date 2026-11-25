@@ -93,7 +93,7 @@ export function Td({
   return (
     <td
       className={cn(
-        "px-4 py-3 text-[12.5px] text-fg-muted",
+        "px-4 py-3 text-[13.5px] text-fg-muted",
         align === "right" && "text-right",
         className,
       )}
@@ -115,7 +115,7 @@ export function EmptyRow({
     <tr>
       <td
         colSpan={colSpan}
-        className="px-4 py-12 text-center text-[12.5px] text-fg-dim"
+        className="px-4 py-12 text-center text-[13.5px] text-fg-dim"
       >
         {children}
       </td>
@@ -136,7 +136,7 @@ export function Mono({
   return (
     <span
       title={title}
-      className={cn("tabular text-[11.5px] text-fg-dim", className)}
+      className={cn("tabular text-[12.5px] text-fg-dim", className)}
     >
       {children}
     </span>
@@ -178,12 +178,12 @@ export function Pager({
 
   return (
     <div className="flex items-center justify-between gap-4">
-      <p className="tabular font-mono text-[11px] text-fg-dim">
+      <p className="tabular font-mono text-[12px] text-fg-dim">
         {page.from}–{page.to} of {page.total.toLocaleString(LOCALE)} {noun}
       </p>
 
       <div className="flex items-center gap-2">
-        <span className="tabular font-mono text-[11px] text-fg-dim">
+        <span className="tabular font-mono text-[12px] text-fg-dim">
           Page {page.page} of {page.pages}
         </span>
         {step(

@@ -328,7 +328,7 @@ export function LiveSession({
           </p>
 
           {restLeft > 0 && (
-            <span className="tabular flex shrink-0 items-center gap-1.5 rounded-full border border-accent-line bg-accent-soft px-3 py-1.5 text-[12.5px] font-bold text-accent-text">
+            <span className="tabular flex shrink-0 items-center gap-1.5 rounded-full border border-accent-line bg-accent-soft px-3 py-1.5 text-[13.5px] font-bold text-accent-text">
               <Timer className="h-3.5 w-3.5" />
               {formatClock(restLeft)}
               <button
@@ -363,7 +363,7 @@ export function LiveSession({
             <p className="font-serif text-[19px] text-fg">
               Nothing added yet
             </p>
-            <p className="mx-auto mt-2 max-w-xs text-[13px] leading-relaxed text-fg-dim">
+            <p className="mx-auto mt-2 max-w-xs text-[14px] leading-relaxed text-fg-dim">
               Add your first movement and the sets you did last time appear
               beside it. The clock is already running.
             </p>

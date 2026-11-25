@@ -68,7 +68,7 @@ export function SessionCard({
       <div className="flex items-center gap-3.5">
         <span
           className={cn(
-            "grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] font-mono text-[11px] font-semibold",
+            "grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] font-mono text-[12px] font-semibold",
             tint(title),
           )}
         >
@@ -76,10 +76,10 @@ export function SessionCard({
         </span>
 
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13.5px] font-semibold text-fg">
+          <span className="block truncate text-[14px] font-semibold text-fg">
             {title}
           </span>
-          <span className="mt-1 block truncate font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
+          <span className="mt-1 block truncate font-mono text-[12px] uppercase tracking-[0.06em] text-fg-dim">
             {when}
           </span>
         </span>
@@ -98,7 +98,7 @@ export function SessionCard({
           {shown.map((group) => (
             <p
               key={group.id}
-              className="flex items-baseline gap-2 text-[12.5px] text-fg-muted"
+              className="flex items-baseline gap-2 text-[13.5px] text-fg-muted"
             >
               <span className="tabular shrink-0 text-fg-dim">
                 {group.workingSets} set{group.workingSets === 1 ? "" : "s"}
@@ -108,7 +108,7 @@ export function SessionCard({
           ))}
 
           {hidden > 0 && (
-            <p className="text-[12.5px] font-semibold text-accent-text">
+            <p className="text-[13.5px] font-semibold text-accent-text">
               See {hidden} more exercise{hidden === 1 ? "" : "s"}
             </p>
           )}
@@ -116,7 +116,7 @@ export function SessionCard({
       )}
 
       {workout.status === "FAILED" && workout.error && (
-        <p className="mt-3 text-[11.5px] text-clay-text">{workout.error}</p>
+        <p className="mt-3 text-[12.5px] text-clay-text">{workout.error}</p>
       )}
     </Link>
   );

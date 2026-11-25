@@ -231,17 +231,17 @@ export function MealForm({
             {analysing ? (
               <div className="flex flex-col items-center gap-3 py-10 text-center">
                 <Loader2 className="h-5 w-5 animate-spin text-accent-text" />
-                <p className="text-[13px] text-fg-muted">
+                <p className="text-[14px] text-fg-muted">
                   Working out the ingredients…
                 </p>
-                <p className="max-w-[18rem] text-[12px] leading-relaxed text-fg-dim">
+                <p className="max-w-[18rem] text-[13px] leading-relaxed text-fg-dim">
                   Your meal is already saved. This usually takes a few seconds.
                 </p>
               </div>
             ) : (
               <>
                 {failed && (
-                  <p className="rounded-[14px] border border-clay-line bg-clay-soft px-3.5 py-3 text-[12.5px] leading-relaxed text-clay-text">
+                  <p className="rounded-[14px] border border-clay-line bg-clay-soft px-3.5 py-3 text-[13.5px] leading-relaxed text-clay-text">
                     {failed}
                   </p>
                 )}
@@ -249,7 +249,7 @@ export function MealForm({
                 {transcript && (
                   <div className="flex flex-col gap-1.5">
                     <p className="mono-label">What we heard</p>
-                    <p className="rounded-[14px] border border-line bg-surface-muted px-3.5 py-3 text-[13px] italic leading-relaxed text-fg-muted">
+                    <p className="rounded-[14px] border border-line bg-surface-muted px-3.5 py-3 text-[14px] italic leading-relaxed text-fg-muted">
                       &ldquo;{transcript}&rdquo;
                     </p>
                   </div>

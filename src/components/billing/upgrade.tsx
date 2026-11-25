@@ -48,13 +48,13 @@ export function Upgrade({ currentTerm }: { currentTerm: PlanTerm | null }) {
               {busy ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-fg-dim" />
               ) : current ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-accent-line/70 bg-accent-soft px-2 py-[3px] text-[10px] font-medium leading-none text-accent-text">
+                <span className="inline-flex items-center gap-1 rounded-full border border-accent-line/70 bg-accent-soft px-2 py-[3px] text-[11px] font-medium leading-none text-accent-text">
                   <Check className="h-3 w-3" /> Current
                 </span>
               ) : plan.ribbon ? (
                 <span
                   className={cn(
-                    "rounded-full border px-2 py-[3px] text-[10px] font-medium leading-none",
+                    "rounded-full border px-2 py-[3px] text-[11px] font-medium leading-none",
                     plan.featured
                       ? "border-accent-line bg-accent-soft text-accent-text"
                       : "border-line bg-surface-inset text-fg-muted",
@@ -69,16 +69,16 @@ export function Upgrade({ currentTerm }: { currentTerm: PlanTerm | null }) {
               <span className="font-serif text-[30px] leading-none text-fg">
                 {plan.price}
               </span>
-              <span className="text-[11.5px] text-fg-dim">{plan.cadence}</span>
+              <span className="text-[12.5px] text-fg-dim">{plan.cadence}</span>
             </span>
 
-            <span className="relative mt-2.5 flex-1 text-[11.5px] leading-relaxed text-fg-dim">
+            <span className="relative mt-2.5 flex-1 text-[12.5px] leading-relaxed text-fg-dim">
               {plan.blurb}
             </span>
 
             <span
               className={cn(
-                "relative mt-4 inline-flex items-center gap-1.5 text-[12px] font-semibold transition-colors",
+                "relative mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold transition-colors",
                 current ? "text-fg-muted" : "text-accent-text",
               )}
             >

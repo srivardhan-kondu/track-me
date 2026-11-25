@@ -55,7 +55,7 @@ function Ring({
           {pct}%
         </span>
         <span className="mono-label mt-1.5 text-fg-muted">{label}</span>
-        <span className="mt-0.5 text-[10px] text-fg-dim">{caption}</span>
+        <span className="mt-0.5 text-[12px] text-fg-dim">{caption}</span>
       </div>
     </div>
   );
@@ -80,11 +80,11 @@ function WeekStat({
         <span className="tabular font-serif text-[16px] leading-none text-fg">
           {value}
         </span>
-        {unit && <span className="text-[10px] text-fg-dim">{unit}</span>}
+        {unit && <span className="text-[12px] text-fg-dim">{unit}</span>}
       </p>
-      <p className="mt-1.5 text-[10px] leading-none text-fg-dim">{label}</p>
+      <p className="mt-1.5 text-[12px] leading-none text-fg-dim">{label}</p>
       {target && (
-        <p className="tabular mt-1 text-[9.5px] leading-none text-accent-text">
+        <p className="tabular mt-1 text-[12px] leading-none text-accent-text">
           of {target}
         </p>
       )}
@@ -158,11 +158,11 @@ export function DashboardHero({
       />
 
       <div className="relative p-5 sm:p-6">
-        <p className="text-[13px] text-fg-muted">{greeting},</p>
+        <p className="text-[14px] text-fg-muted">{greeting},</p>
         <h1 className="font-serif text-[26px] leading-tight text-fg sm:text-[30px]">
           {name} <span aria-hidden="true">👋</span>
         </h1>
-        <p className="mt-1 text-[12.5px] text-fg-muted">
+        <p className="mt-1 text-[13.5px] text-fg-muted">
           You&rsquo;ve got this today!
         </p>
 

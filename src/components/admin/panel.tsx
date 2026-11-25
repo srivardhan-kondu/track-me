@@ -34,10 +34,10 @@ export function Panel({
         <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
           <div className="min-w-0">
             {title && (
-              <h2 className="text-[13px] font-semibold text-fg">{title}</h2>
+              <h2 className="text-[14px] font-semibold text-fg">{title}</h2>
             )}
             {description && (
-              <p className="mt-1.5 max-w-prose text-[12.5px] leading-relaxed text-fg-dim">
+              <p className="mt-1.5 max-w-prose text-[13.5px] leading-relaxed text-fg-dim">
                 {description}
               </p>
             )}
@@ -45,7 +45,7 @@ export function Panel({
 
           <div className="flex shrink-0 items-center gap-3">
             {meta && (
-              <span className="tabular font-mono text-[11px] text-fg-dim">
+              <span className="tabular font-mono text-[12px] text-fg-dim">
                 {meta}
               </span>
             )}
@@ -92,7 +92,7 @@ export function StatusDot({
       {label && (
         <span
           className={cn(
-            "text-[12px]",
+            "text-[13px]",
             tone === "off" ? "text-fg-dim" : "text-fg-muted",
           )}
         >
@@ -129,19 +129,19 @@ export function ServiceRow({
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <p
             className={cn(
-              "text-[12.5px] font-medium",
+              "text-[13.5px] font-medium",
               live ? "text-fg" : "text-fg-muted",
             )}
           >
             {name}
           </p>
           {value && (
-            <span className="tabular font-mono text-[11px] text-fg-dim">
+            <span className="tabular font-mono text-[12px] text-fg-dim">
               {value}
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-[11.5px] leading-relaxed text-fg-dim">
+        <p className="mt-0.5 text-[12.5px] leading-relaxed text-fg-dim">
           {detail}
         </p>
       </div>

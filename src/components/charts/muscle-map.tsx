@@ -206,8 +206,8 @@ export function MuscleMap({
 
         {shown && (
           <div className="pointer-events-none absolute right-0 top-0 rounded-[10px] border border-line-strong bg-surface-raised px-3 py-2">
-            <p className="text-[11.5px] font-semibold text-fg">{shown.name}</p>
-            <p className="tabular mt-0.5 font-mono text-[11px] text-fg-dim">
+            <p className="text-[12.5px] font-semibold text-fg">{shown.name}</p>
+            <p className="tabular mt-0.5 font-mono text-[12px] text-fg-dim">
               {shown.sets} sets
               {total > 0 && ` · ${Math.round((shown.sets / total) * 100)}%`}
             </p>

@@ -107,7 +107,7 @@ export default async function WeightPage({
     weeklyTrend !== null && latest !== null && Math.abs(weeklyTrend) >= 0.05
       ? `Hold this and you're around ${formatWeight(latest + weeklyTrend * 4, unit)} in a month.`
       : weeklyTrend !== null
-        ? "Holding steady — no drift either way this fortnight."
+        ? "Holding steady — no drift either way these two weeks."
         : "A couple more check-ins and a weekly rate appears here.";
 
   const loggedDays = compliance.filter(
@@ -121,7 +121,7 @@ export default async function WeightPage({
           <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
             Weight
           </h1>
-          <p className="mt-2.5 text-[13px] text-fg-dim">
+          <p className="mt-2.5 text-[14px] text-fg-dim">
             Morning check-ins · {range.window} window
           </p>
         </div>
@@ -171,7 +171,7 @@ export default async function WeightPage({
 
           <div className="ml-auto max-w-[240px]">
             <p className="mono-label">Where this is heading</p>
-            <p className="mt-2.5 text-[12.5px] leading-relaxed text-fg-muted">
+            <p className="mt-2.5 text-[13.5px] leading-relaxed text-fg-muted">
               {projection}
             </p>
           </div>
@@ -182,12 +182,12 @@ export default async function WeightPage({
 
       <section className="rounded-2xl border border-line-strong bg-surface px-7 py-6">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1.5">
-          <h2 className="text-[13px] font-semibold text-fg">
+          <h2 className="text-[14px] font-semibold text-fg">
             Intake against the scale
           </h2>
           <p className="mono-label">{range.window} window</p>
         </div>
-        <p className="mt-2 max-w-xl text-[12.5px] leading-relaxed text-fg-dim">
+        <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-fg-dim">
           The two panels share one axis rather than one frame: calories and
           kilograms are different scales, and drawing them against each other
           would invent a relationship out of where the two happen to cross.
@@ -242,7 +242,7 @@ export default async function WeightPage({
                     <div className="min-w-0 flex-1">
                       <p
                         className={cn(
-                          "text-[13px] font-medium",
+                          "text-[14px] font-medium",
                           i === 0 ? "text-fg" : "text-fg-muted",
                         )}
                       >
@@ -254,7 +254,7 @@ export default async function WeightPage({
                         })}
                       </p>
                       {entry.notes && (
-                        <p className="truncate text-[11.5px] text-fg-dim">
+                        <p className="truncate text-[12.5px] text-fg-dim">
                           {entry.notes}
                         </p>
                       )}
@@ -262,7 +262,7 @@ export default async function WeightPage({
 
                     <span
                       className={cn(
-                        "tabular w-[52px] shrink-0 font-mono text-[11.5px]",
+                        "tabular w-[52px] shrink-0 font-mono text-[12.5px]",
                         delta === null
                           ? "text-fg-faint"
                           : delta <= 0
@@ -273,7 +273,7 @@ export default async function WeightPage({
                       {delta === null ? "—" : formatWeightDelta(delta, unit)}
                     </span>
 
-                    <span className="tabular shrink-0 font-mono text-[13px] text-fg">
+                    <span className="tabular shrink-0 font-mono text-[14px] text-fg">
                       {formatWeight(entry.weightKg, unit)}
                     </span>
 
@@ -286,7 +286,7 @@ export default async function WeightPage({
         </section>
 
         <aside className="rounded-2xl border border-line p-[18px]">
-          <p className="text-[12.5px] font-semibold text-fg">Check-in rhythm</p>
+          <p className="text-[13.5px] font-semibold text-fg">Check-in rhythm</p>
 
           <div className="mt-3.5">
             <ComplianceStrip

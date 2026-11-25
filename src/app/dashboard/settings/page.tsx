@@ -16,6 +16,8 @@ import { aiEnabled } from "@/services/ai/client";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { GoalsForm } from "@/components/settings/goals-form";
 import { WaterGoalForm } from "@/components/settings/water-goal-form";
+import { Reminders } from "@/components/settings/reminders";
+import { vapidPublicKey } from "@/services/push";
 import { getCoachLinksForAthlete } from "@/services/reporting";
 import { storageProvider, usingObjectStorage } from "@/services/storage";
 
@@ -41,9 +43,9 @@ function Panel({
           : "border-line-strong bg-surface",
       )}
     >
-      <h2 className="text-[13px] font-semibold text-fg">{title}</h2>
+      <h2 className="text-[14px] font-semibold text-fg">{title}</h2>
       {description && (
-        <p className="mt-1.5 text-[12.5px] leading-relaxed text-fg-dim">
+        <p className="mt-1.5 text-[13.5px] leading-relaxed text-fg-dim">
           {description}
         </p>
       )}
@@ -74,20 +76,20 @@ function ServiceRow({
       <div className="min-w-0 flex-1">
         <p
           className={cn(
-            "text-[12.5px] font-medium",
+            "text-[13.5px] font-medium",
             live ? "text-fg" : "text-fg-muted",
           )}
         >
           {name}
         </p>
-        <p className="mt-0.5 text-[11.5px] leading-relaxed text-fg-dim">
+        <p className="mt-0.5 text-[12.5px] leading-relaxed text-fg-dim">
           {detail}
         </p>
       </div>
 
       <span
         className={cn(
-          "mt-0.5 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em]",
+          "mt-0.5 shrink-0 font-mono text-[11px] uppercase tracking-[0.12em]",
           live ? "text-sage-text" : "text-fg-faint",
         )}
       >
@@ -116,8 +118,12 @@ export default async function SettingsPage() {
       weightUnit: true,
       heightUnit: true,
       volumeUnit: true,
+      remindWeighIn: true,
+      remindLog: true,
+      remindComments: true,
     },
   });
+  const vapidKey = vapidPublicKey();
 
   const units = unitPrefs(profile);
 
@@ -127,7 +133,7 @@ export default async function SettingsPage() {
         <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
           Settings
         </h1>
-        <p className="mt-2.5 text-[13px] text-fg-dim">
+        <p className="mt-2.5 text-[14px] text-fg-dim">
           Your account, your coach, and what&apos;s wired up.
         </p>
       </div>
@@ -140,7 +146,7 @@ export default async function SettingsPage() {
             <div className="flex items-center gap-3.5">
               <Avatar className="h-11 w-11">
                 {user.image && <AvatarImage src={user.image} alt="" />}
-                <AvatarFallback className="text-[12px]">
+                <AvatarFallback className="text-[13px]">
                   {initials(user.name, user.email)}
                 </AvatarFallback>
               </Avatar>
@@ -149,7 +155,7 @@ export default async function SettingsPage() {
                 <p className="truncate text-[14px] font-semibold text-fg">
                   {user.name ?? "Unnamed"}
                 </p>
-                <p className="mt-0.5 truncate text-[12px] text-fg-dim">
+                <p className="mt-0.5 truncate text-[13px] text-fg-dim">
                   {user.email}
                 </p>
               </div>
@@ -187,6 +193,22 @@ export default async function SettingsPage() {
             />
           </Panel>
 
+          {vapidKey && user.role === "ATHLETE" && (
+            <Panel
+              title="Reminders"
+              description="Notifications on this phone or computer. Each device is turned on separately."
+            >
+              <Reminders
+                vapidKey={vapidKey}
+                prefs={{
+                  remindWeighIn: profile?.remindWeighIn ?? true,
+                  remindLog: profile?.remindLog ?? true,
+                  remindComments: profile?.remindComments ?? true,
+                }}
+              />
+            </Panel>
+          )}
+
           <Panel
             title="Hydration"
             description="The daily water target every bar and percentage is measured against."
@@ -215,12 +237,12 @@ export default async function SettingsPage() {
 
           <Panel title="Where your days are counted">
             <div className="flex items-center justify-between gap-4">
-              <p className="text-[12.5px] text-fg-muted">Time zone</p>
-              <p className="tabular rounded-lg border border-line-strong px-3 py-1.5 font-mono text-[12px] text-fg">
+              <p className="text-[13.5px] text-fg-muted">Time zone</p>
+              <p className="tabular rounded-lg border border-line-strong px-3 py-1.5 font-mono text-[13px] text-fg">
                 {safeZone(user.timeZone)}
               </p>
             </div>
-            <p className="mt-3 text-[11.5px] leading-relaxed text-fg-dim">
+            <p className="mt-3 text-[12.5px] leading-relaxed text-fg-dim">
               Detected from your browser, and kept up to date as you travel.
               Every day boundary — meals, weigh-ins, the timeline — uses it.
             </p>

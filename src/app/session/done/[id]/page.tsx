@@ -119,7 +119,7 @@ export default async function SessionDonePage({
             ))}
           </div>
 
-          <p className="mt-5 text-center text-[13px] text-fg-muted">
+          <p className="mt-5 text-center text-[14px] text-fg-muted">
             You trained{" "}
             <span className="font-bold text-fg">{trained.size} time{trained.size === 1 ? "" : "s"}</span>{" "}
             in the last 7 days
@@ -136,10 +136,10 @@ export default async function SessionDonePage({
           <ul className="mt-4 flex flex-col gap-2.5 rounded-2xl border border-line bg-surface px-5 py-4">
             {groups.map((group) => (
               <li key={group.id} className="flex items-baseline gap-4">
-                <span className="min-w-0 flex-1 truncate text-[13px] text-fg-muted">
+                <span className="min-w-0 flex-1 truncate text-[14px] text-fg-muted">
                   {group.name}
                 </span>
-                <span className="tabular shrink-0 text-[12px] text-fg-dim">
+                <span className="tabular shrink-0 text-[13px] text-fg-dim">
                   {group.workingSets} set{group.workingSets === 1 ? "" : "s"}
                   {group.topKg !== null &&
                     ` · top ${displayWeight(group.topKg, units.weight)} ${weightLabel(units.weight)}`}

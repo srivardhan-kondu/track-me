@@ -31,7 +31,7 @@ export function PageHeader({
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-2.5 text-[13px] leading-relaxed text-fg-dim">
+          <p className="mt-2.5 text-[14px] leading-relaxed text-fg-dim">
             {subtitle}
           </p>
         )}
@@ -58,9 +58,9 @@ export function SectionHeading({
     <div
       className={cn("flex items-baseline justify-between gap-4", className)}
     >
-      <h2 className="text-[12.5px] font-semibold text-fg">{children}</h2>
+      <h2 className="text-[13.5px] font-semibold text-fg">{children}</h2>
       {meta && (
-        <span className="tabular shrink-0 font-mono text-[11px] text-fg-dim">
+        <span className="tabular shrink-0 font-mono text-[12px] text-fg-dim">
           {meta}
         </span>
       )}
@@ -80,10 +80,10 @@ export function DayDivider({
 }) {
   return (
     <div className={cn("flex items-center gap-3 pt-1", className)}>
-      <span className="text-[12.5px] font-semibold text-fg">{label}</span>
+      <span className="text-[13.5px] font-semibold text-fg">{label}</span>
       <span className="h-px flex-1 bg-line" />
       {meta && (
-        <span className="tabular shrink-0 font-mono text-[11px] uppercase tracking-wide text-fg-dim">
+        <span className="tabular shrink-0 font-mono text-[12px] uppercase tracking-wide text-fg-dim">
           {meta}
         </span>
       )}
@@ -119,7 +119,7 @@ export function EmptyState({
       <div className="mx-auto max-w-md">
         <p className="font-serif text-xl text-fg">{title}</p>
         {body && (
-          <p className="mt-2 text-[13px] leading-relaxed text-fg-dim">{body}</p>
+          <p className="mt-2 text-[14px] leading-relaxed text-fg-dim">{body}</p>
         )}
 
         {steps && steps.length > 0 && (
@@ -128,7 +128,7 @@ export function EmptyState({
               <li key={step.title} className="flex items-start gap-3">
                 <span
                   className={cn(
-                    "mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border font-mono text-[10px] font-medium",
+                    "mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border font-mono text-[11px] font-medium",
                     i === 0
                       ? "border-accent-line text-accent-text"
                       : "border-line-strong text-fg-dim",
@@ -139,13 +139,13 @@ export function EmptyState({
                 <div>
                   <p
                     className={cn(
-                      "text-[13px] font-semibold",
+                      "text-[14px] font-semibold",
                       i === 0 ? "text-fg" : "text-fg-muted",
                     )}
                   >
                     {step.title}
                   </p>
-                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-fg-dim">
+                  <p className="mt-0.5 text-[13.5px] leading-relaxed text-fg-dim">
                     {step.body}
                   </p>
                 </div>

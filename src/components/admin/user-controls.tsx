@@ -48,7 +48,7 @@ function Segmented({
             onClick={() => onPick(option.value)}
             aria-pressed={selected}
             className={cn(
-              "rounded-full px-4 py-2 text-[12px] font-medium transition-colors",
+              "rounded-full px-4 py-2 text-[13px] font-medium transition-colors",
               selected
                 ? "bg-accent font-semibold text-accent-ink"
                 : "border border-line text-fg-muted hover:border-accent-line hover:text-fg",
@@ -116,7 +116,7 @@ export function PlanControls({
         maxLength={280}
       />
 
-      <p className="text-[11.5px] leading-relaxed text-fg-dim">
+      <p className="text-[12.5px] leading-relaxed text-fg-dim">
         Granting here records no payment — comped access never shows up as
         revenue. A lifetime plan is never overwritten by a shorter one.
       </p>
@@ -138,7 +138,7 @@ export function TrialControls({ userId }: { userId: string }) {
             type="button"
             onClick={() => setDays(preset)}
             className={cn(
-              "rounded-full border px-3.5 py-1.5 text-[11.5px] font-medium transition-colors",
+              "rounded-full border px-3.5 py-1.5 text-[12.5px] font-medium transition-colors",
               days === preset
                 ? "border-accent-line bg-accent-soft text-accent-text"
                 : "border-line text-fg-muted hover:text-fg",
@@ -222,7 +222,7 @@ export function AdminToggle({
 
   if (byEmail) {
     return (
-      <p className="text-[12px] leading-relaxed text-fg-dim">
+      <p className="text-[13px] leading-relaxed text-fg-dim">
         This address is on the <code className="text-fg-muted">ADMIN_EMAILS</code>{" "}
         allowlist, so it is an admin whatever this page does. Remove it from the
         environment to change that.
@@ -232,7 +232,7 @@ export function AdminToggle({
 
   if (isSelf && isAdmin) {
     return (
-      <p className="text-[12px] leading-relaxed text-fg-dim">
+      <p className="text-[13px] leading-relaxed text-fg-dim">
         This is you. Another admin has to be the one to remove your access —
         one mis-click here would otherwise cost a redeploy.
       </p>

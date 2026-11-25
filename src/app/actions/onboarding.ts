@@ -18,7 +18,7 @@ import type { ActionResult } from "./meals";
 
 /**
  * Everything onboarding asks for is optional. Someone who taps Skip on the
- * first screen still finishes onboarded — the flow exists to personalise the
+ * first screen still finishes onboarded — the flow exists to personalize the
  * app, never to stand between the athlete and it.
  */
 const UnitSchema = z.object({
@@ -95,12 +95,25 @@ export async function completeOnboarding(
   return { ok: true };
 }
 
-/** Marks onboarding done without recording anything. */
-export async function skipOnboarding(): Promise<ActionResult> {
+/**
+ * Marks onboarding done without recording any measurements. The units the
+ * browser suggested still come along — skipping the questions should not
+ * leave somebody in Chicago reading their weight in kilograms.
+ */
+export async function skipOnboarding(
+  units?: z.input<typeof UnitSchema>,
+): Promise<ActionResult> {
   const user = await requireUser();
+  const parsed = UnitSchema.safeParse(units ?? {});
+  const chosen = parsed.success ? parsed.data : {};
   await db.user.update({
     where: { id: user.id },
-    data: { onboardedAt: new Date() },
+    data: {
+      onboardedAt: new Date(),
+      weightUnit: chosen.weightUnit,
+      heightUnit: chosen.heightUnit,
+      volumeUnit: chosen.volumeUnit,
+    },
   });
   revalidatePath("/dashboard");
   return { ok: true };

@@ -33,13 +33,13 @@ export function TrialStrip({ daysLeft }: { daysLeft: number }) {
           : "border-line-strong bg-surface",
       )}
     >
-      <p className="text-[12.5px] font-semibold text-fg">
+      <p className="text-[13.5px] font-semibold text-fg">
         {daysLeft === 1
           ? "Your trial ends today"
           : `${daysLeft} days of Premium left`}
       </p>
 
-      <p className="min-w-0 flex-1 text-[11.5px] leading-relaxed text-fg-dim">
+      <p className="min-w-0 flex-1 text-[12.5px] leading-relaxed text-fg-dim">
         {urgent
           ? "After that this account keeps logging, but history shortens, meals stop being read properly and progress photos pause."
           : "Subscribe now and nothing changes when the trial runs out — your history, photos and analysis carry straight on."}
@@ -48,7 +48,7 @@ export function TrialStrip({ daysLeft }: { daysLeft: number }) {
       <div className="flex shrink-0 items-center gap-3">
         <Link
           href="/dashboard/settings"
-          className="text-[11.5px] font-medium text-fg-dim underline-offset-4 transition-colors hover:text-fg hover:underline"
+          className="text-[12.5px] font-medium text-fg-dim underline-offset-4 transition-colors hover:text-fg hover:underline"
         >
           All plans
         </Link>

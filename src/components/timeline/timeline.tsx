@@ -54,7 +54,7 @@ function StatusBadge({ status }: { status: string }) {
     return (
       <Badge variant="secondary">
         <Loader2 className="h-3 w-3 animate-spin" />
-        Analysing
+        Analyzing
       </Badge>
     );
   }
@@ -98,7 +98,7 @@ export async function Timeline({
     return (
       <div className="rounded-2xl border border-dashed border-line-strong px-6 py-10">
         {emptyState ?? (
-          <p className="text-[13px] text-fg-dim">Nothing logged yet today.</p>
+          <p className="text-[14px] text-fg-dim">Nothing logged yet today.</p>
         )}
       </div>
     );
@@ -138,7 +138,7 @@ export async function Timeline({
         return (
           <li key={`${entry.kind}-${entry.id}`} className="flex gap-3.5">
             <div className="w-[56px] shrink-0 pt-4 text-right">
-              <span className="tabular font-mono text-[11px] text-fg-faint">
+              <span className="tabular font-mono text-[12px] text-fg-faint">
                 {entry.kind === "weight"
                   ? "AM"
                   : formatTimeInZone(entry.at, timeZone)}
@@ -270,7 +270,7 @@ function MealBody({
               <h3 className="truncate text-[14.5px] font-semibold leading-tight tracking-[-0.005em] text-fg">
                 {meal.title ?? "Logged meal"}
               </h3>
-              <p className="mt-1 flex items-center gap-2 text-[11.5px] text-fg-dim">
+              <p className="mt-1 flex items-center gap-2 text-[12.5px] text-fg-dim">
                 {meal.slot && <span>{SLOT_LABEL[meal.slot] ?? meal.slot}</span>}
                 {meal.slot && items.length > 0 && <span>·</span>}
                 {items.length > 0 && (
@@ -284,8 +284,8 @@ function MealBody({
 
             <div className="flex shrink-0 items-start gap-1">
               {!foundNothing && (
-                <span className="tabular font-mono text-[13px] text-fg">
-                  {round(meal.calories) ?? "—"} kcal
+                <span className="tabular font-mono text-[14px] text-fg">
+                  {round(meal.calories) ?? "—"} cal
                 </span>
               )}
               {isOwner && (
@@ -313,10 +313,10 @@ function MealBody({
 
       {foundNothing && (
         <div className="rounded-[11px] border border-dashed border-line-strong p-3.5">
-          <p className="text-[13px] font-semibold text-fg">
-            Nothing recognisable in this one
+          <p className="text-[14px] font-semibold text-fg">
+            Nothing recognizable in this one
           </p>
-          <p className="mt-1.5 text-[12px] leading-relaxed text-fg-dim">
+          <p className="mt-1.5 text-[13px] leading-relaxed text-fg-dim">
             The photo may not show food, or the voice note may not have picked
             up any speech.{" "}
             {isOwner
@@ -338,7 +338,7 @@ function MealBody({
       {audioUrl && <AudioNote src={audioUrl} />}
 
       {meal.transcript && (
-        <p className="font-serif text-[13.5px] italic leading-relaxed text-fg-muted">
+        <p className="font-serif text-[14px] italic leading-relaxed text-fg-muted">
           &ldquo;{meal.transcript}&rdquo;
         </p>
       )}
@@ -350,11 +350,11 @@ function MealBody({
           </summary>
 
           <div className="mt-2.5 overflow-x-auto">
-            <table className="w-full text-[11.5px]">
+            <table className="w-full text-[12.5px]">
               <thead>
                 <tr className="border-b border-line">
                   <th className="mono-label py-1.5 text-left">Item</th>
-                  <th className="mono-label py-1.5 text-right">kcal</th>
+                  <th className="mono-label py-1.5 text-right">cal</th>
                   <th className="mono-label py-1.5 text-right">P</th>
                   <th className="mono-label py-1.5 text-right">C</th>
                   <th className="mono-label py-1.5 text-right">F</th>
@@ -390,7 +390,7 @@ function MealBody({
       )}
 
       {meal.status === "FAILED" && meal.error && (
-        <p className="text-[11.5px] text-clay-text">{meal.error}</p>
+        <p className="text-[12.5px] text-clay-text">{meal.error}</p>
       )}
     </div>
   );
@@ -417,10 +417,10 @@ function WorkoutBody({
     <div className="flex flex-col gap-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-[13.5px] font-semibold leading-tight text-fg">
+          <h3 className="truncate text-[14px] font-semibold leading-tight text-fg">
             {workout.title ?? "Workout"}
           </h3>
-          <p className="mt-1 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
+          <p className="mt-1 flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.06em] text-fg-dim">
             <span>
               {groups.length} exercise
               {groups.length === 1 ? "" : "s"}
@@ -452,10 +452,10 @@ function WorkoutBody({
           {groups.map((group) => (
             <li
               key={group.id}
-              className="flex items-baseline gap-4 text-[12.5px] text-fg-muted"
+              className="flex items-baseline gap-4 text-[13.5px] text-fg-muted"
             >
               <span className="min-w-0 flex-1 truncate">{group.name}</span>
-              <span className="tabular shrink-0 font-mono text-[11.5px] text-fg-dim">
+              <span className="tabular shrink-0 font-mono text-[12.5px] text-fg-dim">
                 {/*
                   A movement has no single weight-times-reps to quote — its
                   sets were 50x8, 60x6, 65x4 — so the timeline says how many
@@ -471,7 +471,7 @@ function WorkoutBody({
       )}
 
       {workout.notes && (
-        <p className="text-[12.5px] leading-relaxed text-fg-dim">
+        <p className="text-[13.5px] leading-relaxed text-fg-dim">
           {workout.notes}
         </p>
       )}
@@ -488,13 +488,13 @@ function WorkoutBody({
       {audioUrl && <AudioNote src={audioUrl} />}
 
       {workout.transcript && (
-        <p className="font-serif text-[13.5px] italic leading-relaxed text-fg-muted">
+        <p className="font-serif text-[14px] italic leading-relaxed text-fg-muted">
           &ldquo;{workout.transcript}&rdquo;
         </p>
       )}
 
       {workout.status === "FAILED" && workout.error && (
-        <p className="text-[11.5px] text-clay-text">{workout.error}</p>
+        <p className="text-[12.5px] text-clay-text">{workout.error}</p>
       )}
     </div>
   );
@@ -524,12 +524,12 @@ function WeightBody({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-[13.5px] font-semibold leading-tight text-fg">
+          <h3 className="text-[14px] font-semibold leading-tight text-fg">
             Morning check-in
           </h3>
 
           <div className="flex shrink-0 items-center gap-1">
-            <span className="tabular font-mono text-[12.5px] text-sage-text">
+            <span className="tabular font-mono text-[13.5px] text-sage-text">
               {displayWeight(entry.weightKg, unit)} {weightLabel(unit)}
             </span>
             {isOwner && <WeightActions entryId={entry.id} />}
@@ -537,7 +537,7 @@ function WeightBody({
         </div>
 
         {entry.notes && (
-          <p className="mt-1.5 text-[12.5px] leading-relaxed text-fg-dim">
+          <p className="mt-1.5 text-[13.5px] leading-relaxed text-fg-dim">
             {entry.notes}
           </p>
         )}

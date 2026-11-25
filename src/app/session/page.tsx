@@ -35,7 +35,7 @@ export default async function SessionPage() {
           <h1 className="font-serif text-[26px] leading-none text-fg">
             Start a workout
           </h1>
-          <p className="mx-auto mt-3 max-w-xs text-[13px] leading-relaxed text-fg-dim">
+          <p className="mx-auto mt-3 max-w-xs text-[14px] leading-relaxed text-fg-dim">
             The clock starts now. Add movements as you go, tick each set off as
             you finish it, and press Finish when you are done.
           </p>
@@ -44,7 +44,7 @@ export default async function SessionPage() {
             <StartWorkout size="lg" className="w-full" />
             <Link
               href="/dashboard/workouts"
-              className="text-[12.5px] font-medium text-fg-dim transition-colors hover:text-fg"
+              className="text-[13.5px] font-medium text-fg-dim transition-colors hover:text-fg"
             >
               Back to training
             </Link>

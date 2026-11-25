@@ -170,9 +170,9 @@ export function VoiceRecorder({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between">
-        <span className="text-[12.5px] font-medium text-fg-muted">{label}</span>
+        <span className="text-[13.5px] font-medium text-fg-muted">{label}</span>
         {(recording || value) && (
-          <span className="tabular font-mono text-[11px] text-fg-dim">
+          <span className="tabular font-mono text-[12px] text-fg-dim">
             {formatDuration(elapsed)}
             {recording && ` / ${formatDuration(MAX_SECONDS)}`}
           </span>
@@ -226,7 +226,7 @@ export function VoiceRecorder({
               <p className="mono-label">Tap to finish</p>
             </>
           ) : (
-            <p className="max-w-xs text-center text-[12px] leading-relaxed text-fg-dim">
+            <p className="max-w-xs text-center text-[13px] leading-relaxed text-fg-dim">
               {hint}
             </p>
           )}
@@ -234,7 +234,7 @@ export function VoiceRecorder({
       )}
 
       {error && (
-        <p className="text-[11.5px] text-clay-text" role="alert">
+        <p className="text-[12.5px] text-clay-text" role="alert">
           {error}
         </p>
       )}

@@ -32,7 +32,7 @@ export function SetTable({
   return (
     <section>
       <div className="flex items-center gap-3">
-        <span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-accent-soft text-[12px] font-bold text-accent-text">
+        <span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-accent-soft text-[13px] font-bold text-accent-text">
           {initials(group.name)}
         </span>
         <h3 className="min-w-0 flex-1 truncate text-[15px] font-bold text-accent-text">
@@ -58,14 +58,14 @@ export function SetTable({
             >
               <span
                 className={cn(
-                  "tabular text-[13.5px] font-semibold",
+                  "tabular text-[14px] font-semibold",
                   set.kind === "WARMUP" ? "text-fg-faint" : "text-fg",
                 )}
               >
                 {set.kind === "WARMUP" ? "W" : countUpTo(group, i)}
               </span>
 
-              <span className="tabular text-[13.5px] text-fg-muted">
+              <span className="tabular text-[14px] text-fg-muted">
                 {describe(set, unit)}
               </span>
             </li>

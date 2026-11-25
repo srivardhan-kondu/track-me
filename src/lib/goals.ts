@@ -39,7 +39,7 @@ export function parseCalorieTarget(raw: string): GoalResult<number | null> {
   if (n < MIN_TARGET_CALORIES || n > MAX_TARGET_CALORIES) {
     return {
       ok: false,
-      error: `A daily target belongs between ${MIN_TARGET_CALORIES.toLocaleString(LOCALE)} and ${MAX_TARGET_CALORIES.toLocaleString(LOCALE)} kcal.`,
+      error: `A daily target belongs between ${MIN_TARGET_CALORIES.toLocaleString(LOCALE)} and ${MAX_TARGET_CALORIES.toLocaleString(LOCALE)} calories.`,
     };
   }
 

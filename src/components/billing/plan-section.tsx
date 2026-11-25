@@ -102,8 +102,8 @@ function FeatureCard({
         <Icon className="h-[15px] w-[15px]" />
       </span>
 
-      <p className="mt-3 text-[12.5px] font-semibold text-fg">{title}</p>
-      <p className="mt-1 text-[11.5px] leading-relaxed text-fg-dim">{detail}</p>
+      <p className="mt-3 text-[13.5px] font-semibold text-fg">{title}</p>
+      <p className="mt-1 text-[12.5px] leading-relaxed text-fg-dim">{detail}</p>
 
       {owned && (
         <p className="mono-label mt-2.5 text-sage-text">Included</p>
@@ -120,15 +120,15 @@ export function PlanSection({ status }: { status: Status }) {
     <section className="overflow-hidden rounded-2xl border border-line-strong bg-surface">
       <div className="border-b border-line p-[22px]">
         <div className="flex flex-wrap items-center gap-2.5">
-          <h2 className="text-[13px] font-semibold text-fg">Plan</h2>
+          <h2 className="text-[14px] font-semibold text-fg">Plan</h2>
           <Badge variant={status.premium ? "default" : "secondary"}>{label}</Badge>
-          <span className="text-[12px] text-fg-dim">{detail}</span>
+          <span className="text-[13px] text-fg-dim">{detail}</span>
         </div>
 
         <p className="mt-4 max-w-[560px] font-serif text-[22px] leading-[1.25] text-fg">
           {title}
         </p>
-        <p className="mt-2.5 max-w-[560px] text-[12.5px] leading-relaxed text-fg-dim">
+        <p className="mt-2.5 max-w-[560px] text-[13.5px] leading-relaxed text-fg-dim">
           {sub}
         </p>
       </div>
@@ -150,7 +150,7 @@ export function PlanSection({ status }: { status: Status }) {
           <>
             <Upgrade currentTerm={status.planTerm} />
 
-            <p className="mt-3.5 text-[11.5px] leading-relaxed text-fg-dim">
+            <p className="mt-3.5 text-[12.5px] leading-relaxed text-fg-dim">
               Payment opens in Razorpay Checkout, over this page. Plans do not
               renew automatically — when one runs out you are asked before
               anything is charged again. See our{" "}
@@ -167,7 +167,7 @@ export function PlanSection({ status }: { status: Status }) {
             </p>
           </>
         ) : (
-          <p className="text-[12.5px] leading-relaxed text-fg-muted">
+          <p className="text-[13.5px] leading-relaxed text-fg-muted">
             Payments are not configured here. Set RAZORPAY_KEY_ID and
             RAZORPAY_KEY_SECRET to enable the payment sheet.
           </p>

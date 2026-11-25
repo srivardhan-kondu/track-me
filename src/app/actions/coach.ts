@@ -1,11 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { enforce, RateLimited } from "@/lib/rate-limit";
+import { commentPreview } from "@/lib/reminders";
 import { assertCanViewAthlete, requireUser } from "@/lib/session";
+import { sendPush } from "@/services/push";
 
 import type { ActionResult } from "./meals";
 
@@ -91,6 +94,31 @@ export async function addComment(formData: FormData): Promise<ActionResult> {
 
   revalidatePath("/dashboard");
   revalidatePath(`/trainer/${ownerId}`);
+
+  // Tell the athlete, after the response: a coach replying should not wait
+  // on a push service. Their own notes on their own log notify nobody.
+  if (ownerId !== user.id) {
+    const athleteId = ownerId;
+    const url = mealId
+      ? `/dashboard/meals/${mealId}`
+      : workoutId
+        ? `/dashboard/workouts/${workoutId}`
+        : "/dashboard/weight";
+    after(async () => {
+      const athlete = await db.user.findUnique({
+        where: { id: athleteId },
+        select: { remindComments: true },
+      });
+      if (!athlete?.remindComments) return;
+      await sendPush(athleteId, {
+        title: `${user.name?.split(" ")[0] ?? "Your coach"} commented`,
+        body: commentPreview(body),
+        url,
+        tag: `comment-${mealId ?? workoutId ?? weightEntryId}`,
+      });
+    });
+  }
+
   return { ok: true };
 }
 
@@ -258,7 +286,7 @@ export async function setTimeZone(timeZone: string): Promise<ActionResult> {
   try {
     new Intl.DateTimeFormat("en-US", { timeZone }).format(new Date());
   } catch {
-    return { ok: false, error: "Unrecognised timezone." };
+    return { ok: false, error: "Unrecognized time zone." };
   }
 
   const existing = await db.user.findUnique({

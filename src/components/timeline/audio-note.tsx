@@ -121,7 +121,7 @@ export function AudioNote({
         />
       </div>
 
-      <span className="tabular shrink-0 font-mono text-[11px] text-fg-dim">
+      <span className="tabular shrink-0 font-mono text-[12px] text-fg-dim">
         {clock(time)} / {clock(duration)}
       </span>
 

@@ -78,7 +78,7 @@ export default async function WorkoutDetailPage({
         <h1 className="font-serif text-[26px] leading-none text-fg sm:text-[30px]">
           {workout.title ?? "Workout"}
         </h1>
-        <p className="mt-2.5 text-[13px] text-fg-dim">
+        <p className="mt-2.5 text-[14px] text-fg-dim">
           {formatDateInZone(workout.performedAt, zone, {
             weekday: "long",
             day: "numeric",
@@ -122,7 +122,7 @@ export default async function WorkoutDetailPage({
       {(workout.notes || audioUrl || workout.transcript) && (
         <section className="flex flex-col gap-3.5 rounded-2xl border border-line bg-surface px-6 py-5">
           {workout.notes && (
-            <p className="text-[13px] leading-relaxed text-fg-muted">
+            <p className="text-[14px] leading-relaxed text-fg-muted">
               {workout.notes}
             </p>
           )}
@@ -130,7 +130,7 @@ export default async function WorkoutDetailPage({
           {audioUrl && <AudioNote src={audioUrl} />}
 
           {workout.transcript && (
-            <p className="font-serif text-[13.5px] italic leading-relaxed text-fg-muted">
+            <p className="font-serif text-[14px] italic leading-relaxed text-fg-muted">
               &ldquo;{workout.transcript}&rdquo;
             </p>
           )}
@@ -138,7 +138,7 @@ export default async function WorkoutDetailPage({
       )}
 
       {workout.status === "FAILED" && workout.error && (
-        <p className="text-[12.5px] text-clay-text">{workout.error}</p>
+        <p className="text-[13.5px] text-clay-text">{workout.error}</p>
       )}
 
       <div className="flex items-start justify-between gap-3">

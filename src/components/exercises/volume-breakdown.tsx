@@ -27,10 +27,10 @@ export function VolumeBreakdown({
   if (report.groups.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-line-strong px-6 py-8 text-center">
-        <p className="text-[13px] font-semibold text-fg">
+        <p className="text-[14px] font-semibold text-fg">
           No attributed volume yet
         </p>
-        <p className="mx-auto mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-fg-dim">
+        <p className="mx-auto mt-1.5 max-w-sm text-[13.5px] leading-relaxed text-fg-dim">
           Log a workout and each set is credited to the muscles it trains.
         </p>
       </div>
@@ -50,10 +50,10 @@ export function VolumeBreakdown({
           return (
             <div key={group.groupId}>
               <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[12.5px] font-medium text-fg-muted">
+                <span className="text-[13.5px] font-medium text-fg-muted">
                   {group.name}
                 </span>
-                <span className="tabular font-mono text-[11px] text-fg-dim">
+                <span className="tabular font-mono text-[12px] text-fg-dim">
                   {group.sets} sets
                   {group.sets !== group.directSets && (
                     <span className="ml-1 text-fg-faint">
@@ -69,7 +69,7 @@ export function VolumeBreakdown({
                 <div className="bg-accent/40" style={{ width: `${assisting}%` }} />
               </div>
 
-              <p className="mt-1.5 truncate text-[11px] text-fg-faint">
+              <p className="mt-1.5 truncate text-[12px] text-fg-faint">
                 {group.exercises.slice(0, 4).join(" · ")}
                 {group.exercises.length > 4 &&
                   ` +${group.exercises.length - 4}`}
@@ -100,7 +100,7 @@ export function VolumeBreakdown({
       </div>
 
       {report.unattributedSets > 0 && (
-        <p className="flex items-start gap-2.5 rounded-xl border border-dashed border-line-strong p-3.5 text-[11.5px] leading-relaxed text-fg-dim">
+        <p className="flex items-start gap-2.5 rounded-xl border border-dashed border-line-strong p-3.5 text-[12.5px] leading-relaxed text-fg-dim">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
             {report.unattributedSets} of {report.totalSets} sets in the last{" "}

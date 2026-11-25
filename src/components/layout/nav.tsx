@@ -197,7 +197,7 @@ export function SidebarNav({ groups }: { groups: NavGroup[] }) {
                 onClick={onNavigate(item.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13.5px] transition-colors",
+                  "flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[14px] transition-colors",
                   active
                     ? "bg-accent-soft font-semibold text-fg"
                     : "font-medium text-fg-muted hover:bg-hover hover:text-fg",
@@ -264,7 +264,7 @@ export function BottomNav({
                 <Icon className="h-[19px] w-[19px] shrink-0" />
                 <span
                   className={cn(
-                    "max-w-full truncate text-[10px] tracking-[0.01em]",
+                    "max-w-full truncate text-[11px] tracking-[0.01em]",
                     active ? "font-bold" : "font-medium",
                   )}
                 >
