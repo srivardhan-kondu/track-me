@@ -5,6 +5,7 @@ import { RoleSwitcher } from "@/components/settings/role-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
+import { FREE_FOR_ALL } from "@/lib/entitlements";
 import { googleEnabled } from "@/lib/auth";
 import { checkoutEnabled, liveMode } from "@/lib/razorpay";
 import { premiumStatus, requireUser } from "@/lib/session";
@@ -131,7 +132,7 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <PlanSection status={status} />
+      {!FREE_FOR_ALL && <PlanSection status={status} />}
 
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <div className="flex flex-col gap-5">
@@ -262,6 +263,7 @@ export default async function SettingsPage() {
                     : "No API key — meals fall back to the offline estimator and voice notes are stored but not transcribed."
                 }
               />
+              {!FREE_FOR_ALL && (
               <ServiceRow
                 name="Payments"
                 live={checkoutEnabled && liveMode}
@@ -273,6 +275,7 @@ export default async function SettingsPage() {
                       : "Razorpay test keys — the sheet works, but no money moves."
                 }
               />
+              )}
               <ServiceRow
                 name="Media storage"
                 live={usingObjectStorage}

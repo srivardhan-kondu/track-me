@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Logo } from "@/components/layout/shell";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FREE_HISTORY_DAYS, PRICES, TRIAL_DAYS } from "@/lib/entitlements";
+import { FREE_FOR_ALL, FREE_HISTORY_DAYS, PRICES, TRIAL_DAYS } from "@/lib/entitlements";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -77,6 +78,9 @@ function Tick() {
 }
 
 export default function PricingPage() {
+  // Nothing is for sale while everything is free.
+  if (FREE_FOR_ALL) redirect("/");
+
   return (
     <main className="mx-auto w-full max-w-[960px] px-6 py-12 sm:py-16">
       <div className="mb-10">

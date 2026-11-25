@@ -66,9 +66,6 @@ export default async function LandingPage() {
           <Button asChild size="lg" variant="outline">
             <Link href="/signin?role=COACH">I&apos;m a coach</Link>
           </Button>
-          <Button asChild size="lg" variant="ghost">
-            <Link href="/pricing">See pricing</Link>
-          </Button>
           <InstallButton variant="ghost" className="h-[42px] px-5 text-sm" />
         </div>
       </section>
