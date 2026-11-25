@@ -120,7 +120,9 @@ export function MealForm({
       }
 
       await new Promise((r) => setTimeout(r, delay));
-      delay = Math.min(3000, Math.round(delay * 1.4));
+      // Capped at 2s so a finished estimate never sits unseen for long, while
+      // staying near the 30-a-minute limit on status checks.
+      delay = Math.min(2000, Math.round(delay * 1.25));
     }
 
     setFailed(
@@ -147,7 +149,9 @@ export function MealForm({
     toast.success("Meal saved.");
     resetForm();
     setOpen(false);
-    router.refresh();
+    // No router.refresh(): updateMealItems revalidates, so its response has
+    // already brought the corrected meal onto the page. Refreshing again only
+    // paid for the same dashboard render twice.
   }
 
   async function handleSubmit(e: React.FormEvent) {

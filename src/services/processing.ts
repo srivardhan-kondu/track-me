@@ -55,6 +55,13 @@ async function runMealAnalysis(mealId: string, typedDescription: string | null) 
 
   let transcript = meal.transcript;
 
+  // The photo does not depend on the transcript, so fetch it while the voice
+  // note is being transcribed rather than after. The no-op catch stops it
+  // rejecting unobserved if transcription throws first; the await below still
+  // sees the error.
+  const imageBuffer = meal.imageKey ? getObject(meal.imageKey) : null;
+  imageBuffer?.catch(() => {});
+
   // Transcribe only if a previous attempt has not already done it. The
   // transcript is written back immediately below, so a job that fails later —
   // in the vision call, or in its own final write — does not buy the audio a
@@ -79,8 +86,8 @@ async function runMealAnalysis(mealId: string, typedDescription: string | null) 
   }
 
   let imagePayload = null;
-  if (meal.imageKey) {
-    const buffer = await getObject(meal.imageKey);
+  if (meal.imageKey && imageBuffer) {
+    const buffer = await imageBuffer;
     const ext = meal.imageKey.split(".").pop()?.toLowerCase();
     imagePayload = {
       buffer,
@@ -311,9 +318,10 @@ export async function runJob(job: JobRow): Promise<"done" | "retrying" | "failed
  */
 export async function runNow(jobId: string): Promise<void> {
   try {
-    if ((await inFlight()) >= MAX_IN_FLIGHT) return;
-    // Leave it queued; the worker will park it properly.
-    if (!(await hasBudget())) return;
+    // Both checks at once. Either one declining leaves the job queued, and the
+    // worker parks a budget-blocked one properly.
+    const [running, budget] = await Promise.all([inFlight(), hasBudget()]);
+    if (running >= MAX_IN_FLIGHT || !budget) return;
 
     const job = await claimOne(jobId);
     if (!job) return;
