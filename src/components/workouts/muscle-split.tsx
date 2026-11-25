@@ -37,7 +37,7 @@ export function MuscleSplit({
 
   return (
     <section className={className}>
-      <h2 className="text-[13px] font-semibold text-fg">Muscle split</h2>
+      <h2 className="text-[14px] font-semibold text-fg">Muscle split</h2>
 
       <ul className="mt-4 flex flex-col gap-3.5">
         {shown.map((group) => {
@@ -47,13 +47,13 @@ export function MuscleSplit({
 
           return (
             <li key={group.key}>
-              <p className="text-[13px] text-fg">{group.name}</p>
+              <p className="text-[14px] text-fg">{group.name}</p>
               <div className="mt-1.5 flex items-center gap-3">
                 <span
                   className="h-[18px] rounded-[5px] bg-accent"
                   style={{ width: `${Math.max(share, 1.5)}%` }}
                 />
-                <span className="tabular shrink-0 text-[12.5px] text-fg-dim">
+                <span className="tabular shrink-0 text-[13.5px] text-fg-dim">
                   {share < 1 ? "<1" : Math.round(share)}%
                 </span>
               </div>
@@ -67,7 +67,7 @@ export function MuscleSplit({
           type="button"
           onClick={() => setExpanded((e) => !e)}
           className={cn(
-            "mt-3.5 text-[13px] font-semibold text-accent-text transition-colors hover:text-accent-strong",
+            "mt-3.5 text-[14px] font-semibold text-accent-text transition-colors hover:text-accent-strong",
           )}
         >
           {expanded ? "Show less" : `Show ${hidden} more`}

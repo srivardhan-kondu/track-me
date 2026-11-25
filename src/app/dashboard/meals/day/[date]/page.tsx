@@ -104,7 +104,7 @@ export default async function MealDayPage({
                 month: "long",
               })}
         </h1>
-        <p className="mt-2.5 text-[13px] text-fg-dim">
+        <p className="mt-2.5 text-[14px] text-fg-dim">
           {formatDateInZone(day, zone, {
             day: "numeric",
             month: "short",
@@ -128,12 +128,12 @@ export default async function MealDayPage({
             <Figure label="Carbs" value={Math.round(totals.carbs)} unit="g" />
             <Figure label="Fat" value={Math.round(totals.fat)} unit="g" />
             {totals.fiber !== null && (
-              <Figure label="Fibre" value={Math.round(totals.fiber)} unit="g" />
+              <Figure label="Fiber" value={Math.round(totals.fiber)} unit="g" />
             )}
           </div>
 
           <div className="rounded-2xl border border-line bg-surface px-6 py-5">
-            <h2 className="text-[13px] font-semibold text-fg">Macro split</h2>
+            <h2 className="text-[14px] font-semibold text-fg">Macro split</h2>
             <MacroSplitBar macros={totals} className="mt-4" />
             <MacroRow macros={totals} className="mt-3.5" />
           </div>
@@ -169,7 +169,7 @@ function Figure({
       <p className="tabular mt-1.5 text-[19px] font-extrabold leading-none text-fg">
         {value.toLocaleString(LOCALE)}
         {unit && (
-          <span className="ml-1 text-[12px] font-semibold text-fg-dim">
+          <span className="ml-1 text-[13px] font-semibold text-fg-dim">
             {unit}
           </span>
         )}

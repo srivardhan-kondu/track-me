@@ -46,7 +46,7 @@ export function HydrationCard({
       )}
     >
       <div className="flex items-baseline justify-between">
-        <p className="text-[12.5px] font-semibold text-fg">Hydration</p>
+        <p className="text-[13.5px] font-semibold text-fg">Hydration</p>
         <p className="mono-label">goal {formatWater(goalMl, unit)}</p>
       </div>
 
@@ -54,12 +54,12 @@ export function HydrationCard({
         <span className="tabular font-serif text-[30px] leading-none text-fg">
           {ml === 0 ? "0" : headline}
         </span>
-        <span className="text-[12px] text-fg-dim">
+        <span className="text-[13px] text-fg-dim">
           {unit === "FL_OZ" ? "fl oz" : "L"}
         </span>
         <span
           className={cn(
-            "tabular ml-auto font-mono text-[11.5px] font-medium",
+            "tabular ml-auto font-mono text-[12.5px] font-medium",
             met ? "text-blue-text" : "text-fg-muted",
           )}
         >
@@ -77,7 +77,7 @@ export function HydrationCard({
         />
       </div>
 
-      <p className="mt-2.5 text-[11.5px] leading-relaxed text-fg-dim">
+      <p className="mt-2.5 text-[12.5px] leading-relaxed text-fg-dim">
         {met
           ? "Goal met. Anything more is a bonus."
           : ml === 0

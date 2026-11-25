@@ -34,7 +34,7 @@ export function DaySwitcher({
         href={todayHref}
         aria-current={isToday ? "page" : undefined}
         className={cn(
-          "flex h-7 items-center rounded-[8px] px-3 text-[12px] transition-colors",
+          "flex h-7 items-center rounded-[8px] px-3 text-[13px] transition-colors",
           isToday
             ? "bg-hover font-semibold text-fg"
             : "font-medium text-fg-muted hover:bg-hover hover:text-fg",

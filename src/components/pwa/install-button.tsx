@@ -143,9 +143,9 @@ export function InstallButton({
             </DialogDescription>
           </DialogHeader>
 
-          <ol className="flex flex-col gap-4 text-[12.5px] leading-relaxed text-fg-muted">
+          <ol className="flex flex-col gap-4 text-[13.5px] leading-relaxed text-fg-muted">
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-accent-line font-mono text-[10px] font-medium text-accent-text">
+              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-accent-line font-mono text-[11px] font-medium text-accent-text">
                 1
               </span>
               <span className="flex flex-wrap items-center gap-1.5">
@@ -155,7 +155,7 @@ export function InstallButton({
               </span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-line-strong font-mono text-[10px] font-medium text-fg-dim">
+              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-line-strong font-mono text-[11px] font-medium text-fg-dim">
                 2
               </span>
               <span className="flex flex-wrap items-center gap-1.5">
@@ -168,7 +168,7 @@ export function InstallButton({
               </span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-line-strong font-mono text-[10px] font-medium text-fg-dim">
+              <span className="mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border border-line-strong font-mono text-[11px] font-medium text-fg-dim">
                 3
               </span>
               <span>
@@ -179,7 +179,7 @@ export function InstallButton({
             </li>
           </ol>
 
-          <p className="text-[11.5px] leading-relaxed text-fg-faint">
+          <p className="text-[12.5px] leading-relaxed text-fg-faint">
             Works in Safari, Chrome, Edge and Firefox on iOS 16.4 and later.
           </p>
         </DialogContent>
@@ -231,10 +231,10 @@ export function InstallBanner() {
       <Mark size={36} label="Track Me" />
 
       <div className="min-w-0 flex-1">
-        <p className="text-[12.5px] font-semibold text-fg">
+        <p className="text-[13.5px] font-semibold text-fg">
           Add Track Me to your home screen
         </p>
-        <p className="mt-0.5 text-[11.5px] text-fg-dim">
+        <p className="mt-0.5 text-[12.5px] text-fg-dim">
           {ios
             ? "Opens full screen, straight to the camera."
             : "Log a meal in two taps, without opening a browser."}

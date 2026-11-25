@@ -47,7 +47,7 @@ export function VolumeBars({
               />
               <span
                 className={cn(
-                  "text-center font-mono text-[10px]",
+                  "text-center font-mono text-[11px]",
                   current ? "font-medium text-fg-muted" : "text-fg-faint",
                 )}
               >
@@ -59,7 +59,7 @@ export function VolumeBars({
       </div>
 
       {caption && (
-        <p className="mt-3.5 text-[12px] leading-relaxed text-fg-dim">
+        <p className="mt-3.5 text-[13px] leading-relaxed text-fg-dim">
           {caption}
         </p>
       )}

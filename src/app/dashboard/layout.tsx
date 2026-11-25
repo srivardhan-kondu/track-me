@@ -6,9 +6,11 @@ import { AppShell } from "@/components/layout/shell";
 import { TimeZoneSync } from "@/components/layout/timezone-sync";
 import { MealForm } from "@/components/log/meal-form";
 import { TrialStrip } from "@/components/billing/trial-strip";
+import { UnitsProvider } from "@/components/units-provider";
 import { db } from "@/lib/db";
 import { trialDaysLeft } from "@/lib/entitlements";
 import { premiumStatus, requireUser } from "@/lib/session";
+import { unitPrefs } from "@/lib/units";
 
 export default async function DashboardLayout({
   children,
@@ -24,19 +26,17 @@ export default async function DashboardLayout({
   */
   const [status, record] = await Promise.all([
     premiumStatus(user.id),
-    user.role === "ATHLETE"
-      ? db.user.findUnique({
-          where: { id: user.id },
-          select: { onboardedAt: true },
-        })
-      : null,
+    db.user.findUnique({
+      where: { id: user.id },
+      select: { onboardedAt: true, weightUnit: true, heightUnit: true, volumeUnit: true },
+    }),
   ]);
   if (user.role === "ATHLETE" && !record?.onboardedAt) redirect("/onboarding");
 
   const daysLeft = trialDaysLeft(status);
 
   return (
-    <>
+    <UnitsProvider units={unitPrefs(record)}>
       <TimeZoneSync current={user.timeZone} />
 
       <AppShell
@@ -59,6 +59,6 @@ export default async function DashboardLayout({
       >
         {children}
       </AppShell>
-    </>
+    </UnitsProvider>
   );
 }

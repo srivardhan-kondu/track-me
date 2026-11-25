@@ -61,21 +61,21 @@ export function MealRow({
       <div className="min-w-0 flex-1">
         <p
           className={cn(
-            "truncate text-[13.5px] font-semibold",
+            "truncate text-[14px] font-semibold",
             dim ? "text-fg-muted" : "text-fg",
           )}
         >
           {meal.title ?? "Logged meal"}
         </p>
 
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-[12px] uppercase tracking-[0.06em] text-fg-dim">
           <span className="tabular">{time}</span>
           {meal.slot && <span>{SLOT_LABEL[meal.slot] ?? meal.slot}</span>}
           {complete && <EstimateTag analysed={meal.aiGenerated} />}
           {analysing && (
             <span className="flex items-center gap-1.5 text-accent-text">
               <Loader2 className="h-3 w-3 animate-spin" />
-              analysing
+              analyzing
             </span>
           )}
           {meal.comments.length > 0 && (
@@ -94,7 +94,7 @@ export function MealRow({
 
       <span
         className={cn(
-          "tabular w-[62px] shrink-0 text-right font-mono text-[13.5px]",
+          "tabular w-[62px] shrink-0 text-right font-mono text-[14px]",
           dim ? "text-fg-muted" : "text-fg",
         )}
       >

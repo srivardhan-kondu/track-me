@@ -87,10 +87,10 @@ export function FuelPanel({
           <span className="tabular font-serif text-[52px] leading-none text-fg">
             {totals.calories.toLocaleString(LOCALE)}
           </span>
-          <span className="text-[13px] font-medium text-fg-dim">kcal</span>
+          <span className="text-[14px] font-medium text-fg-dim">cal</span>
         </div>
 
-        <p className="mt-1.5 text-[12.5px] text-fg-dim">
+        <p className="mt-1.5 text-[13.5px] text-fg-dim">
           {totals.mealCount} meal{totals.mealCount === 1 ? "" : "s"}
           {hasBaseline ? (
             <>
@@ -122,10 +122,10 @@ export function FuelPanel({
           return (
             <div key={key}>
               <div className="mb-2 flex items-baseline justify-between gap-3">
-                <span className="text-[12.5px] font-medium text-fg-muted">
+                <span className="text-[13.5px] font-medium text-fg-muted">
                   {name}
                 </span>
-                <span className="tabular font-mono text-[11.5px] text-fg-dim">
+                <span className="tabular font-mono text-[12.5px] text-fg-dim">
                   {value} g{reference > 0 && ` · avg ${reference}`}
                 </span>
               </div>
@@ -140,7 +140,7 @@ export function FuelPanel({
         })}
 
         {!hasBaseline && (
-          <p className="text-[11.5px] leading-relaxed text-fg-faint">
+          <p className="text-[12.5px] leading-relaxed text-fg-faint">
             Averages appear once you have a few days logged — then each bar
             fills toward your own usual day.
           </p>

@@ -95,12 +95,12 @@ export default async function AdminAuditPage({
                   {entry.actorId ? (
                     <Link
                       href={`/admin/users/${entry.actorId}`}
-                      className="text-[12px] text-accent-text hover:underline"
+                      className="text-[13px] text-accent-text hover:underline"
                     >
                       {entry.actorEmail ?? entry.actorId}
                     </Link>
                   ) : (
-                    <span className="text-[12px]">
+                    <span className="text-[13px]">
                       {entry.actorEmail ?? "unknown"}
                     </span>
                   )}
@@ -116,7 +116,7 @@ export default async function AdminAuditPage({
                   {href ? (
                     <Link
                       href={href}
-                      className="text-[12px] text-accent-text hover:underline"
+                      className="text-[13px] text-accent-text hover:underline"
                     >
                       {entry.targetType}
                     </Link>

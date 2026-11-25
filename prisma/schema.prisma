@@ -81,6 +81,17 @@ model User {
   timeZone  String?
   createdAt DateTime @default(now())
 
+  /// Which nudges this person wants, on any device they have turned
+  /// notifications on for. Defaults on: turning notifications on at all is
+  /// the opt-in, and these let them narrow it.
+  remindWeighIn   Boolean   @default(true)
+  remindLog       Boolean   @default(true)
+  remindComments  Boolean   @default(true)
+  /// The local day each daily nudge last went out, so an hourly sender that
+  /// runs twice in the same hour cannot send it twice.
+  weighInNudgedOn DateTime? @db.Date
+  logNudgedOn     DateTime? @db.Date
+
   accounts Account[]
   sessions Session[]
 
@@ -88,20 +99,37 @@ model User {
   coachLinks   CoachAthlete[] @relation("AthleteToCoach")
   athleteLinks CoachAthlete[] @relation("CoachToAthlete")
 
-  payments       Payment[]
-  adminActions   AdminAudit[]    @relation("AdminAuditActor")
-  meals          Meal[]
-  workouts       Workout[]
-  workoutDraft   WorkoutDraft?
-  weightEntries  WeightEntry[]
-  waterEntries   WaterEntry[]
-  progressPhotos ProgressPhoto[]
-  comments       Comment[]
+  payments          Payment[]
+  adminActions      AdminAudit[]       @relation("AdminAuditActor")
+  meals             Meal[]
+  workouts          Workout[]
+  workoutDraft      WorkoutDraft?
+  weightEntries     WeightEntry[]
+  waterEntries      WaterEntry[]
+  progressPhotos    ProgressPhoto[]
+  comments          Comment[]
+  pushSubscriptions PushSubscription[]
 
   @@index([role])
   @@index([isAdmin])
   @@index([plan])
   @@index([createdAt])
+}
+
+/// One browser or installed app that has agreed to receive notifications.
+/// A person has one per device; the push service hands back the endpoint and
+/// the two keys the payload is encrypted with.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Account {
@@ -759,7 +787,7 @@ model RateLimit {
 model AdminAudit {
   id String @id @default(cuid())
 
-  actorId String?
+  actorId    String?
   /// Copied rather than joined. Deleting an account is itself an auditable
   /// action, and the line describing it must outlive the row it points at.
   actorEmail String?
@@ -775,7 +803,7 @@ model AdminAudit {
   summary String
   /// Whatever the action needs to be reconstructed later — the previous plan,
   /// the amount, the reason given.
-  meta Json?
+  meta    Json?
 
   createdAt DateTime @default(now())
 

@@ -70,7 +70,7 @@ export function WaterBars({
             timeZone: "UTC",
           })}
         </span>
-        <span className="tabular font-mono text-[10.5px] text-fg-dim">
+        <span className="tabular font-mono text-[11.5px] text-fg-dim">
           {empty ? "nothing logged yet" : `goal ${formatWater(goalMl, unit)}`}
         </span>
         <span className="mono-label">Today</span>

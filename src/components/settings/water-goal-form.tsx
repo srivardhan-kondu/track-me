@@ -74,7 +74,7 @@ export function WaterGoalForm({
         {pending ? "Saving…" : "Save goal"}
       </Button>
 
-      <p className="w-full text-[11.5px] leading-relaxed text-fg-dim">
+      <p className="w-full text-[12.5px] leading-relaxed text-fg-dim">
         Leave it blank to use the default of{" "}
         {formatVolume(DEFAULT_WATER_GOAL_ML, unit)} a day.
       </p>

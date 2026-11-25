@@ -14,7 +14,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <span className="mono-label sm:w-[140px] sm:shrink-0 sm:pt-[3px]">
         {label}
       </span>
-      <span className="text-[13px] leading-relaxed text-fg">{children}</span>
+      <span className="text-[14px] leading-relaxed text-fg">{children}</span>
     </div>
   );
 }
@@ -59,7 +59,7 @@ export default function ContactPage() {
             </span>
           ))}
         </address>
-        <p className="text-[12px] text-fg-dim">
+        <p className="text-[13px] text-fg-dim">
           {BUSINESS.entityType}. Correspondence about billing, refunds and data
           requests should go to the email address above rather than by post —
           it is very much faster.

@@ -34,11 +34,11 @@ export function PremiumNotice({
         className,
       )}
     >
-      <p className="text-[12.5px] font-semibold text-fg">{title}</p>
-      <p className="mt-1.5 text-[11.5px] leading-relaxed text-fg-dim">{body}</p>
+      <p className="text-[13.5px] font-semibold text-fg">{title}</p>
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-fg-dim">{body}</p>
       <Link
         href="/dashboard/settings"
-        className="mt-3 inline-flex text-[11.5px] font-medium text-accent-text underline-offset-4 hover:underline"
+        className="mt-3 inline-flex text-[12.5px] font-medium text-accent-text underline-offset-4 hover:underline"
       >
         {cta ?? `See plans — from ${rupees(PRICES.MONTHLY)} a month`} →
       </Link>

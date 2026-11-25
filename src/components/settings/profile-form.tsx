@@ -52,7 +52,7 @@ function Pills<T extends string>({
               onClick={() => onChange(option.value)}
               aria-pressed={selected}
               className={cn(
-                "rounded-full px-4 py-2 text-[12.5px] transition-colors",
+                "rounded-full px-4 py-2 text-[13.5px] transition-colors",
                 selected
                   ? "bg-accent font-semibold text-accent-ink"
                   : "border border-line font-medium text-fg-muted hover:border-accent-line hover:text-fg",
@@ -148,7 +148,7 @@ export function ProfileForm({
                 onClick={() => setGender(choice.value)}
                 aria-pressed={selected}
                 className={cn(
-                  "rounded-full px-4 py-2 text-[12.5px] transition-colors",
+                  "rounded-full px-4 py-2 text-[13.5px] transition-colors",
                   selected
                     ? "bg-accent font-semibold text-accent-ink"
                     : "border border-line font-medium text-fg-muted hover:border-accent-line hover:text-fg",
@@ -159,7 +159,7 @@ export function ProfileForm({
             );
           })}
         </div>
-        <p className="mt-2 text-[11.5px] leading-relaxed text-fg-dim">
+        <p className="mt-2 text-[12.5px] leading-relaxed text-fg-dim">
           This only picks which portrait the dashboard shows.
         </p>
       </div>
@@ -234,8 +234,8 @@ export function ProfileForm({
 
       <div className="flex flex-col gap-4 rounded-[16px] border border-line p-4">
         <div>
-          <p className="text-[12.5px] font-semibold text-fg">Units</p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-fg-dim">
+          <p className="text-[13.5px] font-semibold text-fg">Units</p>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-fg-dim">
             How your numbers are read back to you. Nothing you have logged
             changes — the same history is simply shown in the unit you pick,
             and your coach sees it in yours.
@@ -257,7 +257,7 @@ export function ProfileForm({
           value={units.height}
           onChange={changeHeightUnit}
           options={[
-            { value: "CM", label: "Centimetres" },
+            { value: "CM", label: "Centimeters" },
             { value: "FT", label: "Feet & inches" },
           ]}
         />
@@ -267,7 +267,7 @@ export function ProfileForm({
           value={units.volume}
           onChange={(v) => setUnits((u) => ({ ...u, volume: v }))}
           options={[
-            { value: "ML", label: "Millilitres" },
+            { value: "ML", label: "Milliliters" },
             { value: "FL_OZ", label: "Fluid ounces" },
           ]}
         />

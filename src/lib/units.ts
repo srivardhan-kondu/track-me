@@ -26,6 +26,48 @@ export type UnitPrefs = {
 /** What an account starts on, and what any unreadable preference falls back to. */
 export const METRIC: UnitPrefs = { weight: "KG", height: "CM", volume: "ML" };
 
+/** Pounds, feet and fluid ounces — how the US reads a body and a bottle. */
+export const IMPERIAL: UnitPrefs = { weight: "LB", height: "FT", volume: "FL_OZ" };
+
+/**
+ * IANA zones that lie in the United States.
+ *
+ * The zone is a better signal than the browser language: plenty of browsers
+ * outside the US report "en-US" because that is what the OS shipped with,
+ * but almost nobody outside the US has their clock set to Chicago.
+ */
+const US_ZONES = new Set([
+  "America/New_York",
+  "America/Detroit",
+  "America/Chicago",
+  "America/Menominee",
+  "America/Denver",
+  "America/Boise",
+  "America/Phoenix",
+  "America/Los_Angeles",
+  "America/Anchorage",
+  "America/Juneau",
+  "America/Sitka",
+  "America/Metlakatla",
+  "America/Yakutat",
+  "America/Nome",
+  "America/Adak",
+  "America/Puerto_Rico",
+  "Pacific/Honolulu",
+  "Pacific/Guam",
+]);
+const US_ZONE_PREFIXES = ["America/Indiana/", "America/Kentucky/", "America/North_Dakota/", "US/"];
+
+export function isUsTimeZone(timeZone: string | null | undefined): boolean {
+  if (!timeZone) return false;
+  return US_ZONES.has(timeZone) || US_ZONE_PREFIXES.some((p) => timeZone.startsWith(p));
+}
+
+/** The units somebody in this zone most likely thinks in, before they say. */
+export function unitsForTimeZone(timeZone: string | null | undefined): UnitPrefs {
+  return isUsTimeZone(timeZone) ? IMPERIAL : METRIC;
+}
+
 /** Normalises whatever came out of the database into a usable set. */
 export function unitPrefs(
   row:
@@ -220,4 +262,26 @@ export function formatVolume(ml: number, unit: VolumeUnit): string {
   if (unit === "FL_OZ") return `${displayVolume(ml, unit)} fl oz`;
   if (ml <= 0) return "0 ml";
   return ml < 1000 ? `${Math.round(ml)} ml` : `${fix(ml / 1000, 1)} L`;
+}
+
+/* -------------------------------------------------------------------------
+   Food portions
+   ------------------------------------------------------------------------- */
+
+/** The avoirdupois ounce — what a US nutrition label weighs a portion in. */
+const G_PER_OZ = 28.349523125;
+
+/**
+ * A meal's portion follows the athlete's weight unit: somebody who weighs
+ * themselves in pounds reads "6 oz chicken", not "170 g". The column still
+ * holds grams, for the same reasons the weight column holds kilograms.
+ */
+export const portionLabel = (unit: WeightUnit) => (unit === "LB" ? "oz" : "g");
+
+export function displayPortion(grams: number, unit: WeightUnit): number {
+  return unit === "LB" ? fix(grams / G_PER_OZ, 1) : Math.round(grams);
+}
+
+export function toGrams(value: number, unit: WeightUnit): number {
+  return unit === "LB" ? fix(value * G_PER_OZ, 1) : value;
 }

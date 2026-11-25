@@ -108,7 +108,7 @@ export function ExercisePicker({
 
         <div className="-mx-1 max-h-[52vh] overflow-y-auto px-1">
           {groups.length === 0 && !isFetching && (
-            <p className="py-6 text-center text-[12.5px] text-fg-dim">
+            <p className="py-6 text-center text-[13.5px] text-fg-dim">
               No match — you can still type the name by hand.
             </p>
           )}
@@ -116,11 +116,11 @@ export function ExercisePicker({
           {groups.map((group) => (
             <section key={group.groupId}>
               <h3 className="sticky top-0 z-10 flex items-baseline gap-2 bg-bg/95 py-2 backdrop-blur">
-                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px] bg-accent-soft text-[10px] font-semibold text-accent-text">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px] bg-accent-soft text-[11px] font-semibold text-accent-text">
                   {group.name.charAt(0)}
                 </span>
-                <span className="text-[12.5px] font-semibold text-fg">{group.name}</span>
-                <span className="tabular font-mono text-[11px] text-fg-faint">
+                <span className="text-[13.5px] font-semibold text-fg">{group.name}</span>
+                <span className="tabular font-mono text-[12px] text-fg-faint">
                   {group.exercises.length}
                 </span>
               </h3>
@@ -133,12 +133,12 @@ export function ExercisePicker({
                       onClick={() => pick(ex)}
                       className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-left transition-colors hover:bg-hover"
                     >
-                      <span className="min-w-0 flex-1 truncate text-[12.5px] text-fg-muted">
+                      <span className="min-w-0 flex-1 truncate text-[13.5px] text-fg-muted">
                         {ex.name}
                       </span>
                       <Badge
                         variant="secondary"
-                        className="shrink-0 text-[10px] font-normal"
+                        className="shrink-0 text-[11px] font-normal"
                       >
                         {equipmentLabel(ex.equipment)}
                       </Badge>

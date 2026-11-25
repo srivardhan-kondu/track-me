@@ -122,7 +122,7 @@ export function EnergyBalance({
             {fmtDay(d.day, { weekday: "long", month: "long", day: "numeric" })}
             {": "}
             {d.calories > 0
-              ? `${d.calories.toLocaleString(LOCALE)} kcal`
+              ? `${d.calories.toLocaleString(LOCALE)} cal`
               : "nothing eaten logged"}
             {d.weightKg !== null
               ? `, ${formatWeight(d.weightKg, unit)}`
@@ -151,10 +151,10 @@ export function EnergyBalance({
             Panel one — what went in
             --------------------------------------------------------------- */}
         <div className="flex items-baseline justify-between gap-4">
-          <p className="text-[12.5px] font-semibold text-fg">Eaten</p>
-          <p className="tabular font-mono text-[10.5px] text-fg-dim">
+          <p className="text-[13.5px] font-semibold text-fg">Eaten</p>
+          <p className="tabular font-mono text-[11.5px] text-fg-dim">
             {hasCalories
-              ? `${meanCalories.toLocaleString(LOCALE)} kcal average`
+              ? `${meanCalories.toLocaleString(LOCALE)} cal average`
               : "nothing logged yet"}
           </p>
         </div>
@@ -201,15 +201,15 @@ export function EnergyBalance({
             Panel two — what it did to the scale
             --------------------------------------------------------------- */}
         <div className="mt-6 flex items-baseline justify-between gap-4">
-          <p className="text-[12.5px] font-semibold text-fg">Weight</p>
+          <p className="text-[13.5px] font-semibold text-fg">Weight</p>
 
           {hasWeight && (
             <div className="flex items-center gap-3.5">
-              <span className="flex items-center gap-1.5 text-[10.5px] text-fg-dim">
+              <span className="flex items-center gap-1.5 text-[11.5px] text-fg-dim">
                 <span className="h-[7px] w-[7px] rounded-full bg-fg-faint" />
                 Daily
               </span>
-              <span className="flex items-center gap-1.5 text-[10.5px] text-fg-dim">
+              <span className="flex items-center gap-1.5 text-[11.5px] text-fg-dim">
                 <span className="h-[2px] w-4 rounded-full bg-accent" />
                 {TREND_DAYS}-day trend
               </span>
@@ -257,7 +257,7 @@ export function EnergyBalance({
             </>
           ) : (
             <div className="grid h-full place-items-center rounded-xl border border-dashed border-line-strong px-6 text-center">
-              <p className="text-[12px] text-fg-dim">
+              <p className="text-[13px] text-fg-dim">
                 Weigh in a few mornings and the trend appears here.
               </p>
             </div>
@@ -284,12 +284,12 @@ export function EnergyBalance({
                   day: "numeric",
                 })}
               </p>
-              <p className="tabular mt-1.5 font-mono text-[11.5px] text-fg">
+              <p className="tabular mt-1.5 font-mono text-[12.5px] text-fg">
                 {current.calories > 0
-                  ? `${current.calories.toLocaleString(LOCALE)} kcal`
-                  : "— kcal"}
+                  ? `${current.calories.toLocaleString(LOCALE)} cal`
+                  : "— cal"}
               </p>
-              <p className="tabular font-mono text-[11.5px] text-fg-muted">
+              <p className="tabular font-mono text-[12.5px] text-fg-muted">
                 {current.weightKg !== null
                   ? formatWeight(current.weightKg, unit)
                   : "no weigh-in"}
@@ -317,7 +317,7 @@ export function EnergyBalance({
 
       {/* Every figure above, reachable without a pointer. */}
       <details className="mt-4 border-t border-line pt-3">
-        <summary className="cursor-pointer text-[11.5px] text-fg-dim transition-colors hover:text-fg">
+        <summary className="cursor-pointer text-[12.5px] text-fg-dim transition-colors hover:text-fg">
           Table view
         </summary>
         <div className="mt-3 max-h-[260px] overflow-auto">
@@ -325,7 +325,7 @@ export function EnergyBalance({
             <thead>
               <tr className="border-b border-line">
                 <th className="mono-label py-2 text-left font-normal">Day</th>
-                <th className="mono-label py-2 text-right font-normal">kcal</th>
+                <th className="mono-label py-2 text-right font-normal">cal</th>
                 <th className="mono-label py-2 text-right font-normal">
                   {weightLabel(unit)}
                 </th>
@@ -338,20 +338,20 @@ export function EnergyBalance({
                 const t = trendAt.get(i);
                 return (
                   <tr key={d.day.toISOString()} className="border-b border-line last:border-0">
-                    <td className="py-2 text-[11.5px] text-fg-muted">
+                    <td className="py-2 text-[12.5px] text-fg-muted">
                       {fmtDay(d.day, {
                         weekday: "short",
                         day: "numeric",
                         month: "short",
                       })}
                     </td>
-                    <td className="tabular py-2 text-right font-mono text-[11.5px] text-fg-muted">
+                    <td className="tabular py-2 text-right font-mono text-[12.5px] text-fg-muted">
                       {d.calories > 0 ? d.calories.toLocaleString(LOCALE) : "—"}
                     </td>
-                    <td className="tabular py-2 text-right font-mono text-[11.5px] text-fg-muted">
+                    <td className="tabular py-2 text-right font-mono text-[12.5px] text-fg-muted">
                       {d.weightKg !== null ? displayWeight(d.weightKg, unit) : "—"}
                     </td>
-                    <td className="tabular py-2 text-right font-mono text-[11.5px] text-fg">
+                    <td className="tabular py-2 text-right font-mono text-[12.5px] text-fg">
                       {t !== undefined ? displayWeight(t, unit) : "—"}
                     </td>
                   </tr>

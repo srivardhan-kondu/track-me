@@ -27,13 +27,13 @@ export function LegalPage({
       <h1 className="font-serif text-[32px] leading-[1.1] text-fg sm:text-[38px]">
         {title}
       </h1>
-      <p className="mt-3.5 text-[13.5px] leading-relaxed text-fg-dim">
+      <p className="mt-3.5 text-[14px] leading-relaxed text-fg-dim">
         {summary}
       </p>
       <p className="mono-label mt-5">Last updated {BUSINESS.lastUpdated}</p>
 
       {businessDetailsIncomplete && process.env.NODE_ENV !== "production" && (
-        <p className="mt-6 rounded-xl border border-dashed border-clay-line p-3.5 text-[12px] leading-relaxed text-clay-text">
+        <p className="mt-6 rounded-xl border border-dashed border-clay-line p-3.5 text-[13px] leading-relaxed text-clay-text">
           The business address or jurisdiction in{" "}
           <code className="font-mono">src/lib/business.ts</code> is still a
           placeholder. Razorpay checks for a complete address during activation.
@@ -44,7 +44,7 @@ export function LegalPage({
       <div className="mt-10 flex flex-col gap-9">{children}</div>
 
       <div className="mt-14 rounded-2xl border border-line-strong bg-surface-muted p-5">
-        <p className="text-[12.5px] leading-relaxed text-fg-dim">
+        <p className="text-[13.5px] leading-relaxed text-fg-dim">
           Questions about this page? Write to{" "}
           <Link
             href={`mailto:${BUSINESS.email}`}
@@ -72,7 +72,7 @@ export function Clause({
   return (
     <section>
       <h2 className="text-[14px] font-semibold text-fg">{title}</h2>
-      <div className="mt-2.5 flex flex-col gap-3 text-[13px] leading-[1.75] text-fg-muted">
+      <div className="mt-2.5 flex flex-col gap-3 text-[14px] leading-[1.75] text-fg-muted">
         {children}
       </div>
     </section>

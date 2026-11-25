@@ -115,7 +115,7 @@ export default async function MealsPage({
           <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
             Meals
           </h1>
-          <p className="mt-2.5 text-[13px] text-fg-dim">
+          <p className="mt-2.5 text-[14px] text-fg-dim">
             Last {DAYS} days
             {perDay > 0 && ` · ${perDay} meals a day on average`}
           </p>
@@ -126,7 +126,7 @@ export default async function MealsPage({
 
       {!premium && (
         <PremiumNotice
-          title="These macros are estimated, not analysed"
+          title="These macros are estimated, not analyzed"
           body="On the free plan a meal is matched against a word list — it never reaches the model. Premium reads the photograph itself and returns the breakdown per ingredient, and turns a spoken note into a logged meal without you typing anything."
         />
       )}
@@ -226,7 +226,7 @@ export default async function MealsPage({
                     month: "short",
                     day: "numeric",
                   })}`}
-                  meta={`${Math.round(totals.calories).toLocaleString(LOCALE)} kcal · ${Math.round(totals.protein)} p`}
+                  meta={`${Math.round(totals.calories).toLocaleString(LOCALE)} cal · ${Math.round(totals.protein)} p`}
                 />
 
                 {rows

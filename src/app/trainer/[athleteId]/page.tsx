@@ -127,7 +127,7 @@ export default async function AthleteReviewPage({
       <header className="flex flex-wrap items-center gap-4">
         <Avatar className="h-14 w-14">
           {athlete.image && <AvatarImage src={athlete.image} alt="" />}
-          <AvatarFallback className="text-[13px]">
+          <AvatarFallback className="text-[14px]">
             {initials(athlete.name, athlete.email)}
           </AvatarFallback>
         </Avatar>
@@ -136,7 +136,7 @@ export default async function AthleteReviewPage({
           <h1 className="truncate font-serif text-[28px] leading-none text-fg sm:text-[30px]">
             {athlete.name ?? athlete.email}
           </h1>
-          <p className="mt-2 truncate font-mono text-[11.5px] text-fg-dim">
+          <p className="mt-2 truncate font-mono text-[12.5px] text-fg-dim">
             {athlete.email}
           </p>
         </div>
@@ -149,7 +149,7 @@ export default async function AthleteReviewPage({
           <Metric
             label="Avg calories"
             value={summary.avgCalories.toLocaleString(LOCALE)}
-            unit="kcal"
+            unit="cal"
           />
           <Metric label="Avg protein" value={summary.avgProtein} unit="g" />
           <Metric
@@ -203,7 +203,7 @@ export default async function AthleteReviewPage({
 
       <section className="rounded-2xl border border-line-strong bg-surface px-6 py-5">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1.5">
-          <p className="text-[12.5px] font-semibold text-fg">
+          <p className="text-[13.5px] font-semibold text-fg">
             Intake against the scale
           </p>
           <p className="mono-label">{ENERGY_DAYS} days</p>
@@ -214,14 +214,14 @@ export default async function AthleteReviewPage({
       <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         <section className="rounded-2xl border border-line-strong bg-surface px-6 py-5">
           <div className="flex items-baseline justify-between gap-4">
-            <p className="text-[12.5px] font-semibold text-fg">Weight trend</p>
+            <p className="text-[13.5px] font-semibold text-fg">Weight trend</p>
             <p className="mono-label">90 days</p>
           </div>
           <WeightChart points={series} unit={units.weight} className="mt-5" />
         </section>
 
         <section className="rounded-2xl border border-line p-[18px]">
-          <p className="text-[12.5px] font-semibold text-fg">
+          <p className="text-[13.5px] font-semibold text-fg">
             Logging consistency
           </p>
           <div className="mt-3.5">
@@ -247,7 +247,7 @@ export default async function AthleteReviewPage({
           Volume by muscle group
         </SectionHeading>
         <div className="rounded-2xl border border-line-strong bg-surface p-5">
-          <p className="mb-4 text-[12px] leading-relaxed text-fg-dim">
+          <p className="mb-4 text-[13px] leading-relaxed text-fg-dim">
             Weighted by how directly each exercise trains the group. The dark
             patches are the week's gaps.
           </p>
@@ -268,11 +268,11 @@ export default async function AthleteReviewPage({
       <section className="flex flex-col gap-3.5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-[13px] font-semibold text-fg">
+            <h2 className="text-[14px] font-semibold text-fg">
               {formatDateInZone(date, zone)}
             </h2>
-            <p className="tabular mt-1.5 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
-              {totals.calories.toLocaleString(LOCALE)} kcal · {totals.protein} p ·{" "}
+            <p className="tabular mt-1.5 font-mono text-[12px] uppercase tracking-[0.06em] text-fg-dim">
+              {totals.calories.toLocaleString(LOCALE)} cal · {totals.protein} p ·{" "}
               {totals.mealCount} meals · {totals.workoutCount} workouts ·{" "}
               {formatWater(totals.waterMl, units.volume)} water
             </p>
@@ -294,7 +294,7 @@ export default async function AthleteReviewPage({
           isOwner={false}
           canComment
           emptyState={
-            <p className="text-[13px] text-fg-dim">
+            <p className="text-[14px] text-fg-dim">
               Nothing logged on this day.
             </p>
           }

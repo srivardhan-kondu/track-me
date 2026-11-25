@@ -45,7 +45,7 @@ export function ClaimPayment({
         onChange={(event) => setEmail(event.target.value)}
         placeholder="account email"
         aria-label="The account that made this payment"
-        className="h-9 w-[220px] text-[12.5px]"
+        className="h-9 w-[220px] text-[13.5px]"
       />
 
       <Button type="submit" size="sm" disabled={pending || !email}>

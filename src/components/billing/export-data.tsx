@@ -22,10 +22,10 @@ export function ExportData() {
           href={o.href}
           prefetch={false}
           download
-          className="inline-flex items-center gap-2 rounded-[10px] border border-line-strong px-3 py-2 text-[12px] font-medium text-fg transition-colors hover:bg-hover"
+          className="inline-flex items-center gap-2 rounded-[10px] border border-line-strong px-3 py-2 text-[13px] font-medium text-fg transition-colors hover:bg-hover"
         >
           {o.label}
-          <span className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-fg-faint">
+          <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-faint">
             {o.hint}
           </span>
         </Link>

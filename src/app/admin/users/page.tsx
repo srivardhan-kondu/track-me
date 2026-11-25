@@ -167,14 +167,14 @@ export default async function AdminUsersPage({
                   >
                     <Avatar className="h-8 w-8">
                       {user.image && <AvatarImage src={user.image} alt="" />}
-                      <AvatarFallback className="text-[10px]">
+                      <AvatarFallback className="text-[11px]">
                         {initials(user.name, user.email)}
                       </AvatarFallback>
                     </Avatar>
 
                     <span className="min-w-0">
                       <span className="flex items-center gap-1.5">
-                        <span className="truncate text-[12.5px] font-medium text-fg">
+                        <span className="truncate text-[13.5px] font-medium text-fg">
                           {user.name ?? "Unnamed"}
                         </span>
                         {user.isAdmin && (
@@ -184,7 +184,7 @@ export default async function AdminUsersPage({
                           />
                         )}
                       </span>
-                      <span className="block truncate text-[11.5px] text-fg-dim">
+                      <span className="block truncate text-[12.5px] text-fg-dim">
                         {user.email ?? "no email"}
                       </span>
                     </span>
@@ -199,7 +199,7 @@ export default async function AdminUsersPage({
 
                 <Td>
                   {user.planTerm ? (
-                    <span className="text-[12px] text-fg-muted">
+                    <span className="text-[13px] text-fg-muted">
                       {user.planTerm[0] + user.planTerm.slice(1).toLowerCase()}
                       <Mono className="ml-1.5">
                         {user.planExpiresAt
@@ -213,13 +213,13 @@ export default async function AdminUsersPage({
                 </Td>
 
                 <Td>
-                  <span className="text-[12px] text-fg-muted">
+                  <span className="text-[13px] text-fg-muted">
                     {user.role === "COACH" ? "Coach" : "Athlete"}
                   </span>
                 </Td>
 
                 <Td align="right">
-                  <span className="tabular text-[12.5px] text-fg">
+                  <span className="tabular text-[13.5px] text-fg">
                     {logged.toLocaleString(LOCALE)}
                   </span>
                 </Td>

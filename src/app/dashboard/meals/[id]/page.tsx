@@ -85,7 +85,7 @@ export default async function MealDetailPage({
         <h1 className="font-serif text-[26px] leading-none text-fg sm:text-[30px]">
           {meal.title ?? "Logged meal"}
         </h1>
-        <p className="mt-2.5 text-[13px] text-fg-dim">
+        <p className="mt-2.5 text-[14px] text-fg-dim">
           {formatDateInZone(meal.eatenAt, zone, {
             weekday: "long",
             day: "numeric",
@@ -121,31 +121,31 @@ export default async function MealDetailPage({
           cell saying "Fibre —" on all of them is worse than no cell at all.
         */}
         {meal.fiber != null && (
-          <Figure label="Fibre" value={round(meal.fiber) ?? "—"} unit="g" />
+          <Figure label="Fiber" value={round(meal.fiber) ?? "—"} unit="g" />
         )}
       </div>
 
       <div className="rounded-2xl border border-line bg-surface px-6 py-5">
-        <h2 className="text-[13px] font-semibold text-fg">Macro split</h2>
+        <h2 className="text-[14px] font-semibold text-fg">Macro split</h2>
         <MacroSplitBar macros={macros} className="mt-4" />
         <MacroRow macros={macros} className="mt-3.5" />
       </div>
 
       {items.length > 0 && (
         <section className="rounded-2xl border border-line bg-surface px-5 py-5 sm:px-6">
-          <h2 className="text-[13px] font-semibold text-fg">
+          <h2 className="text-[14px] font-semibold text-fg">
             What was on the plate
           </h2>
           <ul className="mt-4 overflow-hidden rounded-[10px]">
             {items.map((item, i) => (
               <li
                 key={i}
-                className={`flex items-center gap-3 px-3 py-2.5 text-[13px] text-fg-muted ${
+                className={`flex items-center gap-3 px-3 py-2.5 text-[14px] text-fg-muted ${
                   i % 2 === 1 ? "bg-surface-inset" : ""
                 }`}
               >
                 <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                <span className="tabular shrink-0 text-[12.5px] text-fg-dim">
+                <span className="tabular shrink-0 text-[13.5px] text-fg-dim">
                   {item.quantity}
                 </span>
               </li>
@@ -167,7 +167,7 @@ export default async function MealDetailPage({
         {audioUrl && <AudioNote src={audioUrl} />}
 
         {meal.transcript && (
-          <p className="font-serif text-[13.5px] italic leading-relaxed text-fg-muted">
+          <p className="font-serif text-[14px] italic leading-relaxed text-fg-muted">
             &ldquo;{meal.transcript}&rdquo;
           </p>
         )}
@@ -209,7 +209,7 @@ function Figure({
       <p className="tabular mt-1.5 text-[19px] font-extrabold leading-none text-fg">
         {typeof value === "number" ? value.toLocaleString(LOCALE) : value}
         {unit && (
-          <span className="ml-1 text-[12px] font-semibold text-fg-dim">
+          <span className="ml-1 text-[13px] font-semibold text-fg-dim">
             {unit}
           </span>
         )}

@@ -56,14 +56,14 @@ function Figure({
       <p className="tabular mt-1.5 text-[15px] font-semibold text-fg">
         {value}
         {unit && (
-          <span className="ml-1 font-mono text-[10.5px] font-normal text-fg-dim">
+          <span className="ml-1 font-mono text-[11.5px] font-normal text-fg-dim">
             {unit}
           </span>
         )}
         {delta && (
           <span
             className={cn(
-              "ml-1.5 font-mono text-[10.5px] font-normal",
+              "ml-1.5 font-mono text-[11.5px] font-normal",
               deltaTone === "sage" ? "text-sage-text" : "text-accent-text",
             )}
           >
@@ -89,7 +89,7 @@ export default async function TrainerPage() {
           <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
             Athletes
           </h1>
-          <p className="mt-2.5 text-[13px] text-fg-dim">
+          <p className="mt-2.5 text-[14px] text-fg-dim">
             {roster.length === 0
               ? "No athletes yet."
               : `${roster.length} athlete${roster.length === 1 ? "" : "s"} on your roster · last 7 days`}
@@ -102,7 +102,7 @@ export default async function TrainerPage() {
       {pending.length > 0 && (
         <section className="rounded-2xl border border-line-strong bg-surface p-5">
           <p className="mono-label">Waiting on the athlete</p>
-          <p className="mt-2 text-[12.5px] leading-relaxed text-fg-muted">
+          <p className="mt-2 text-[13.5px] leading-relaxed text-fg-muted">
             You will see nothing of their training until they allow it. Ask them
             to check Settings on their own account.
           </p>
@@ -114,12 +114,12 @@ export default async function TrainerPage() {
               >
                 <Avatar className="h-8 w-8">
                   {athlete.image && <AvatarImage src={athlete.image} alt="" />}
-                  <AvatarFallback className="text-[11px]">
+                  <AvatarFallback className="text-[12px]">
                     {initials(athlete.name, athlete.email)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12.5px] font-medium text-fg">
+                  <p className="truncate text-[13.5px] font-medium text-fg">
                     {athlete.name ?? athlete.email}
                   </p>
                 </div>
@@ -154,19 +154,19 @@ export default async function TrainerPage() {
               >
                 <Avatar className="h-11 w-11">
                   {athlete.image && <AvatarImage src={athlete.image} alt="" />}
-                  <AvatarFallback className="text-[11px]">
+                  <AvatarFallback className="text-[12px]">
                     {initials(athlete.name, athlete.email)}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <p className="truncate text-[13.5px] font-semibold text-fg">
+                    <p className="truncate text-[14px] font-semibold text-fg">
                       {athlete.name ?? athlete.email}
                     </p>
                     <Badge variant={tone.variant}>{tone.label}</Badge>
                   </div>
-                  <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
+                  <p className="mt-1.5 font-mono text-[12px] uppercase tracking-[0.06em] text-fg-dim">
                     {relativeDays(lastLoggedAt)} ·{" "}
                     {summary.mealComplianceDays}/{summary.daysElapsed} days
                     logged
@@ -177,7 +177,7 @@ export default async function TrainerPage() {
                   <Figure
                     label="Today"
                     value={todayTotals.calories.toLocaleString(LOCALE)}
-                    unit="kcal"
+                    unit="cal"
                   />
                   <Figure
                     label="Avg protein"
@@ -212,7 +212,7 @@ export default async function TrainerPage() {
                   <RemoveAthlete athleteId={athlete.id} />
                   <Link
                     href={`/trainer/${athlete.id}`}
-                    className="flex items-center gap-1 rounded-[9px] px-2.5 py-2 text-[12.5px] font-medium text-accent-text transition-colors hover:bg-hover"
+                    className="flex items-center gap-1 rounded-[9px] px-2.5 py-2 text-[13.5px] font-medium text-accent-text transition-colors hover:bg-hover"
                   >
                     Review
                     <ChevronRight className="h-4 w-4" />

@@ -77,10 +77,10 @@ export function UserCard({ name, email, image, role, isAdmin }: Props) {
         </Avatar>
 
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[12.5px] font-semibold text-fg">
+          <span className="block truncate text-[13.5px] font-semibold text-fg">
             {name ?? "Athlete"}
           </span>
-          <span className="block truncate text-[10.5px] text-fg-dim">
+          <span className="block truncate text-[11.5px] text-fg-dim">
             {role === "COACH" ? "Coach" : "Athlete"}
           </span>
         </span>
@@ -90,10 +90,10 @@ export function UserCard({ name, email, image, role, isAdmin }: Props) {
 
       <DropdownMenuContent align="start" side="top" className="w-[204px]">
         <DropdownMenuLabel className="font-normal">
-          <span className="block truncate text-[12.5px] font-semibold text-fg">
+          <span className="block truncate text-[13.5px] font-semibold text-fg">
             {name ?? "Athlete"}
           </span>
-          <span className="block truncate text-[11px] text-fg-dim">{email}</span>
+          <span className="block truncate text-[12px] text-fg-dim">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Items role={role} isAdmin={isAdmin} />
@@ -118,10 +118,10 @@ export function UserMenu({ name, email, image, role, isAdmin }: Props) {
 
       <DropdownMenuContent align="end" className="w-[204px]">
         <DropdownMenuLabel className="font-normal">
-          <span className="block truncate text-[12.5px] font-semibold text-fg">
+          <span className="block truncate text-[13.5px] font-semibold text-fg">
             {name ?? "Athlete"}
           </span>
-          <span className="block truncate text-[11px] text-fg-dim">{email}</span>
+          <span className="block truncate text-[12px] text-fg-dim">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Items role={role} isAdmin={isAdmin} />

@@ -1,7 +1,6 @@
-import { timingSafeEqual } from "node:crypto";
-
 import { NextResponse } from "next/server";
 
+import { cronAuthorized } from "@/lib/cron-auth";
 import { claim, inFlight, MAX_IN_FLIGHT, purgeFinished, WORKER_BATCH } from "@/lib/jobs";
 import { purgeExpired } from "@/lib/rate-limit";
 import { budgetStatus } from "@/services/ai/budget";
@@ -24,23 +23,6 @@ export const dynamic = "force-dynamic";
 // Jobs are claimed under a lease, so anything this misses is simply picked up
 // on the next pass rather than lost.
 export const maxDuration = 60;
-
-/** Constant-time, so the secret cannot be found one character at a time. */
-function secretMatches(given: string, expected: string): boolean {
-  const a = Buffer.from(given);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
-
-function authorized(req: Request): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-
-  const header = req.headers.get("authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  return Boolean(token) && secretMatches(token, secret);
-}
 
 async function drain() {
   // Respect the same ceiling the upload path does, so a cron pass cannot be
@@ -65,7 +47,7 @@ async function drain() {
 }
 
 export async function GET(req: Request) {
-  if (!authorized(req)) {
+  if (!cronAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

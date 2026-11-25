@@ -126,14 +126,14 @@ export default async function AdminJobsPage({
                   {record.status.toLowerCase()}
                 </Badge>
 
-                <span className="text-[12.5px] text-fg">
+                <span className="text-[13.5px] text-fg">
                   {record.title ?? `Untitled ${record.kind}`}
                 </span>
 
                 {record.user && (
                   <Link
                     href={`/admin/users/${record.user.id}`}
-                    className="text-[12px] text-accent-text hover:underline"
+                    className="text-[13px] text-accent-text hover:underline"
                   >
                     {record.user.email ?? record.user.name}
                   </Link>
@@ -202,7 +202,7 @@ export default async function AdminJobsPage({
           rows.map((job) => (
             <Tr key={job.id}>
               <Td>
-                <span className="text-[12.5px] text-fg">
+                <span className="text-[13.5px] text-fg">
                   {job.kind === "MEAL_ANALYSIS" ? "Meal analysis" : "Workout parse"}
                 </span>
                 <Mono className="mt-0.5 block max-w-[280px] truncate" title={job.lastError ?? job.targetId}>
@@ -214,7 +214,7 @@ export default async function AdminJobsPage({
                 {job.user ? (
                   <Link
                     href={`/admin/users/${job.user.id}`}
-                    className="text-[12px] text-accent-text hover:underline"
+                    className="text-[13px] text-accent-text hover:underline"
                   >
                     {job.user.email ?? job.user.name}
                   </Link>
@@ -228,7 +228,7 @@ export default async function AdminJobsPage({
               </Td>
 
               <Td align="right">
-                <span className="tabular text-[12.5px]">
+                <span className="tabular text-[13.5px]">
                   {job.attempts}/{job.maxAttempts}
                 </span>
               </Td>

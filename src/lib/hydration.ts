@@ -36,7 +36,7 @@ const PRESETS: Record<VolumeUnit, { label: string; ml: number }[]> = {
   ML: [
     { label: "Glass", ml: 250 },
     { label: "Bottle", ml: 500 },
-    { label: "Litre", ml: 1000 },
+    { label: "Liter", ml: 1000 },
   ],
   FL_OZ: [
     { label: "Glass", ml: 237 },

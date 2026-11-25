@@ -288,7 +288,7 @@ export function WorkoutForm({
                         <button
                           type="button"
                           onClick={() => setPickerFor(row.key)}
-                          className="min-w-0 flex-1 truncate rounded-[10px] border border-line-strong bg-surface-inset px-3 py-2 text-left text-[12.5px] text-fg transition-colors hover:bg-hover"
+                          className="min-w-0 flex-1 truncate rounded-[10px] border border-line-strong bg-surface-inset px-3 py-2 text-left text-[13.5px] text-fg transition-colors hover:bg-hover"
                         >
                           {row.name || (
                             <span className="text-fg-faint">

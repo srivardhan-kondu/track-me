@@ -130,7 +130,7 @@ export function ExerciseBlock({
   return (
     <section className="border-b border-line px-[max(1rem,env(safe-area-inset-left,0px))] py-5 last:border-b-0">
       <div className="flex items-center gap-3">
-        <span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-accent-soft text-[12px] font-bold text-accent-text">
+        <span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-accent-soft text-[13px] font-bold text-accent-text">
           {initials(exercise.name)}
         </span>
 
@@ -186,7 +186,7 @@ export function ExerciseBlock({
         onChange={(e) => onPatch({ notes: e.target.value })}
         placeholder="Add notes here…"
         aria-label={`Notes for ${exercise.name}`}
-        className="mt-3.5 w-full bg-transparent text-[13.5px] text-fg outline-none placeholder:text-fg-faint"
+        className="mt-3.5 w-full bg-transparent text-[14px] text-fg outline-none placeholder:text-fg-faint"
       />
 
       <DropdownMenu>
@@ -194,7 +194,7 @@ export function ExerciseBlock({
           <button
             type="button"
             className={cn(
-              "mt-3 flex items-center gap-2 rounded-[10px] py-1 text-[13px] font-semibold transition-colors",
+              "mt-3 flex items-center gap-2 rounded-[10px] py-1 text-[14px] font-semibold transition-colors",
               exercise.rest > 0 ? "text-accent-text" : "text-fg-dim hover:text-fg",
             )}
           >
@@ -265,7 +265,7 @@ export function ExerciseBlock({
                       type="button"
                       aria-label={`Set ${i + 1} — ${SET_KIND_LABEL[set.kind]}`}
                       className={cn(
-                        "tabular grid h-10 w-[38px] place-items-center rounded-[10px] bg-surface-inset text-[13.5px] font-bold transition-colors hover:bg-hover",
+                        "tabular grid h-10 w-[38px] place-items-center rounded-[10px] bg-surface-inset text-[14px] font-bold transition-colors hover:bg-hover",
                         KIND_STYLE[set.kind],
                       )}
                     >
@@ -321,7 +321,7 @@ export function ExerciseBlock({
                       seconds: before.seconds ?? 0,
                     });
                   }}
-                  className="tabular truncate rounded-[8px] px-1 py-2 text-left text-[13px] text-fg-dim transition-colors enabled:hover:text-fg disabled:cursor-default"
+                  className="tabular truncate rounded-[8px] px-1 py-2 text-left text-[14px] text-fg-dim transition-colors enabled:hover:text-fg disabled:cursor-default"
                 >
                   {last ?? "—"}
                 </button>
@@ -406,7 +406,7 @@ export function ExerciseBlock({
         <button
           type="button"
           onClick={onAddSet}
-          className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-surface-inset text-[13.5px] font-semibold text-fg-muted transition-colors hover:bg-hover hover:text-fg"
+          className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-surface-inset text-[14px] font-semibold text-fg-muted transition-colors hover:bg-hover hover:text-fg"
         >
           <Plus className="h-4 w-4" />
           Add Set

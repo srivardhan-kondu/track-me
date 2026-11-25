@@ -81,7 +81,7 @@ function CompareTile({
           <div className="hatched h-full w-full" />
         )}
 
-        <span className="absolute bottom-2.5 left-2.5 rounded bg-black/55 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-white/90 backdrop-blur">
+        <span className="absolute bottom-2.5 left-2.5 rounded bg-black/55 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.12em] text-white/90 backdrop-blur">
           {caption}
         </span>
       </div>
@@ -150,7 +150,7 @@ export default async function ProgressPage() {
           <h1 className="font-serif text-[28px] leading-none text-fg sm:text-[30px]">
             Progress photos
           </h1>
-          <p className="mt-2.5 text-[13px] leading-relaxed text-fg-dim">
+          <p className="mt-2.5 text-[14px] leading-relaxed text-fg-dim">
             Front, side and back — one set a month is plenty. Only you and your
             coach can see these.
           </p>
@@ -209,7 +209,7 @@ export default async function ProgressPage() {
             return (
               <section key={key} className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-[12.5px] font-semibold text-fg">
+                  <h2 className="text-[13.5px] font-semibold text-fg">
                     {label}
                   </h2>
                   <span className="h-px flex-1 bg-line" />

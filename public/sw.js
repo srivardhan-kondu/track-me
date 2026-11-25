@@ -93,3 +93,44 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+/*
+ * Reminders and coach comments. The payload is the server's PushPayload:
+ * { title, body, url, tag }. A tag replaces an earlier notification with the
+ * same one, so three comments on one meal stack as one, not three.
+ */
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Track Me", {
+      body: data.body || "",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      tag: data.tag,
+      data: { url: data.url || "/dashboard" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/dashboard", self.location.origin);
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      // Reuse an open window of the app rather than stacking a new one.
+      for (const win of windows) {
+        if (new URL(win.url).origin === target.origin && "focus" in win) {
+          return win.focus().then((w) => (w && "navigate" in w ? w.navigate(target.href) : w));
+        }
+      }
+      return self.clients.openWindow(target.href);
+    }),
+  );
+});

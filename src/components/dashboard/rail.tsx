@@ -45,12 +45,12 @@ export function WeightRailCard({
   return (
     <div className="rounded-2xl border border-line bg-surface p-[18px]">
       <div className="flex items-baseline justify-between">
-        <p className="text-[12.5px] font-semibold text-fg">Weight</p>
+        <p className="text-[13.5px] font-semibold text-fg">Weight</p>
         <p className="mono-label">{days} days</p>
       </div>
 
       {latest === null ? (
-        <p className="mt-3 text-[12.5px] leading-relaxed text-fg-dim">
+        <p className="mt-3 text-[13.5px] leading-relaxed text-fg-dim">
           No check-ins yet. One number today becomes your baseline.
         </p>
       ) : (
@@ -59,11 +59,11 @@ export function WeightRailCard({
             <span className="tabular font-serif text-[30px] leading-none text-fg">
               {displayWeight(latest, unit)}
             </span>
-            <span className="text-[12px] text-fg-dim">{weightLabel(unit)}</span>
+            <span className="text-[13px] text-fg-dim">{weightLabel(unit)}</span>
             {change !== null && (
               <span
                 className={cn(
-                  "tabular ml-auto font-mono text-[11.5px] font-medium",
+                  "tabular ml-auto font-mono text-[12.5px] font-medium",
                   change <= 0 ? "text-sage-text" : "text-fg-muted",
                 )}
               >
@@ -78,7 +78,7 @@ export function WeightRailCard({
             "4.5 kg to go" is the only form of it anybody acts on.
           */}
           {targetKg !== null && (
-            <p className="mt-2 text-[11.5px] text-fg-dim">
+            <p className="mt-2 text-[12.5px] text-fg-dim">
               {Math.abs(latest - targetKg) < 0.1 ? (
                 <span className="text-sage-text">Goal weight reached.</span>
               ) : (
@@ -132,7 +132,7 @@ export function ConsistencyCard({ days }: { days: ComplianceDay[] }) {
 
   return (
     <div className="rounded-2xl border border-line bg-surface p-[18px]">
-      <p className="text-[12.5px] font-semibold text-fg">Consistency</p>
+      <p className="text-[13.5px] font-semibold text-fg">Consistency</p>
 
       <div className="mt-3.5 flex gap-1.5">
         {scored.map(({ day, score }) => (
@@ -154,14 +154,14 @@ export function ConsistencyCard({ days }: { days: ComplianceDay[] }) {
                 score === 3 && "bg-accent",
               )}
             />
-            <span className="font-mono text-[10px] text-fg-faint">
+            <span className="font-mono text-[11px] text-fg-faint">
               {day.toLocaleDateString(LOCALE, { weekday: "narrow" })}
             </span>
           </div>
         ))}
       </div>
 
-      <p className="mt-3 text-[11.5px] text-fg-dim">
+      <p className="mt-3 text-[12.5px] text-fg-dim">
         {logged} of {scored.length} days logged.
         {logged === scored.length
           ? " Not a day missed."
@@ -195,19 +195,19 @@ export function CoachNoteCard({
       <div className="mb-2.5 flex items-center gap-2.5">
         <Avatar className="h-5 w-5">
           {note.author.image && <AvatarImage src={note.author.image} alt="" />}
-          <AvatarFallback className="text-[8px]">
+          <AvatarFallback className="text-[10px]">
             {initials(note.author.name)}
           </AvatarFallback>
         </Avatar>
-        <p className="min-w-0 truncate text-[12px] font-semibold text-fg">
+        <p className="min-w-0 truncate text-[13px] font-semibold text-fg">
           Note from {note.author.name?.split(" ")[0] ?? "your coach"}
         </p>
-        <span className="ml-auto shrink-0 font-mono text-[10px] text-sage-text">
+        <span className="ml-auto shrink-0 font-mono text-[11px] text-sage-text">
           {relativeShort(note.createdAt)}
         </span>
       </div>
 
-      <p className="text-[12.5px] leading-relaxed text-fg-muted">{note.body}</p>
+      <p className="text-[13.5px] leading-relaxed text-fg-muted">{note.body}</p>
     </div>
   );
 }

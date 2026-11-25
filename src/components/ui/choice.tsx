@@ -41,7 +41,7 @@ export function ChoiceTile({
       <div className="flex items-center justify-between gap-2">
         <span
           className={cn(
-            "text-[13px] font-semibold",
+            "text-[14px] font-semibold",
             selected ? "text-fg" : "text-fg-muted",
           )}
         >
@@ -55,7 +55,7 @@ export function ChoiceTile({
       </div>
 
       {blurb && (
-        <p className="mt-1.5 text-[11.5px] leading-relaxed text-fg-dim">
+        <p className="mt-1.5 text-[12.5px] leading-relaxed text-fg-dim">
           {blurb}
         </p>
       )}

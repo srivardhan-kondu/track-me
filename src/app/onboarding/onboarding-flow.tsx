@@ -15,7 +15,9 @@ import {
   formatWeight,
   inchesToCm,
   toKg,
+  unitsForTimeZone,
   type HeightUnit,
+  type VolumeUnit,
   type WeightUnit,
 } from "@/lib/units";
 import { cn } from "@/lib/utils";
@@ -102,7 +104,7 @@ function Slider({
         {ticks.map((t) => (
           <span
             key={t}
-            className="tabular absolute -translate-x-1/2 text-[11px] text-fg-dim"
+            className="tabular absolute -translate-x-1/2 text-[12px] text-fg-dim"
             style={{ left: `${((t - min) / (max - min)) * 100}%` }}
           >
             {formatTick ? formatTick(t) : t}
@@ -141,7 +143,7 @@ function UnitSwitch<T extends string>({
               onClick={() => onChange(option.value)}
               aria-pressed={selected}
               className={cn(
-                "rounded-full px-4 py-1.5 text-[12.5px] transition-colors",
+                "rounded-full px-4 py-1.5 text-[13.5px] transition-colors",
                 selected
                   ? "bg-accent font-semibold text-accent-ink"
                   : "font-medium text-fg-muted hover:text-fg",
@@ -244,7 +246,27 @@ export function OnboardingFlow({
   const [weightKg, setWeightKg] = React.useState(68);
   const [heightUnit, setHeightUnit] = React.useState<HeightUnit>("CM");
   const [weightUnit, setWeightUnit] = React.useState<WeightUnit>("KG");
+  const [volumeUnit, setVolumeUnit] = React.useState<VolumeUnit>("ML");
   const [pending, startTransition] = React.useTransition();
+
+  /*
+    Start in the units this athlete most likely thinks in. Read from the
+    browser's zone after mount rather than during render, so the server and
+    the browser agree on the first paint; the opening step shows no figures,
+    so nothing visibly changes when this lands.
+  */
+  React.useEffect(() => {
+    let zone: string | undefined;
+    try {
+      zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return;
+    }
+    const units = unitsForTimeZone(zone);
+    setWeightUnit(units.weight);
+    setHeightUnit(units.height);
+    setVolumeUnit(units.volume);
+  }, []);
 
   const step: Step = STEPS[index];
 
@@ -257,6 +279,7 @@ export function OnboardingFlow({
         weightKg,
         heightUnit,
         weightUnit,
+        volumeUnit,
       });
       if (!res.ok) {
         toast.error(res.error);
@@ -269,7 +292,7 @@ export function OnboardingFlow({
 
   function skip() {
     startTransition(async () => {
-      await skipOnboarding();
+      await skipOnboarding({ weightUnit, heightUnit, volumeUnit });
       router.replace("/dashboard");
       router.refresh();
     });
@@ -340,9 +363,9 @@ export function OnboardingFlow({
             <Slider
               label="Age in years"
               value={age}
-              min={18}
-              max={40}
-              ticks={[18, 25, 30, 35, 40]}
+              min={16}
+              max={80}
+              ticks={[16, 30, 45, 60, 80]}
               onChange={setAge}
             />
           </div>
@@ -359,11 +382,11 @@ export function OnboardingFlow({
               <BigValue value={heightCm} unit="cm" />
               <div className="mt-10 px-1">
                 <Slider
-                  label="Height in centimetres"
+                  label="Height in centimeters"
                   value={heightCm}
                   min={140}
-                  max={190}
-                  ticks={[140, 150, 160, 170, 180, 190]}
+                  max={210}
+                  ticks={[140, 160, 180, 200, 210]}
                   onChange={setHeightCm}
                 />
               </div>
@@ -375,13 +398,13 @@ export function OnboardingFlow({
                 unit="feet & inches"
               />
               <div className="mt-10 px-1">
-                {/* The same 140–190 cm span, measured in whole inches. */}
+                {/* The same 140–210 cm span, measured in whole inches. */}
                 <Slider
                   label="Height in feet and inches"
                   value={Math.round(cmToInches(heightCm))}
                   min={55}
-                  max={75}
-                  ticks={[56, 60, 64, 68, 72]}
+                  max={83}
+                  ticks={[60, 66, 72, 78]}
                   formatTick={(n) => `${Math.floor(n / 12)}′${n % 12}″`}
                   onChange={(inches) => setHeightCm(inchesToCm(inches))}
                 />
@@ -417,9 +440,9 @@ export function OnboardingFlow({
                 label="Weight in kilograms"
                 value={weightKg}
                 min={40}
-                max={100}
+                max={160}
                 step={0.5}
-                ticks={[40, 50, 60, 70, 80, 90, 100]}
+                ticks={[40, 70, 100, 130, 160]}
                 onChange={setWeightKg}
               />
             ) : (
@@ -427,8 +450,8 @@ export function OnboardingFlow({
                 label="Weight in pounds"
                 value={Math.round(displayWeight(weightKg, "LB"))}
                 min={88}
-                max={220}
-                ticks={[88, 110, 132, 154, 176, 198, 220]}
+                max={350}
+                ticks={[100, 150, 200, 250, 300, 350]}
                 onChange={(lb) => setWeightKg(toKg(lb, "LB"))}
               />
             )}
@@ -513,7 +536,7 @@ function StepBody({
   return (
     <div className="pt-6">
       <h1 className="font-serif text-[28px] leading-tight text-fg">{title}</h1>
-      <p className="mt-3 max-w-[19rem] text-[13.5px] leading-relaxed text-fg-muted">
+      <p className="mt-3 max-w-[19rem] text-[14px] leading-relaxed text-fg-muted">
         {blurb}
       </p>
       <div className="pt-9">{children}</div>
@@ -524,8 +547,8 @@ function StepBody({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between border-b border-line px-4 py-3.5 last:border-b-0">
-      <dt className="text-[13px] text-fg-muted">{label}</dt>
-      <dd className="text-[13.5px] font-semibold text-fg">{value}</dd>
+      <dt className="text-[14px] text-fg-muted">{label}</dt>
+      <dd className="text-[14px] font-semibold text-fg">{value}</dd>
     </div>
   );
 }

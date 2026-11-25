@@ -205,7 +205,7 @@ export default async function AdminSystemPage() {
                 />
               </div>
             ) : (
-              <p className="text-[12.5px] text-fg-dim">
+              <p className="text-[13.5px] text-fg-dim">
                 The spend ledger could not be read.
               </p>
             )}
@@ -250,7 +250,7 @@ export default async function AdminSystemPage() {
                   <Mono className="text-fg-muted">{bucket}</Mono>
                 </Td>
                 <Td align="right">
-                  <span className="tabular text-[12.5px] text-fg">
+                  <span className="tabular text-[13.5px] text-fg">
                     {limitValue(bucket, limit.max)}
                   </span>
                 </Td>

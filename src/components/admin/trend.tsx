@@ -50,7 +50,7 @@ export function TrendChart({
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="mono-label">{label}</p>
         {!empty && (
-          <span className="tabular font-mono text-[11px] text-fg-dim">
+          <span className="tabular font-mono text-[12px] text-fg-dim">
             peak {format(max)}
           </span>
         )}
@@ -98,12 +98,12 @@ export function TrendChart({
       </div>
 
       <div className="mt-2.5 flex items-baseline justify-between">
-        <span className="font-mono text-[10.5px] text-fg-faint">{first}</span>
-        <span className="font-mono text-[10.5px] text-fg-faint">{last}</span>
+        <span className="font-mono text-[11.5px] text-fg-faint">{first}</span>
+        <span className="font-mono text-[11.5px] text-fg-faint">{last}</span>
       </div>
 
       {note && (
-        <p className="mt-3 text-[12px] leading-relaxed text-fg-dim">{note}</p>
+        <p className="mt-3 text-[13px] leading-relaxed text-fg-dim">{note}</p>
       )}
     </section>
   );
@@ -149,8 +149,8 @@ export function StackedBar({
             <span
               className={cn("h-2 w-2 shrink-0 rounded-full", segment.className)}
             />
-            <span className="text-[12px] text-fg-muted">{segment.label}</span>
-            <span className="tabular font-mono text-[11px] text-fg-dim">
+            <span className="text-[13px] text-fg-muted">{segment.label}</span>
+            <span className="tabular font-mono text-[12px] text-fg-dim">
               {segment.value.toLocaleString(LOCALE)}
             </span>
           </li>

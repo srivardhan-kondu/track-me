@@ -52,7 +52,7 @@ export default function TermsPage() {
             "Calorie and macronutrient figures are estimates produced by an automated model from a photograph or a description. They are useful for observing trends over weeks. They are not accurate enough to manage a medical condition with.",
             "Physique analysis is a subjective visual assessment, not a body composition measurement.",
             "Do not use this service to make decisions about a medical condition, a medication, an eating disorder, or a pregnancy.",
-            "Consult a qualified doctor or dietitian before starting any new training or nutrition programme.",
+            "Consult a qualified doctor or dietitian before starting any new training or nutrition program.",
           ]}
         />
       </Clause>
