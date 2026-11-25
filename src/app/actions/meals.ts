@@ -31,13 +31,17 @@ export async function createMeal(formData: FormData): Promise<ActionResult> {
 
   // Each meal buys a Whisper call and a gpt-4o vision call, so this is the
   // limit that governs the OpenAI bill.
+  // Both counters go out together: this sits on the path between pressing
+  // Log meal and the dialog moving on.
   try {
-    await enforce("aiCreate", user.id, "You have logged a lot of meals recently.");
-    await enforce(
-      "aiCreateDaily",
-      user.id,
-      "You have reached today's logging limit.",
-    );
+    await Promise.all([
+      enforce("aiCreate", user.id, "You have logged a lot of meals recently."),
+      enforce(
+        "aiCreateDaily",
+        user.id,
+        "You have reached today's logging limit.",
+      ),
+    ]);
   } catch (err) {
     if (err instanceof RateLimited) return { ok: false, error: err.message };
     throw err;
@@ -92,21 +96,20 @@ export async function createMeal(formData: FormData): Promise<ActionResult> {
     }
   }
 
-  let imageKey: string | null = null;
-  let audioKey: string | null = null;
+  const imageKey = image ? buildKey(user.id, "meal", image.contentType) : null;
+  const audioKey = audio ? buildKey(user.id, "meal", audio.contentType) : null;
 
-  try {
-    if (image) {
-      imageKey = buildKey(user.id, "meal", image.contentType);
-      await putObject(imageKey, image.buffer, image.contentType);
-    }
-    if (audio) {
-      audioKey = buildKey(user.id, "meal", audio.contentType);
-      await putObject(audioKey, audio.buffer, audio.contentType);
-    }
-  } catch {
-    if (imageKey) await deleteObject(imageKey);
-    if (audioKey) await deleteObject(audioKey);
+  // The photo and the voice note upload side by side rather than one after
+  // the other. If either fails, both keys are cleared away: deleting one that
+  // never landed is harmless.
+  const uploads = await Promise.allSettled([
+    image && imageKey ? putObject(imageKey, image.buffer, image.contentType) : null,
+    audio && audioKey ? putObject(audioKey, audio.buffer, audio.contentType) : null,
+  ]);
+  if (uploads.some((u) => u.status === "rejected")) {
+    await Promise.allSettled(
+      [imageKey, audioKey].filter((k): k is string => !!k).map(deleteObject),
+    );
     return { ok: false, error: "Upload failed. Please try again." };
   }
 
@@ -123,9 +126,15 @@ export async function createMeal(formData: FormData): Promise<ActionResult> {
     select: { id: true },
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/meals");
-
+  /*
+    Deliberately no revalidatePath here. Calling it makes this response carry
+    a full re-render of whatever page the athlete is on — the whole dashboard,
+    around a dozen queries — and the dialog cannot move on to the review step
+    until that render is done. The form calls router.refresh() as soon as the
+    meal is saved instead, which does the same re-render in the background
+    and clears the client's router cache. The analysis job revalidates when
+    it lands.
+  */
   const jobId = await enqueue("MEAL_ANALYSIS", meal.id, user.id, { description });
 
   // Try it inline so an ordinary upload finishes as fast as it always did —
