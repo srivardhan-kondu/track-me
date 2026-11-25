@@ -172,11 +172,14 @@ export function EnergyBalance({
             {days.map((d, i) => (
               <div
                 key={d.day.toISOString()}
-                className="flex h-full min-w-0 max-w-[24px] flex-1 items-end"
+                // Each day takes an equal share of the width, as the hover
+                // layer's cells do; only the bar inside is capped. Capping the
+                // cell instead bunched the bars at the left on wide screens.
+                className="flex h-full min-w-0 flex-1 items-end justify-center"
               >
                 <div
                   className={cn(
-                    "w-full rounded-t-[4px] transition-opacity",
+                    "w-full max-w-[24px] rounded-t-[4px] transition-opacity",
                     d.calories > 0 ? "bg-accent" : "bg-track",
                     active !== null && active !== i && "opacity-40",
                   )}

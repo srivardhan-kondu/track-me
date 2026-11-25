@@ -4,6 +4,7 @@ import { grantsAdmin } from "@/lib/admin";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
+  FREE_FOR_ALL,
   isPremium,
   isTrialing,
   type Entitlement,
@@ -84,6 +85,18 @@ export type PremiumStatus = Entitlement & {
 
 /** The caller's billing state, for rendering upgrade prompts. */
 export async function premiumStatus(userId: string): Promise<PremiumStatus> {
+  // No trial dates either, so no countdown or "trial ended" copy can appear.
+  if (FREE_FOR_ALL) {
+    return {
+      plan: "PREMIUM",
+      planTerm: null,
+      planExpiresAt: null,
+      trialEndsAt: null,
+      premium: true,
+      trialing: false,
+    };
+  }
+
   const user = await db.user.findUnique({
     where: { id: userId },
     select: {

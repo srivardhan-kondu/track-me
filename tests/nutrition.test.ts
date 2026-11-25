@@ -58,6 +58,17 @@ describe("meal quantity parsing", () => {
     assert.equal(r.calories, 0);
   });
 
+  it("does not count a food again inside a longer food name", () => {
+    const names = (text: string) => estimateFromText(text).items.map((i) => i.name);
+    assert.deepEqual(names("200g greek yogurt"), ["Greek yogurt"]);
+    assert.deepEqual(names("six egg whites"), ["Egg white"]);
+    assert.deepEqual(names("chicken with sweet potato"), ["Chicken breast", "Sweet potato"]);
+    // Both really are there, so both count.
+    assert.deepEqual(names("sweet potato and a potato").sort(), ["Potato", "Sweet potato"]);
+    // The quantity still comes from the mention that counted.
+    assert.equal(grams("six egg whites", "Egg white"), 198);
+  });
+
   it("does not double-count a food mentioned twice", () => {
     const r = estimateFromText("chicken for lunch and more chicken at dinner");
     assert.equal(r.items.filter((i) => i.name === "Chicken breast").length, 1);

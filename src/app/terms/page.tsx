@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Clause, LegalPage, Points } from "@/components/layout/legal";
 import { BUSINESS } from "@/lib/business";
-import { TRIAL_DAYS } from "@/lib/entitlements";
+import { FREE_FOR_ALL, TRIAL_DAYS } from "@/lib/entitlements";
 
 export const metadata = {
   title: "Terms & Conditions",
@@ -92,6 +92,15 @@ export default function TermsPage() {
       </Clause>
 
       <Clause title="6. Plans and payment">
+        {FREE_FOR_ALL ? (
+          <p>
+            Track Me is currently free. Every feature is available to every
+            account at no cost, and we do not take payment. If that changes, we
+            will tell you in advance, and nothing you have recorded will be
+            taken away.
+          </p>
+        ) : (
+        <>
         <p>
           New accounts include {TRIAL_DAYS} days of Premium at no cost and
           without card details. After that, Premium features require a paid
@@ -121,6 +130,8 @@ export default function TermsPage() {
           </Link>
           .
         </p>
+        </>
+        )}
       </Clause>
 
       <Clause title="7. Acceptable use">

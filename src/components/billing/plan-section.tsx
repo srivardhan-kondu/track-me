@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Upgrade } from "@/components/billing/upgrade";
 import { Badge } from "@/components/ui/badge";
 import {
+  FREE_FOR_ALL,
   FREE_HISTORY_DAYS,
   trialDaysLeft,
   type Plan,
@@ -35,6 +36,9 @@ export function planSummary(status: Status): { label: string; detail: string } {
   const on = (d: Date) =>
     d.toLocaleDateString(LOCALE, { day: "numeric", month: "long", year: "numeric" });
 
+  if (FREE_FOR_ALL) {
+    return { label: "Free", detail: "Every feature, for everyone." };
+  }
   if (status.plan === "PREMIUM" && !status.planExpiresAt) {
     return { label: "Lifetime", detail: "Paid once. Nothing to renew." };
   }

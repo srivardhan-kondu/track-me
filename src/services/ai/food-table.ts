@@ -90,8 +90,7 @@ const CONTAINER_GRAMS: Record<string, number> = {
  * Finds the quantity dictated immediately before a food mention, e.g.
  * "200g chicken", "2 eggs", "three rotis", "two cups of rice".
  */
-function quantityFor(text: string, fact: FoodFact): number {
-  const idx = text.search(fact.match);
+function quantityFor(text: string, fact: FoodFact, idx: number): number {
   if (idx < 0) return fact.defaultGrams;
 
   // Look at the characters preceding the food word.
@@ -158,11 +157,27 @@ export function estimateFromText(text: string): {
   const items: EstimatedItem[] = [];
   const seen = new Set<string>();
 
-  for (const fact of FOOD_TABLE) {
-    if (!fact.match.test(text) || seen.has(fact.label)) continue;
+  // Every place each food is mentioned. "Greek yogurt" also contains
+  // "yogurt", "egg whites" contains "egg" and "sweet potato" contains
+  // "potato"; a mention lying wholly inside a longer mention of a different
+  // food belongs to that food, or the meal is counted twice.
+  const spans = FOOD_TABLE.map((fact) =>
+    [...text.matchAll(new RegExp(fact.match.source, fact.match.flags.replace("g", "") + "g"))].map(
+      (m) => ({ start: m.index!, end: m.index! + m[0].length }),
+    ),
+  );
+  const shadowed = (i: number, s: { start: number; end: number }) =>
+    spans.some((other, j) =>
+      j !== i &&
+      other.some((o) => o.start <= s.start && o.end >= s.end && o.end - o.start > s.end - s.start),
+    );
+
+  for (const [i, fact] of FOOD_TABLE.entries()) {
+    const own = spans[i].find((s) => !shadowed(i, s));
+    if (!own || seen.has(fact.label)) continue;
     seen.add(fact.label);
 
-    const grams = quantityFor(text, fact);
+    const grams = quantityFor(text, fact, own.start);
     const k = grams / 100;
     items.push({
       name: fact.label,

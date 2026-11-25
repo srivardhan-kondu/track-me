@@ -1,11 +1,16 @@
 import Link from "next/link";
 
 import { BUSINESS } from "@/lib/business";
+import { FREE_FOR_ALL } from "@/lib/entitlements";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
-  { href: "/pricing", label: "Pricing" },
-  { href: "/refunds", label: "Refunds & Cancellation" },
+  ...(FREE_FOR_ALL
+    ? []
+    : [
+        { href: "/pricing", label: "Pricing" },
+        { href: "/refunds", label: "Refunds & Cancellation" },
+      ]),
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
   { href: "/contact", label: "Contact" },

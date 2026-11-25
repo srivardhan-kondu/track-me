@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { PRICES } from "@/lib/entitlements";
+import { FREE_FOR_ALL, PRICES } from "@/lib/entitlements";
 import { enforce, rateLimitResponse, RateLimited } from "@/lib/rate-limit";
 import { checkoutEnabled, createOrder, keyId, liveMode } from "@/lib/razorpay";
 import { currentUser } from "@/lib/session";
@@ -22,6 +22,12 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  // Nothing to buy. Verification and the webhook stay on, so a payment that
+  // was already under way still completes.
+  if (FREE_FOR_ALL) {
+    return NextResponse.json({ error: "Track Me is free; there is nothing to buy." }, { status: 410 });
+  }
+
   const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

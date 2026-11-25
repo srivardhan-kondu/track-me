@@ -9,6 +9,14 @@ import { addDays, addMonths, addYears } from "date-fns";
 export type PlanTerm = "MONTHLY" | "YEARLY" | "LIFETIME";
 export type Plan = "FREE" | "PREMIUM";
 
+/**
+ * Everything is free for everyone while this is on: every account is treated
+ * as Premium, the pricing page and checkout are switched off, and no upgrade
+ * prompt is shown. The paid-plan machinery below is kept intact, so turning
+ * this off brings the paywall back without restoring any code.
+ */
+export const FREE_FOR_ALL = true;
+
 /** Every new account gets this long before the paywall applies. */
 export const TRIAL_DAYS = 7;
 

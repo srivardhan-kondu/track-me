@@ -27,7 +27,9 @@
     "links:audit": "node --import tsx --env-file=.env scripts/migrate-coach-links.ts",
     "jobs:drain": "node --import tsx --env-file=.env scripts/drain-jobs.ts",
     "admin": "node --import tsx --env-file=.env scripts/admin.ts",
-    "sets:backfill": "node --import tsx --env-file=.env scripts/backfill-sets.ts"
+    "sets:backfill": "node --import tsx --env-file=.env scripts/backfill-sets.ts",
+    "demo:user": "node --import tsx --env-file=.env.production.local scripts/demo-user.ts",
+    "demo:coach": "node --import tsx --env-file=.env.production.local scripts/demo-coach.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
