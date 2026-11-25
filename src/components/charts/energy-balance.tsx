@@ -11,6 +11,7 @@ import {
 } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
+import { LOCALE } from "@/lib/locale";
 export type EnergyDay = {
   day: Date;
   calories: number;
@@ -21,7 +22,7 @@ export type EnergyDay = {
 const TREND_DAYS = 7;
 
 const fmtDay = (d: Date, opts: Intl.DateTimeFormatOptions) =>
-  d.toLocaleDateString(undefined, { timeZone: "UTC", ...opts });
+  d.toLocaleDateString(LOCALE, { timeZone: "UTC", ...opts });
 
 /**
  * Intake and bodyweight, one panel above the other on a single shared axis.
@@ -121,7 +122,7 @@ export function EnergyBalance({
             {fmtDay(d.day, { weekday: "long", month: "long", day: "numeric" })}
             {": "}
             {d.calories > 0
-              ? `${d.calories.toLocaleString()} kcal`
+              ? `${d.calories.toLocaleString(LOCALE)} kcal`
               : "nothing eaten logged"}
             {d.weightKg !== null
               ? `, ${formatWeight(d.weightKg, unit)}`
@@ -153,7 +154,7 @@ export function EnergyBalance({
           <p className="text-[12.5px] font-semibold text-fg">Eaten</p>
           <p className="tabular font-mono text-[10.5px] text-fg-dim">
             {hasCalories
-              ? `${meanCalories.toLocaleString()} kcal average`
+              ? `${meanCalories.toLocaleString(LOCALE)} kcal average`
               : "nothing logged yet"}
           </p>
         </div>
@@ -282,7 +283,7 @@ export function EnergyBalance({
               </p>
               <p className="tabular mt-1.5 font-mono text-[11.5px] text-fg">
                 {current.calories > 0
-                  ? `${current.calories.toLocaleString()} kcal`
+                  ? `${current.calories.toLocaleString(LOCALE)} kcal`
                   : "— kcal"}
               </p>
               <p className="tabular font-mono text-[11.5px] text-fg-muted">
@@ -342,7 +343,7 @@ export function EnergyBalance({
                       })}
                     </td>
                     <td className="tabular py-2 text-right font-mono text-[11.5px] text-fg-muted">
-                      {d.calories > 0 ? d.calories.toLocaleString() : "—"}
+                      {d.calories > 0 ? d.calories.toLocaleString(LOCALE) : "—"}
                     </td>
                     <td className="tabular py-2 text-right font-mono text-[11.5px] text-fg-muted">
                       {d.weightKg !== null ? displayWeight(d.weightKg, unit) : "—"}

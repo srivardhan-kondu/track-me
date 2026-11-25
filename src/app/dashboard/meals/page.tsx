@@ -21,6 +21,7 @@ import {
 import { getSummary, type TimelineMeal } from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Meals" };
 // Meal and workout logging run transcription and analysis in after(), which
 // counts toward this function's duration. 60s is the Vercel Hobby ceiling.
@@ -133,7 +134,7 @@ export default async function MealsPage({
       <MetricStrip>
         <Metric
           label="Daily calories"
-          value={summary.avgCalories.toLocaleString()}
+          value={summary.avgCalories.toLocaleString(LOCALE)}
           note="7-day average"
         />
         <Metric label="Protein" value={summary.avgProtein} unit="g / day" />
@@ -225,7 +226,7 @@ export default async function MealsPage({
                     month: "short",
                     day: "numeric",
                   })}`}
-                  meta={`${Math.round(totals.calories).toLocaleString()} kcal · ${Math.round(totals.protein)} p`}
+                  meta={`${Math.round(totals.calories).toLocaleString(LOCALE)} kcal · ${Math.round(totals.protein)} p`}
                 />
 
                 {rows

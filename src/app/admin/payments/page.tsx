@@ -13,6 +13,7 @@ import { ago, inr, inrShort, pageParam, stamp } from "@/lib/admin";
 import { PRICES } from "@/lib/entitlements";
 import { getRevenueBreakdown, listPayments } from "@/services/admin";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Payments" };
 
 type Params = { status?: string; q?: string; page?: string };
@@ -122,7 +123,7 @@ export default async function AdminPaymentsPage({
                 <div key={status}>
                   <dt className="mono-label">{status.toLowerCase()}</dt>
                   <dd className="tabular mt-1.5 text-[18px] font-semibold text-fg">
-                    {(row?._count ?? 0).toLocaleString()}
+                    {(row?._count ?? 0).toLocaleString(LOCALE)}
                   </dd>
                   <dd className="tabular mt-0.5 font-mono text-[11px] text-fg-dim">
                     {inrShort(row?._sum.amount ?? 0)}

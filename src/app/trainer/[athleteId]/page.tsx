@@ -43,6 +43,7 @@ import {
   getWeightSeries,
 } from "@/services/reporting";
 
+import { LOCALE } from "@/lib/locale";
 /** The hydration window on this page — a fortnight, as the strip beside it. */
 const HYDRATION_DAYS = 14;
 
@@ -147,7 +148,7 @@ export default async function AthleteReviewPage({
         <MetricStrip>
           <Metric
             label="Avg calories"
-            value={summary.avgCalories.toLocaleString()}
+            value={summary.avgCalories.toLocaleString(LOCALE)}
             unit="kcal"
           />
           <Metric label="Avg protein" value={summary.avgProtein} unit="g" />
@@ -271,7 +272,7 @@ export default async function AthleteReviewPage({
               {formatDateInZone(date, zone)}
             </h2>
             <p className="tabular mt-1.5 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-dim">
-              {totals.calories.toLocaleString()} kcal · {totals.protein} p ·{" "}
+              {totals.calories.toLocaleString(LOCALE)} kcal · {totals.protein} p ·{" "}
               {totals.mealCount} meals · {totals.workoutCount} workouts ·{" "}
               {formatWater(totals.waterMl, units.volume)} water
             </p>

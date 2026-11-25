@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Page } from "@/lib/admin";
 import { cn } from "@/lib/utils";
 
+import { LOCALE } from "@/lib/locale";
 /**
  * The console's table.
  *
@@ -178,7 +179,7 @@ export function Pager({
   return (
     <div className="flex items-center justify-between gap-4">
       <p className="tabular font-mono text-[11px] text-fg-dim">
-        {page.from}–{page.to} of {page.total.toLocaleString()} {noun}
+        {page.from}–{page.to} of {page.total.toLocaleString(LOCALE)} {noun}
       </p>
 
       <div className="flex items-center gap-2">

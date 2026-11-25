@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { initials } from "@/lib/utils";
 import { runAction } from "@/lib/run-action";
 
+import { LOCALE } from "@/lib/locale";
 export type CommentView = {
   id: string;
   body: string;
@@ -94,7 +95,7 @@ export function CommentThread({
                 suppressHydrationWarning
                 className="shrink-0 font-mono text-[10px] uppercase tracking-[0.1em] text-fg-dim"
               >
-                {new Date(c.createdAt).toLocaleDateString(undefined, {
+                {new Date(c.createdAt).toLocaleDateString(LOCALE, {
                   month: "short",
                   day: "numeric",
                 })}

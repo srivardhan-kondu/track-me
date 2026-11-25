@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { MacroRow, MacroSplitBar } from "@/components/timeline/macros";
 import { cn } from "@/lib/utils";
 
+import { LOCALE } from "@/lib/locale";
 /**
  * A finished day of eating, as one card.
  *
@@ -101,7 +102,7 @@ function Figure({
     <div className="min-w-0">
       <p className="mono-label">{label}</p>
       <p className="tabular mt-1 truncate text-[15px] font-extrabold leading-none text-fg">
-        {value.toLocaleString()}
+        {value.toLocaleString(LOCALE)}
         {unit && (
           <span className="ml-0.5 text-[11px] font-semibold text-fg-dim">
             {unit}

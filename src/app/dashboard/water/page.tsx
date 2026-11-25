@@ -16,6 +16,7 @@ import { premiumStatus, requireUser } from "@/lib/session";
 import { addDaysInZone, dayKeyInZone, safeZone } from "@/lib/tz";
 import { cn } from "@/lib/utils";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Water" };
 
 const RANGES = [
@@ -230,7 +231,7 @@ export default async function WaterPage({
                       >
                         {isToday
                           ? "Today"
-                          : entry.day.toLocaleDateString(undefined, {
+                          : entry.day.toLocaleDateString(LOCALE, {
                               weekday: "short",
                               day: "numeric",
                               month: "short",

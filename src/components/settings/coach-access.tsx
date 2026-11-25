@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { runAction, type ActionResult } from "@/lib/run-action";
 import { initials } from "@/lib/utils";
 
+import { LOCALE } from "@/lib/locale";
 type Person = {
   id: string;
   name: string | null;
@@ -123,7 +124,7 @@ export function CoachAccess({
               <Row
                 key={coach.id}
                 person={coach}
-                note={`Since ${createdAt.toLocaleDateString(undefined, {
+                note={`Since ${createdAt.toLocaleDateString(LOCALE, {
                   day: "numeric",
                   month: "short",
                 })}`}

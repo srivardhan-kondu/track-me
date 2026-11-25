@@ -3,6 +3,7 @@ import type { VolumeUnit } from "@/lib/units";
 import { cn } from "@/lib/utils";
 import type { WaterPoint } from "@/services/reporting";
 
+import { LOCALE } from "@/lib/locale";
 /**
  * A day per bar, filled against the goal, with the goal itself drawn across
  * them as a line.
@@ -42,7 +43,7 @@ export function WaterBars({
             <div
               key={p.day.toISOString()}
               className="flex h-full min-w-0 flex-1 flex-col justify-end"
-              title={`${p.day.toLocaleDateString(undefined, {
+              title={`${p.day.toLocaleDateString(LOCALE, {
                 weekday: "short",
                 month: "short",
                 day: "numeric",
@@ -63,7 +64,7 @@ export function WaterBars({
 
       <div className="mt-2.5 flex items-baseline justify-between">
         <span className="mono-label">
-          {points[0]?.day.toLocaleDateString(undefined, {
+          {points[0]?.day.toLocaleDateString(LOCALE, {
             month: "short",
             day: "numeric",
             timeZone: "UTC",

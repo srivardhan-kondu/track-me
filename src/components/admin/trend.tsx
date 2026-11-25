@@ -1,6 +1,7 @@
 import type { Point } from "@/services/admin";
 import { cn } from "@/lib/utils";
 
+import { LOCALE } from "@/lib/locale";
 /**
  * One measure over time, as bars.
  *
@@ -135,7 +136,7 @@ export function StackedBar({
           .map((segment) => (
             <div
               key={segment.label}
-              title={`${segment.label}: ${segment.value.toLocaleString()}`}
+              title={`${segment.label}: ${segment.value.toLocaleString(LOCALE)}`}
               className={cn("h-full first:rounded-l-full last:rounded-r-full", segment.className)}
               style={{ width: `${(segment.value / total) * 100}%` }}
             />
@@ -150,7 +151,7 @@ export function StackedBar({
             />
             <span className="text-[12px] text-fg-muted">{segment.label}</span>
             <span className="tabular font-mono text-[11px] text-fg-dim">
-              {segment.value.toLocaleString()}
+              {segment.value.toLocaleString(LOCALE)}
             </span>
           </li>
         ))}

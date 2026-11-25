@@ -14,6 +14,7 @@ import { round } from "@/lib/utils";
 import type { TimelineMeal } from "@/services/reporting";
 import { mediaUrl } from "@/services/storage";
 
+import { LOCALE } from "@/lib/locale";
 export const metadata = { title: "Meal" };
 
 const SLOT_LABEL: Record<string, string> = {
@@ -206,7 +207,7 @@ function Figure({
     <div className="px-5 py-4">
       <p className="mono-label">{label}</p>
       <p className="tabular mt-1.5 text-[19px] font-extrabold leading-none text-fg">
-        {typeof value === "number" ? value.toLocaleString() : value}
+        {typeof value === "number" ? value.toLocaleString(LOCALE) : value}
         {unit && (
           <span className="ml-1 text-[12px] font-semibold text-fg-dim">
             {unit}

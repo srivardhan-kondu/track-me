@@ -6,6 +6,8 @@
  * each carrying their own copy.
  */
 
+import { LOCALE } from "./locale";
+
 import { toKg, WEIGHT_MAX_KG, WEIGHT_MIN_KG, type WeightUnit } from "./units";
 
 /**
@@ -37,7 +39,7 @@ export function parseCalorieTarget(raw: string): GoalResult<number | null> {
   if (n < MIN_TARGET_CALORIES || n > MAX_TARGET_CALORIES) {
     return {
       ok: false,
-      error: `A daily target belongs between ${MIN_TARGET_CALORIES.toLocaleString()} and ${MAX_TARGET_CALORIES.toLocaleString()} kcal.`,
+      error: `A daily target belongs between ${MIN_TARGET_CALORIES.toLocaleString(LOCALE)} and ${MAX_TARGET_CALORIES.toLocaleString(LOCALE)} kcal.`,
     };
   }
 
