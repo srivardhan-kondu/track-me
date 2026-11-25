@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 
 import { Providers } from "@/components/providers";
+import { NavProgress } from "@/components/layout/nav-progress";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 
 import "./globals.css";
@@ -63,6 +64,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={manrope.variable}>
       <body className="min-h-dvh bg-bg font-sans text-fg">
         <Providers>
+          <NavProgress />
           <RegisterServiceWorker />
           {children}
         </Providers>

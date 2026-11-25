@@ -17,19 +17,23 @@ export default async function DashboardLayout({
 }) {
   const user = await requireUser();
 
-  const daysLeft = trialDaysLeft(await premiumStatus(user.id));
-
   /*
     Athletes meet onboarding once, before anything else. Coaches never do —
-    the flow asks about training a body they are not tracking here.
+    the flow asks about training a body they are not tracking here. Both
+    lookups go out together: every click waits on this layout.
   */
-  if (user.role === "ATHLETE") {
-    const record = await db.user.findUnique({
-      where: { id: user.id },
-      select: { onboardedAt: true },
-    });
-    if (!record?.onboardedAt) redirect("/onboarding");
-  }
+  const [status, record] = await Promise.all([
+    premiumStatus(user.id),
+    user.role === "ATHLETE"
+      ? db.user.findUnique({
+          where: { id: user.id },
+          select: { onboardedAt: true },
+        })
+      : null,
+  ]);
+  if (user.role === "ATHLETE" && !record?.onboardedAt) redirect("/onboarding");
+
+  const daysLeft = trialDaysLeft(status);
 
   return (
     <>
