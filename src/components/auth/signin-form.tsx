@@ -57,7 +57,9 @@ export function SignInForm({
 
   async function handleGoogle() {
     setPending("google");
-    await signIn("google", { callbackUrl: "/dashboard" });
+    // "/" sends a coach to the roster and an athlete to their day; neither
+    // sign-in knows the role until the account is loaded.
+    await signIn("google", { callbackUrl: "/" });
   }
 
   async function handleDev(e: React.FormEvent) {
@@ -85,7 +87,7 @@ export function SignInForm({
       toast.error("Those credentials were not recognised.");
       return;
     }
-    window.location.href = "/dashboard";
+    window.location.href = "/";
   }
 
   return (
